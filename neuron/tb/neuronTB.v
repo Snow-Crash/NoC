@@ -1,3 +1,5 @@
+//testbench for neuron
+
 `timescale 1ns/100ps
 `define tpd_clk 10
 

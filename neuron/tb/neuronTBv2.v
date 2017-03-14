@@ -1,3 +1,6 @@
+//testbench for a neuron and a router
+//no conflict in this testbench
+
 `timescale 1ns/100ps
 `define tpd_clk 10
 

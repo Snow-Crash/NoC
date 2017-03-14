@@ -108,6 +108,7 @@ module StatusMem
 
 	//simulation memory data initialization
 	//--------------------------------------------------//
+	/*
 	`ifdef SIM_MEM_INIT
 		reg [100*8:1] file_name;
 		initial begin
@@ -119,6 +120,7 @@ module StatusMem
 			file_name = "../data/Weights.txt";			$readmemh (file_name,Mem_6);
 		end
 	`endif
+	*/
 
 	//LOGIC
 	//--------------------------------------------------//

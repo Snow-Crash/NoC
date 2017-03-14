@@ -84,6 +84,7 @@ module ConfigMem
 
 	//simulation memory data initialization
 	//--------------------------------------------------//
+	/*
 	`ifdef SIM_MEM_INIT
 		integer file1, file2, file3, file4, file5, idx;
 		reg [100*8:1] file_name;
@@ -159,6 +160,7 @@ module ConfigMem
 				
 		end
 	`endif
+	*/
 
 	//LOGIC
 	//--------------------------------------------------//

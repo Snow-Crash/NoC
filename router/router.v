@@ -3,13 +3,14 @@
 //2017.2.17 add send_flit signal
 
 //2017.3.5  replace fifo with altara ip
-//2017.3.10 change ports. Remove 5 reset ports 
-//`include "../routing/port.v"
-//`include "../async_fifo/async_fifo.v"
-//           read_buffer to read_fifo
+//2017.3.10 change ports. Remove 5 reset ports
+//2017.3.14 modify request signal of each port.
+//			if a neighbor's fifo is full, the request signal to this port should be 0
+//			for example, in this testbench, the east neighbor's fifo is full,
+//			local port and west port both request for east port, the request vector which inputed
+//			to east arbiter is 5'b00000, instead of 5'b10001. Althought two ports send request signal,
+//			arbiter doesn't receive request, the two ports will be stalled.
 
-//`include "../crossbar/switch_matrix.v"
-//`include "../arbiter/round_robin_arbiter.v"
 
 module router (clk, clk_local, clk_north, clk_south, clk_east, clk_west,
 reset, local_in, north_in, south_in, east_in, west_in, 
@@ -161,11 +162,11 @@ assign south_port_grant = local_arbiter_grant[2] || north_arbiter_grant[2] || so
 assign east_port_grant = local_arbiter_grant[3] || north_arbiter_grant[3] || south_arbiter_grant[3] || east_arbiter_grant[3] || west_arbiter_grant[3];
 assign west_port_grant = local_arbiter_grant[4] || north_arbiter_grant[4] || south_arbiter_grant[4] || east_arbiter_grant[4] || west_arbiter_grant[4];
 
-assign local_arbiter_req = {west_port_req[0], east_port_req[0], south_port_req[0], north_port_req[0], local_port_req[0]};
-assign north_arbiter_req = {west_port_req[1], east_port_req[1], south_port_req[1], north_port_req[1], local_port_req[1]};
-assign south_arbiter_req = {west_port_req[2], east_port_req[2], south_port_req[2], north_port_req[2], local_port_req[2]};
-assign east_arbiter_req = {west_port_req[3], east_port_req[3], south_port_req[3], north_port_req[3], local_port_req[3]};
-assign west_arbiter_req = {west_port_req[4], east_port_req[4], south_port_req[4], north_port_req[4], local_port_req[4]};
+assign local_arbiter_req = local_neuron_full? 5'b0 : {west_port_req[0], east_port_req[0], south_port_req[0], north_port_req[0], local_port_req[0]};
+assign north_arbiter_req = north_neighbor_full? 5'b0 : {west_port_req[1], east_port_req[1], south_port_req[1], north_port_req[1], local_port_req[1]};
+assign south_arbiter_req = south_neighbor_full? 5'b0 : {west_port_req[2], east_port_req[2], south_port_req[2], north_port_req[2], local_port_req[2]};
+assign east_arbiter_req = east_neighbor_full? 5'b0 : {west_port_req[3], east_port_req[3], south_port_req[3], north_port_req[3], local_port_req[3]};
+assign west_arbiter_req = west_neighbor_full? 5'b0 : {west_port_req[4], east_port_req[4], south_port_req[4], north_port_req[4], local_port_req[4]};
 
 assign local_stall = ~local_port_grant;
 assign north_stall = ~north_port_grant;

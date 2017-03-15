@@ -41,7 +41,7 @@ module InSpikeBuf
 	reg LrnSpikeBuf [0:NUM_AXONS-1];
 
 	integer i;
-	
+	/*
 	//simulation memory data initialization
 	//--------------------------------------------------//
 	`ifdef SIM_MEM_INIT
@@ -74,7 +74,7 @@ module InSpikeBuf
 			end
 		endtask
 	`endif
-	
+	*/
 	//LOGIC
 	//--------------------------------------------------//
 	// Read spike reg

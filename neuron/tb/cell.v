@@ -1,6 +1,6 @@
 //neuron_cell cintains a router and a neuron
 
-module neuron_cell(clk, rt_clk, rst_n, rt_reset, 
+module neuron_cell(clk, rt_clk, rst_n, rt_reset, start,
 clk_north, clk_south, clk_east, clk_west,
 north_in, south_in, east_in, west_in,
 north_neighbor_full, south_neighbor_full, east_neighbor_full, west_neighbor_full,
@@ -13,7 +13,7 @@ localparam packet_size = 32;
 localparam flit_size = 4;
 
 input clk, rt_clk, clk_north, clk_south, clk_east, clk_west;
-input rst_n, rt_reset;
+input rst_n, rt_reset, start;
 input north_neighbor_full, south_neighbor_full, east_neighbor_full, west_neighbor_full;
 input write_en_north, write_en_south, write_en_east, write_en_west;
 input [flit_size - 1:0] north_in, south_in, east_in, west_in;

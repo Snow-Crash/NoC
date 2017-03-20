@@ -24,12 +24,12 @@ module NurnCtrlrTB();
 	parameter DATA_BIT_WIDTH_INT    = 8 ;
 	parameter DATA_BIT_WIDTH_FRAC   = 8 ;
 
-	parameter NURN_CNT_BIT_WIDTH   = 1 ;
-	parameter AXON_CNT_BIT_WIDTH   = 1 ;
+	parameter NURN_CNT_BIT_WIDTH   = 1 ;//  width of neuron address
+	parameter AXON_CNT_BIT_WIDTH   = 1 ;//	width of axon address
 
 	parameter STDP_WIN_BIT_WIDTH = 8;
 	
-	parameter AER_BIT_WIDTH = 32;
+	parameter AER_BIT_WIDTH = 32;//width of address
 
 	parameter PRIORITY_ENC_OUT_BIT_WIDTH = 3;
 	
@@ -66,6 +66,7 @@ module NurnCtrlrTB();
 	wire [DSIZE-1:0] data_StatWr_B, data_StatWr_G;
 	wire [STDP_WIN_BIT_WIDTH-1:0] data_StatWr_D;
 
+	wire outspike;
 
 	//--------------------------------------------------//
 
@@ -186,7 +187,7 @@ module NurnCtrlrTB();
 		.lrn_inSpike_i 		( Lrn_InSpike 	),
 
 		//Router
-		.outSpike_o 		(),
+		.outSpike_o 		(outspike),
 
 		//controller
 		.rstAcc_i 			( rstAcc 		),
@@ -355,7 +356,7 @@ module NurnCtrlrTB();
 		#((`tpd_clk*2)*2);
 		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
 		
-		#((`tpd_clk*2)*30);
+		#((`tpd_clk*2)*30);//interval between two start signal
 
 
 		#((`tpd_clk*2)*2);

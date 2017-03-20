@@ -20,14 +20,14 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start);
 	output [31:0] SpikePacket;
 
 	
-	parameter NUM_NURNS    = 2  ;
-	parameter NUM_AXONS    = 2  ;
+	parameter NUM_NURNS    = 4  ;
+	parameter NUM_AXONS    = 4  ;
 
 	parameter DATA_BIT_WIDTH_INT    = 8 ;
 	parameter DATA_BIT_WIDTH_FRAC   = 8 ;
 
-	parameter NURN_CNT_BIT_WIDTH   = 1 ;
-	parameter AXON_CNT_BIT_WIDTH   = 1 ;
+	parameter NURN_CNT_BIT_WIDTH   = 2 ;
+	parameter AXON_CNT_BIT_WIDTH   = 2 ;
 
 	parameter STDP_WIN_BIT_WIDTH = 8;
 	
@@ -39,6 +39,8 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start);
 
 
 	parameter DSIZE = DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC;
+
+	parameter DIRID = "1";
 
 	//REGISTER DECLARATION
 	//reg  start;
@@ -222,7 +224,9 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start);
 
 		.STDP_WIN_BIT_WIDTH		( STDP_WIN_BIT_WIDTH ),
 
-		.AER_BIT_WIDTH 			( AER_BIT_WIDTH )
+		.AER_BIT_WIDTH 			( AER_BIT_WIDTH ),
+
+		.DIRID					(DIRID)
 	)
 	CONFIGMEM
 	(
@@ -266,7 +270,8 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start);
 		.NURN_CNT_BIT_WIDTH ( NURN_CNT_BIT_WIDTH ),
 		.AXON_CNT_BIT_WIDTH ( AXON_CNT_BIT_WIDTH ),
 
-		.STDP_WIN_BIT_WIDTH ( STDP_WIN_BIT_WIDTH )
+		.STDP_WIN_BIT_WIDTH ( STDP_WIN_BIT_WIDTH ),
+		.DIRID				(DIRID)
 	)
 	STATUSMEM
 	(

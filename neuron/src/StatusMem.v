@@ -35,7 +35,9 @@ module StatusMem
 	parameter NURN_CNT_BIT_WIDTH   = 8 ,
 	parameter AXON_CNT_BIT_WIDTH   = 8 ,
 
-	parameter STDP_WIN_BIT_WIDTH = 8
+	parameter STDP_WIN_BIT_WIDTH = 8,
+	
+	parameter DIRID = "1"
 )
 (
 	input 			clk_i			,
@@ -112,12 +114,12 @@ module StatusMem
 	`ifdef SIM_MEM_INIT
 		reg [100*8:1] file_name;
 		initial begin
-			file_name = "../data/Bias.txt";				$readmemh (file_name,Mem_1);
-			file_name = "../data/MembPot.txt";			$readmemh (file_name,Mem_2);
-			file_name = "../data/Th.txt";				$readmemh (file_name,Mem_3);
-			file_name = "../data/PostSpikeHistory.txt";	$readmemh (file_name,Mem_4);
-			file_name = "../data/PreSpikeHistory.txt";	$readmemh (file_name,Mem_5);
-			file_name = "../data/Weights.txt";			$readmemh (file_name,Mem_6);
+			file_name = {"../data", DIRID, "/Bias.txt"};				$readmemh (file_name,Mem_1);
+			file_name = {"../data", DIRID, "/MembPot.txt"};			$readmemh (file_name,Mem_2);
+			file_name = {"../data", DIRID, "/Th.txt"};				$readmemh (file_name,Mem_3);
+			file_name = {"../data", DIRID, "/PostSpikeHistory.txt"};	$readmemh (file_name,Mem_4);
+			file_name = {"../data", DIRID, "/PreSpikeHistory.txt"};	$readmemh (file_name,Mem_5);
+			file_name = {"../data", DIRID, "/Weights.txt"};			$readmemh (file_name,Mem_6);
 		end
 	`endif
 	

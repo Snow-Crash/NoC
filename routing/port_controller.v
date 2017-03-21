@@ -15,11 +15,15 @@
 //2017.3.6  add read_request state, because altera fifo ip can cause 1 clock delay
 //2017.3.9  rewrite two counters, add three control signals
 //          add read_address_complete state
-//          modidy state machine, because the delay of fifo
-
-//todo      reduce the number of states, combine read_address and read_address_complete
-// 2017.3.13 change port name. buffer_empty to fifo_empty
+//          modidy state machine, because the delay of fifo     
+//2017.3.13 change port name. buffer_empty to fifo_empty
 //           read_buffer to read_fifo
+
+
+//--------------to do-----------------
+//          reduce the number of states, combine read_address and read_address_complete
+//2017.3.21 find a 1 clock delay when stall signal transits from 1 to 0, need to detect stall 
+//          stall signal at suspend stage
 
 
 module port_controller(clk, reset, 

@@ -21,7 +21,9 @@ module NurnCtrlr
 	parameter NUM_AXONS    = 4  ,
 
 	parameter NURN_CNT_BIT_WIDTH   = 2  ,
-	parameter AXON_CNT_BIT_WIDTH   = 2
+	parameter AXON_CNT_BIT_WIDTH   = 2	,
+
+	parameter DIR_ID = ""
 )
 (
 	input 												clk_i			,

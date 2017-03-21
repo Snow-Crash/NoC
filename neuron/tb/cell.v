@@ -11,6 +11,13 @@ write_en_north, write_en_south, write_en_east, write_en_west);
 
 localparam packet_size = 32;
 localparam flit_size = 4;
+parameter NUM_NURNS = 4;
+parameter NUM_AXONS = 4;
+parameter NURN_CNT_BIT_WIDTH = 2;
+parameter AXON_CNT_BIT_WIDTH = 2;
+parameter DIR_ID = "";
+parameter X_ID = 0;
+parameter Y_ID = 0;
 
 input clk, rt_clk, clk_north, clk_south, clk_east, clk_west;
 input rst_n, rt_reset, start;

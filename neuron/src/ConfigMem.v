@@ -30,7 +30,12 @@ module ConfigMem
 
 	parameter STDP_WIN_BIT_WIDTH = 8 ,
 
-	parameter AER_BIT_WIDTH = 32 
+	parameter AER_BIT_WIDTH = 32 ,
+
+	parameter DIR_ID = "",
+
+	parameter X_ID = 0;
+	parameter Y_ID = 0;
 )
 (
 	input 			clk_i			,
@@ -96,15 +101,15 @@ module ConfigMem
 		initial begin
 
 			// initialize mem_A
-			file_name = "../data/LTP_Win.txt"; 		file1 = $fopen(file_name, "r+");
+			file_name = {"../data", DIR_ID, "/LTP_Win.txt"}; 		file1 = $fopen(file_name, "r+");
 			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = "../data/LTD_Win.txt"; 		file2 = $fopen(file_name, "r+");
+			file_name = {"../data", DIR_ID, "/LTD_Win.txt"}; 		file2 = $fopen(file_name, "r+");
 			if (file2 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = "../data/LTP_LrnRt.txt"; 	file3 = $fopen(file_name, "r+");
+			file_name = {"../data", DIR_ID, "/LTP_LrnRt.txt"}; 	file3 = $fopen(file_name, "r+");
 			if (file3 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = "../data/LTD_LrnRt.txt"; 	file4 = $fopen(file_name, "r+");
+			file_name = {"../data", DIR_ID, "/LTD_LrnRt.txt"}; 	file4 = $fopen(file_name, "r+");
 			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = "../data/LrnModeBias.txt"; 	file5 = $fopen(file_name, "r+");
+			file_name = {"../data", DIR_ID, "/LrnModeBias.txt"}; 	file5 = $fopen(file_name, "r+");
 			if (file5 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
 
 			for(idx = 0 ; idx <= (NUM_NURNS - 1) ; idx = idx + 1)

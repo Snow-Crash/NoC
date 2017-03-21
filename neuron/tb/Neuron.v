@@ -40,6 +40,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start);
 
 	parameter DSIZE = DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC;
 
+	parameter DIR_ID = ""
 	//REGISTER DECLARATION
 	//reg  start;
 

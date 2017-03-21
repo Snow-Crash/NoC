@@ -48,34 +48,35 @@ wire local_address_ready, north_address_ready, south_address_ready, east_address
 wire [2:0] local_destination, north_destination, south_destination, east_destination, west_destination;
 
 wire [4:0] local_port_req, north_port_req, south_port_req, east_port_req, west_port_req;
+wire [4:0] destination_full_vector;
 
-
-
+								//west east south north local
+assign destination_full_vector = {west_neighbor_full, east_neighbor_full, south_neighbor_full, north_neighbor_full, local_neuron_full};
 
 port local_port(.clk(clk), .reset(reset), .fifo_empty(local_buf_empty),
  .stall(local_stall), .flit_in(local_flit_in), .destination_port(local_destination),  
 .current_address_ready(local_address_ready), .read_fifo(local_read_buf), .flit_out(local_flit_out),
-.request_vector(local_port_req));
+.request_vector(local_port_req), .destination_full_vector(destination_full_vector));
 
 port north_port (.clk(clk), .reset(reset), .fifo_empty(north_buf_empty),
  .stall(north_stall), .flit_in(north_flit_in), .destination_port(north_destination),  
 .current_address_ready(north_address_ready), .read_fifo(north_read_buf), .flit_out(north_flit_out),
-.request_vector(north_port_req));
+.request_vector(north_port_req), .destination_full_vector(destination_full_vector));
 
 port south_port (.clk(clk), .reset(reset), .fifo_empty(south_buf_empty),
  .stall(south_stall), .flit_in(south_flit_in), .destination_port(south_destination),  
 .current_address_ready(south_address_ready), .read_fifo(south_read_buf), .flit_out(south_flit_out),
-.request_vector(south_port_req));
+.request_vector(south_port_req), .destination_full_vector(destination_full_vector));
 
 port east_port (.clk(clk), .reset(reset), .fifo_empty(east_buf_empty),
  .stall(east_stall), .flit_in(east_flit_in), .destination_port(east_destination),  
 .current_address_ready(east_address_ready), .read_fifo(east_read_buf), .flit_out(east_flit_out),
-.request_vector(east_port_req));
+.request_vector(east_port_req), .destination_full_vector(destination_full_vector));
 
 port west_port (.clk(clk), .reset(reset), .fifo_empty(west_buf_empty),
  .stall(west_stall), .flit_in(west_flit_in), .destination_port(west_destination),  
 .current_address_ready(west_address_ready), .read_fifo(west_read_buf), .flit_out(west_flit_out),
-.request_vector(west_port_req));
+.request_vector(west_port_req), .destination_full_vector(destination_full_vector));
 
 local_afifo	fifo_local (
 	.aclr ( reset ),
@@ -145,15 +146,15 @@ wire [4:0] local_arbiter_req, north_arbiter_req, south_arbiter_req, east_arbiter
 wire [4:0] local_arbiter_grant, north_arbiter_grant, south_arbiter_grant, east_arbiter_grant, west_arbiter_grant;
 wire [2:0] local_select, north_select, south_select, east_select, west_select;
 
-round_robin_arbiter arbiter_local(.clk(clk), .reset(reset), .request(local_arbiter_req), .grant_vec(local_arbiter_grant), .crossbar_control(local_select), .write_request(write_req_local));
+round_robin_arbiter arbiter_local(.clk(clk), .reset(reset), .request(local_arbiter_req), .grant_vec(local_arbiter_grant), .crossbar_control(local_select), .write_request(write_req_local), .destination_full(local_neuron_full));
 
-round_robin_arbiter arbiter_north(.clk(clk), .reset(reset), .request(north_arbiter_req), .grant_vec(north_arbiter_grant), .crossbar_control(north_select), .write_request(write_req_north));
+round_robin_arbiter arbiter_north(.clk(clk), .reset(reset), .request(north_arbiter_req), .grant_vec(north_arbiter_grant), .crossbar_control(north_select), .write_request(write_req_north), .destination_full(north_neighbor_full));
 
-round_robin_arbiter arbiter_south(.clk(clk), .reset(reset), .request(south_arbiter_req), .grant_vec(south_arbiter_grant), .crossbar_control(south_select), .write_request(write_req_south));
+round_robin_arbiter arbiter_south(.clk(clk), .reset(reset), .request(south_arbiter_req), .grant_vec(south_arbiter_grant), .crossbar_control(south_select), .write_request(write_req_south), .destination_full(south_neighbor_full));
 
-round_robin_arbiter arbiter_east(.clk(clk), .reset(reset), .request(east_arbiter_req), .grant_vec(east_arbiter_grant), .crossbar_control(east_select), .write_request(write_req_east));
+round_robin_arbiter arbiter_east(.clk(clk), .reset(reset), .request(east_arbiter_req), .grant_vec(east_arbiter_grant), .crossbar_control(east_select), .write_request(write_req_east), .destination_full(east_neighbor_full));
 
-round_robin_arbiter arbiter_west(.clk(clk), .reset(reset), .request(west_arbiter_req), .grant_vec(west_arbiter_grant), .crossbar_control(west_select), .write_request(write_req_west));
+round_robin_arbiter arbiter_west(.clk(clk), .reset(reset), .request(west_arbiter_req), .grant_vec(west_arbiter_grant), .crossbar_control(west_select), .write_request(write_req_west), .destination_full(west_neighbor_full));
 
 
 assign local_port_grant = local_arbiter_grant[0] || north_arbiter_grant[0] || south_arbiter_grant[0] || east_arbiter_grant[0] || west_arbiter_grant[0];

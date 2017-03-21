@@ -12,9 +12,9 @@
 //2017.2.23 modify always blocks of round_robin_pointer and state machine, eliminate latches
 
 
-module round_robin_arbiter(clk, reset, request, grant_vec, crossbar_control, write_request);
+module round_robin_arbiter(clk, reset, request, grant_vec, crossbar_control, write_request, destination_full);
 
-input clk, reset;
+input clk, reset, destination_full;
 input [4:0] request;
 output reg [4:0] grant_vec;
 output reg [2:0] crossbar_control;
@@ -45,7 +45,7 @@ reg [2:0] current_state;
 reg [2:0] next_state;
 reg [3:0] counter;
 
-reg update_pointer, clear_counter;
+reg update_pointer, clear_counter, inc_counter;
 reg [3:0] round_robin_pointer;
 reg [4:0] shifted_request, shifted_grant, unrotated_grant;
 
@@ -125,14 +125,14 @@ always @(posedge clk or posedge reset)
     end
 
 //counter 
-always @(posedge clk or posedge reset)
+always @(posedge clk)
     begin
-        if (reset)
+        if (clear_counter == 1)
             counter <= 0;
-        else if (clear_counter == 1)
-            counter <= 0;
-        else
+        else if (inc_counter == 1)
             counter <= counter + 1;
+        else
+            counter <= counter;
     end
 
 
@@ -191,6 +191,7 @@ always @(current_state or ifrequest or counter)
                         load_grant_reg = 0;
                     //grant_vec <= 0;
                     //grant_vec <= unrotated_grant; 
+                    clear_counter = 1;
                 end
             arbitrating_noload:
                 begin
@@ -198,9 +199,19 @@ always @(current_state or ifrequest or counter)
                     //grant_vec <= unrotated_grant & ~grant_vec;
                     //grant_vec <= grant_vec;
                     update_pointer = 1;
-                    write_request = 1;
+                    
                     load_grant_reg = 0;
                     clear_counter = 0;
+                    if (destination_full == 0)
+                        begin
+                            inc_counter = 1;
+                            write_request = 1;
+                        end
+                    else
+                        begin
+                            inc_counter = 0;
+                            write_request = 0;
+                        end
                 end
             arbitrating:
                 begin
@@ -214,14 +225,24 @@ always @(current_state or ifrequest or counter)
                         load_grant_reg = 1;
                     else
                         load_grant_reg = 0;
-                    write_request = 1;
+                    //write_request = 1;
+                    if (destination_full == 0)
+                        begin
+                            inc_counter = 1;
+                            write_request = 1;
+                        end
+                    else
+                        begin
+                            inc_counter = 0;
+                            write_request = 0;
+                        end
                 end
             sending_packet:
                 begin
                     load_grant_reg = 0;
                     update_pointer = 0;
                     //counter <= counter + 1;
-                    write_request = 1;
+                    //write_request = 1;
                     //load_grant_reg = 0;
                     clear_counter = 0;
                     if (counter == flit_number - 1)
@@ -230,6 +251,16 @@ always @(current_state or ifrequest or counter)
                             clear_counter = 1;
                         end
                     //grant_vec <= grant_vec;
+                    if (destination_full == 0)
+                        begin
+                            inc_counter = 1;
+                            write_request = 1;
+                        end
+                    else
+                        begin
+                            inc_counter = 0;
+                            write_request = 0;
+                        end
                 end
             default:
                 begin

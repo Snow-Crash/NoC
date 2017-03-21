@@ -10,6 +10,10 @@ write_req_north, write_req_south, write_req_east, write_req_west,
 write_en_north, write_en_south, write_en_east, write_en_west);
 
 parameter DIRID = "1";
+parameter neuron_number = 2;
+parameter axon_number = 2;
+parameter neuron_number_bit_width = 1;
+parameter axon_number_bit_width = 1;
 
 localparam packet_size = 32;
 localparam flit_size = 4;
@@ -28,7 +32,8 @@ wire outSpike;
 wire [3:0] local_packet_out;
 wire local_full, write_req_east, local_neuron_full;
 
-Neuron #(.DIRID(DIRID)) uut (.clk(clk), .rst_n(rst_n), .SpikePacket(SpikePacket), .outSpike(outSpike),. start(start));
+Neuron #(.DIRID(DIRID), .NUM_NURNS(), .NUM_AXONS(), .NURN_CNT_BIT_WIDTH(), .AXON_CNT_BIT_WIDTH()) 
+uut (.clk(clk), .rst_n(rst_n), .SpikePacket(SpikePacket), .outSpike(outSpike),. start(start));
 
 router rt (.clk(rt_clk), .clk_local(clk), .clk_north(clk_north), .clk_south(clk_south), .clk_east(clk_east), .clk_west(clk_west),
 .reset(rt_reset), .local_in(SpikePacket), .north_in(north_in), .south_in(south_in), .east_in(east_in), .west_in(west_in),

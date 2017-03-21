@@ -10,13 +10,15 @@ destination_port,
 //routing_result_ready, 
 current_address_ready,
 read_fifo,
-flit_out, request_vector);
+flit_out, request_vector,
+destination_full_vector);
 
 parameter packet_size = 32;
 parameter address_size = 16;
 parameter flit_size = 4;
 
 input clk, reset, fifo_empty, stall;
+input [4:0] destination_full_vector;
 input [flit_size - 1:0] flit_in;
 output [flit_size - 1:0] flit_out;
 output [2:0] destination_port;
@@ -37,6 +39,7 @@ wire load_next_address, load_destination_port;
 wire [address_size - 1:0] current_address, next_address;
 wire [4:0] request_vector_wire;
 wire clear_request_reg_wire;
+reg destination_full;
 
 address_compute address_compute_unit(.address_in(current_address),
  .next_address(next_address),
@@ -51,8 +54,8 @@ port_controller port_controller_unit(.clk(clk), .reset(reset),
 .load_destination_port(load_destination_port),
 .shift_next_address(shift_next_address),
 .load_next_address(load_next_address),
-.clear_request_reg(clear_request_reg_wire)
-);
+.clear_request_reg(clear_request_reg_wire),
+.destination_full(destination_full));
 
 //mux
 //true input1 false input2
@@ -131,6 +134,23 @@ always @(posedge clk or posedge reset)
                 next_address_reg <= {4'h0, next_address_reg[address_size - 1:4]};
     end
 
-//assign next_address_flit = next_address_reg[3:0];
+//full signal mux
+always @(*)
+    begin
+        case(request_vector)
+            5'b10000:
+                destination_full = destination_full_vector[4];
+            5'b01000:
+                destination_full = destination_full_vector[3];
+            5'b00100:
+                destination_full = destination_full_vector[2];
+            5'b00010:
+                destination_full = destination_full_vector[1];
+            5'b00001:
+                destination_full = destination_full_vector[0];
+            default:
+                destination_full = 0;
+        endcase
+    end
 
 endmodule

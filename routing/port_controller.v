@@ -31,7 +31,8 @@ shift_current_address,
 load_destination_port,
 shift_next_address,
 load_next_address,
-clear_request_reg);
+clear_request_reg,
+destination_full);
 
 parameter flit_size = 4;
 parameter packet_size = 32;
@@ -55,7 +56,7 @@ localparam select_address = 1'b0;
 localparam select_payload = 1'b1;
 
 
-input clk, reset, stall, fifo_empty;
+input clk, reset, stall, fifo_empty, destination_full;
 
 output reg shift_current_address, shift_next_address,
             load_destination_port, load_next_address,
@@ -66,14 +67,16 @@ reg [2:0] counter;
 reg [4:0] current_state, next_state;
 reg [2:0] shift_counter;
 reg clear_counter, clear_shift_counter;
-reg inc_shift_counter; 
+reg inc_counter; 
 
 always @(posedge clk)
     begin
         if(clear_counter)
             counter <= 0;
-        else 
+        else if (inc_counter)
             counter <= counter + 1;
+        else
+            counter <= counter;
     end
 
 always @(posedge clk)
@@ -140,8 +143,6 @@ always @(*)
                     next_state = send_address;
             default:
                 next_state <= idle;
-            //send_payload_read_address:
-            //    next_state <= read_address;
         endcase
     end
 
@@ -160,8 +161,7 @@ always @(*)
                     clear_request_reg = 1;
                     clear_counter = 1;
                     clear_shift_counter = 1;
-                    //send_flit <= 0;
-                    //shift_counter <= 0;
+                    inc_counter = 0;
                 end
             read_address_request:
                 begin
@@ -175,6 +175,7 @@ always @(*)
                     read_fifo = 1;
                     clear_counter = 0;
                     clear_shift_counter = 0;
+                    inc_counter = 0;
                 end
             read_address:
                 begin
@@ -186,6 +187,7 @@ always @(*)
                     clear_request_reg = 0;
                     clear_counter = 0;
                     clear_shift_counter = 0;
+                    inc_counter = 0;
                     if (fifo_empty == 0)
                         begin
                             shift_current_address = 1; 
@@ -209,6 +211,8 @@ always @(*)
                     read_fifo = 0;
                     clear_counter = 0;
                     clear_shift_counter = 0;
+                    inc_counter = 0;
+                    
                 end
             current_addr_ready:
                 begin
@@ -222,8 +226,6 @@ always @(*)
                     clear_request_reg = 0;
                     clear_counter = 1;
                     clear_shift_counter = 1;
-                    //shift_counter <=0;
-                    //send_flit <= 0;
                 end
             suspend:
                 begin
@@ -237,14 +239,14 @@ always @(*)
                     clear_request_reg = 0;
                     clear_counter = 1;
                     clear_shift_counter = 1;
-                    //send_flit <= 0;
+                    inc_counter = 0;
                 end
             send_address:
                 begin
                     shift_current_address = 0;
                     current_address_ready = 0;
                     load_destination_port = 0;
-                    shift_next_address = 1;
+                    
                     load_next_address = 0;        
                     mux_select = select_address;
                     clear_shift_counter = 1;
@@ -255,6 +257,16 @@ always @(*)
                         read_fifo = 0;
                     clear_request_reg = 0;
                     clear_counter = 0;
+                    if (destination_full == 0)
+                        begin
+                            inc_counter = 1;
+                            shift_next_address = 1;
+                        end
+                    else
+                        begin
+                            inc_counter = 0;
+                            shift_next_address = 0;
+                        end
                 end
             send_payload:
                 begin
@@ -263,14 +275,21 @@ always @(*)
                     load_destination_port = 0;
                     shift_next_address = 0;
                     load_next_address = 0;
-                    if ((counter == flit_number - 1) && (fifo_empty == 0))
-                        read_fifo = 1;
-                    else if (counter == flit_number - 1)
-                        read_fifo = 0;
-                    else
-                        read_fifo = 1;
+                    if ((counter <= flit_number - 1) && (fifo_empty == 0) && (destination_full == 0))
+                        begin
+                            inc_counter = 1;
+                            read_fifo = 1;
+                        end
+                    else //if (counter == flit_number - 1)
+                        begin
+                            inc_counter = 0;
+                            read_fifo = 0;
+                        end
                     mux_select = select_payload;
-                    clear_request_reg = 1;
+                    if (counter == flit_number - 1)
+                        clear_request_reg = 1;
+                    else
+                        clear_request_reg = 0;
                     clear_counter = 0;
                     clear_shift_counter = 0;
                 end
@@ -285,6 +304,7 @@ always @(*)
                     mux_select = 0;
                     clear_request_reg = 0;
                     clear_counter = 0;
+                    inc_counter = 0;
                 end
         endcase
     end

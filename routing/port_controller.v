@@ -18,6 +18,8 @@
 //          modidy state machine, because the delay of fifo     
 //2017.3.13 change port name. buffer_empty to fifo_empty
 //           read_buffer to read_fifo
+//2017.3.20 fixed a critical bug, when sending address and payload, controller will
+//          always check if estination reouter's fifo is full
 
 
 //--------------to do-----------------

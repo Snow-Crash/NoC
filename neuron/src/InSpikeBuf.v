@@ -16,7 +16,10 @@
 module InSpikeBuf
 #(
 	parameter NUM_AXONS    = 256 ,
-	parameter AXON_CNT_BIT_WIDTH   = 8 
+	parameter AXON_CNT_BIT_WIDTH   = 8 ,
+	parameter X_ID = "1",
+	parameter Y_ID = "1",
+	localparam DIR_ID = {X_ID, "_", Y_ID}
 )
 (
 	input 			clk_i			,
@@ -51,7 +54,7 @@ module InSpikeBuf
 		initial begin
 			//file_name = "../data/InSpikeBuf.txt";			$readmemh (file_name,RclSpikeBuf);
 			//open file for reading Read 
-         	file_ptr = $fopen ("../data/InSpikeBuf.txt", "r");
+         	file_ptr = $fopen ("../data", DIR_ID, "/InSpikeBuf.txt", "r");
 
 		end
 

@@ -37,7 +37,10 @@ module StatusMem
 
 	parameter STDP_WIN_BIT_WIDTH = 8,
 
-	parameter DIR_ID = ""
+	
+	parameter X_ID = "1",
+	parameter Y_ID = "1",
+	localparam DIR_ID = {X_ID, "_", Y_ID}
 )
 (
 	input 			clk_i			,

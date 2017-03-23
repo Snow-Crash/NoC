@@ -15,9 +15,8 @@ parameter NUM_NURNS = 4;
 parameter NUM_AXONS = 4;
 parameter NURN_CNT_BIT_WIDTH = 2;
 parameter AXON_CNT_BIT_WIDTH = 2;
-parameter DIR_ID = "";
-parameter X_ID = 0;
-parameter Y_ID = 0;
+parameter X_ID = "1";
+parameter Y_ID = "1";
 
 input clk, rt_clk, clk_north, clk_south, clk_east, clk_west;
 input rst_n, rt_reset, start;
@@ -33,7 +32,7 @@ wire outSpike;
 wire [3:0] local_packet_out;
 wire local_full, write_req_east, local_neuron_full;
 
-Neuron uut (.clk(clk), .rst_n(rst_n), .SpikePacket(SpikePacket), .outSpike(outSpike),. start(start));
+Neuron #(.X_ID(X_ID), .Y_ID(Y_ID)) uut (.clk(clk), .rst_n(rst_n), .SpikePacket(SpikePacket), .outSpike(outSpike),. start(start));
 
 router rt (.clk(rt_clk), .clk_local(clk), .clk_north(clk_north), .clk_south(clk_south), .clk_east(clk_east), .clk_west(clk_west),
 .reset(rt_reset), .local_in(SpikePacket), .north_in(north_in), .south_in(south_in), .east_in(east_in), .west_in(west_in),

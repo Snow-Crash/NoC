@@ -32,10 +32,9 @@ module ConfigMem
 
 	parameter AER_BIT_WIDTH = 32 ,
 
-	parameter DIR_ID = "",
-
-	parameter X_ID = 0;
-	parameter Y_ID = 0;
+	parameter X_ID = "1",
+	parameter Y_ID = "1",
+	localparam DIR_ID = {X_ID, "_", Y_ID}
 )
 (
 	input 			clk_i			,

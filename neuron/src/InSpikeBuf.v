@@ -33,6 +33,7 @@ module InSpikeBuf
 	input 			saveRclSpikes_i ,
 	input [AXON_CNT_BIT_WIDTH-1:0] LrnAxonAddr_i,
 	input 			rdEn_LrnInSpike_i,
+	input [NUM_AXONS - 1 : 0]		spike_in,
 
 	output reg		Rcl_InSpike_o   ,
 	output reg		Lrn_InSpike_o
@@ -77,6 +78,14 @@ module InSpikeBuf
 			end
 		endtask
 	`endif
+
+//read spike from interface
+always @ (posedge start_i) 
+	begin
+		if(start_i == 1'b1)
+			for(i = 0; i < NUM_AXONS; i = 1 + 1)
+				RclSpikeBuf[i] <= spike_in[i];
+	end
 	
 	//LOGIC
 	//--------------------------------------------------//

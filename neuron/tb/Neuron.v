@@ -14,10 +14,7 @@
 `timescale 1ns/100ps
 `define tpd_clk 5
 
-module Neuron(clk, rst_n, SpikePacket, outSpike, start);
-	input clk, rst_n, start;
-	output  outSpike;
-	output [31:0] SpikePacket;
+module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
 	
 	parameter NUM_NURNS    = 2  ;
@@ -42,6 +39,11 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start);
 
 	parameter X_ID = "1";
 	parameter Y_ID = "1";
+
+	input clk, rst_n, start;
+	input [NUM_AXONS - 1:0] inSpike;
+	output  outSpike;
+	output [31:0] SpikePacket;
 	//REGISTER DECLARATION
 	//reg  start;
 

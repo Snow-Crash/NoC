@@ -57,7 +57,7 @@ interface #(.packet_size(packet_size),
             .router_reset(rt_reset), 
             .write_en(write_req_local), 
             .start(start), 
-            .data_in(local_out), 
+            .data_in(local_packet_out), 
             .spike(spike),
             .neuron_full(local_neuron_full));
 

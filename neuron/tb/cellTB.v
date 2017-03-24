@@ -31,7 +31,7 @@ parameter X_ID = "1";
 parameter Y_ID = "1";
 
 neuron_cell #(.NUM_NURNS(NUM_NURNS), 
-            .NUM_AXONS(NUM_NURNS),
+            .NUM_AXONS(NUM_AXONS),
             .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
             .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
             .X_ID(X_ID),
@@ -69,11 +69,11 @@ initial
             write_en_west = 1'b0;
         #6  rt_reset = 0;
             write_en_west = 1;
-            west_in = 4'h4;
-        #10 west_in = 4'h3;
-        #10 west_in = 4'h7;
+            west_in = 4'h0;
+        #10 west_in = 4'h0;
+        #10 west_in = 4'h0;
+        #10 west_in = 4'h0;
         #10 west_in = 4'h8;
-        #10 west_in = 4'h1;
         #10 west_in = 4'h1;
         #10 west_in = 4'he;
         #10 west_in = 4'hf;

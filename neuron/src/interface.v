@@ -67,7 +67,7 @@ always @(posedge neuron_clk or negedge rst_n )
         if (rst_n == 0)
             spike_reg <= 0;
         else if(write_spike)
-            spike_reg[axon_id] = 1;
+            spike_reg[axon_id] = 1'b1;
     end
 assign spike = spike_reg;
 

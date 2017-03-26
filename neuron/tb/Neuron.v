@@ -344,7 +344,8 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.rdEn_LrnInSpike_i 	( rdEn_StatRd_C ),
 
 		.Rcl_InSpike_o		( Rcl_InSpike ),
-		.Lrn_InSpike_o		( Lrn_InSpike )
+		.Lrn_InSpike_o		( Lrn_InSpike ),
+		.spike_in			( inSpike)	//input from interface
 	);
 
 

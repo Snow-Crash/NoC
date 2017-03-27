@@ -41,7 +41,7 @@ router rt (.clk(rt_clk), .clk_local(clk), .clk_north(clk_north), .clk_south(clk_
 .local_full(local_full), .north_full(north_full), .south_full(south_full), .east_full(east_full), .west_full(west_full),
 .write_en_local(outSpike), .write_en_north(write_en_north), .write_en_south(write_en_south), .write_en_east(write_en_east), .write_en_west(write_en_west),
 .write_req_local(write_req_local), .write_req_north(write_req_north), .write_req_south(write_req_south),
-.write_req_east(write_req_east), .write_req_west(write_req_east),
+.write_req_east(write_req_east), .write_req_west(write_req_west),
 .local_neuron_full(local_neuron_full), .north_neighbor_full(north_neighbor_full), .south_neighbor_full(south_neighbor_full), .east_neighbor_full(east_neighbor_full), .west_neighbor_full(west_neighbor_full));
 
 interface #(.packet_size(packet_size),

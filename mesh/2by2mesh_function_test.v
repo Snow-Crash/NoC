@@ -1,6 +1,9 @@
 `timescale 1ns/100ps
 `define tpd_clk 10
 
+//`define tb1
+`define tb2
+
 module functionTB();
 
 reg clk, rt_clk, rst_n, rt_reset, start;
@@ -49,7 +52,7 @@ router outRT(.clk(rt_clk), .clk_local(1'b0), .clk_north(rt_clk), .clk_south(rt_c
 		begin
 			#5 rt_clk <= ~rt_clk  ;
 		end
-
+`ifdef tb1
     initial
 		begin
 			rt_clk = 1'b0;
@@ -82,7 +85,59 @@ router outRT(.clk(rt_clk), .clk_local(1'b0), .clk_north(rt_clk), .clk_south(rt_c
             #10 in_packet = 4'h1; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
             #10 inRT_write_en = 0;
 	end
+`endif
 
+`ifdef tb2
+	initial
+		begin
+			rt_clk = 1'b0;
+			rt_reset = 1'b1;
+			in_packet = 4'h0;
+            #6 rt_reset = 0;
+            
+            //packet 1 0002fe00
+            #10 inRT_write_en = 1;  
+				in_packet = 4'he; #10 in_packet = 4'hf; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            #10 in_packet = 4'h2; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            //packet 2 0003fe00
+            #10 in_packet = 4'he; #10 in_packet = 4'hf; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            #10 in_packet = 4'h3; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+			#10	inRT_write_en = 0;
+            //packet 3 0004fe00
+            #80 inRT_write_en = 1;
+				in_packet = 4'he; #10 in_packet = 4'hf; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            #10 in_packet = 4'h4; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            //packet 4 0005fe00
+            #10 in_packet = 4'he; #10 in_packet = 4'hf; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            #10 in_packet = 4'h5; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+			#10	inRT_write_en = 0;
+			
+			//000000fe
+			#1500 inRT_write_en = 1;
+				in_packet = 4'he; #10 in_packet = 4'hf; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+			//000100fe
+			#10 in_packet = 4'he; #10 in_packet = 4'hf; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            #10 in_packet = 4'h1; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+			#10	inRT_write_en = 0;
+
+			//000300fe
+            #80 inRT_write_en = 1;
+				in_packet = 4'he; #10 in_packet = 4'hf; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            #10 in_packet = 4'h3; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            //packet 4 000e00fe
+            #10 in_packet = 4'he; #10 in_packet = 4'hf; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            #10 in_packet = 4'h4; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+			#10	inRT_write_en = 0;
+
+			//000600fe
+			#80 inRT_write_en = 1;
+				in_packet = 4'he; #10 in_packet = 4'hf; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+            #10 in_packet = 4'h6; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0;
+			#10	inRT_write_en = 0;
+
+		end
+`endif
 
 //
 

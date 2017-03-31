@@ -2,7 +2,8 @@
 `define tpd_clk 10
 
 //`define tb1
-`define tb2
+//`define tb2
+`define tb3
 
 module functionTB();
 
@@ -139,7 +140,147 @@ router outRT(.clk(rt_clk), .clk_local(1'b0), .clk_north(rt_clk), .clk_south(rt_c
 		end
 `endif
 
-//
+`ifdef tb3
+	initial
+		begin
+			rt_clk = 1'b0;
+			rt_reset = 1'b1;
+			in_packet = 4'h0;
+            #6 rt_reset = 0;
+//packet 000200FE axon_id = 2 time step = 1
+#10 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h2; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000300FE axon_id = 3 time step = 1
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h3; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000400FE axon_id = 4 time step = 1
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h4; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000500FE axon_id = 5 time step = 1
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h5; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000000FE axon_id = 0 time step = 2
+#1500 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000100FE axon_id = 1 time step = 2
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h1; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000300FE axon_id = 3 time step = 2
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h3; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000400FE axon_id = 4 time step = 2
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h4; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000600FE axon_id = 6 time step = 2
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h6; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000000FE axon_id = 0 time step = 3
+#1500 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000100FE axon_id = 1 time step = 3
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h1; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000400FE axon_id = 4 time step = 3
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h4; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000700FE axon_id = 7 time step = 3
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h7; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000000FE axon_id = 0 time step = 4
+#1500 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000100FE axon_id = 1 time step = 4
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h1; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000300FE axon_id = 3 time step = 4
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h3; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000600FE axon_id = 6 time step = 4
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h6; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000700FE axon_id = 7 time step = 4
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h7; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000500FE axon_id = 5 time step = 5
+#1500 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h5; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000700FE axon_id = 7 time step = 5
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h7; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000200FE axon_id = 2 time step = 6
+#1500 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h2; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000300FE axon_id = 3 time step = 6
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h3; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000500FE axon_id = 5 time step = 6
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h5; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000000FE axon_id = 0 time step = 7
+#1500 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000100FE axon_id = 1 time step = 7
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h1; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+//packet 000600FE axon_id = 6 time step = 7
+#80 inRT_write_en = 1;
+    in_packet = 4'hE; #10 in_packet = 4'hF; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 in_packet = 4'h6; #10 in_packet = 4'h0; #10 in_packet = 4'h0; #10 in_packet = 4'h0; 
+#10 inRT_write_en = 0; 
+
+		end
+`endif
+
 
 always
 	begin

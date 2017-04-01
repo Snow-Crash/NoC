@@ -22,7 +22,7 @@ module InSpikeBuf
 	parameter AXON_CNT_BIT_WIDTH   = 8 ,
 	parameter X_ID = "1",
 	parameter Y_ID = "1",
-	localparam DIR_ID = {X_ID, "_", Y_ID}
+	parameter DIR_ID = {X_ID, "_", Y_ID}
 )
 (
 	input 			clk_i			,
@@ -81,7 +81,7 @@ module InSpikeBuf
 			end
 		endtask
 	`endif
-
+/*
 //read spike from interface
 always @ (posedge start_i) 
 	begin
@@ -89,11 +89,11 @@ always @ (posedge start_i)
 			for(i = 0; i < NUM_AXONS; i = 1 + 1)
 				RclSpikeBuf[i] <= spike_in[i];
 	end
-	
+*/	
 	//LOGIC
 	//--------------------------------------------------//
 	// Read spike reg
-	always@(posedge clk_i or negedge rst_n_i)  begin
+	always@(posedge clk_i or negedge rst_n_i or posedge start_i)  begin
 		if(rst_n_i == 1'b0) begin
 			Rcl_InSpike_o	<= 1'b0;
 			Lrn_InSpike_o   <= 1'b0;
@@ -103,7 +103,14 @@ always @ (posedge start_i)
 			for(i = 0 ; i < NUM_AXONS ; i = i + 1)
 				LrnSpikeBuf[i] <= 0;
 
-	  	end else begin
+	  	end 
+		  //read spike from interface
+		  else if (start_i == 1'b1)
+		  	begin
+			  	for(i = 0; i < NUM_AXONS; i = 1 + 1)
+					RclSpikeBuf[i] <= spike_in[i];
+			end
+		  else begin
 	  		if(rdEn_RclInSpike_i == 1'b1) begin
 	  			Rcl_InSpike_o <= RclSpikeBuf[RclAxonAddr_i];
 	  		end

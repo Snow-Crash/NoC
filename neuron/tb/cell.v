@@ -9,8 +9,8 @@ north_full, south_full, east_full, west_full,
 write_req_north, write_req_south, write_req_east, write_req_west,
 write_en_north, write_en_south, write_en_east, write_en_west);
 
-localparam packet_size = 32;
-localparam flit_size = 4;
+parameter packet_size = 32;
+parameter flit_size = 4;
 parameter NUM_NURNS = 2;
 parameter NUM_AXONS = 2;
 parameter NURN_CNT_BIT_WIDTH = 1;
@@ -32,8 +32,11 @@ wire outSpike;
 wire [3:0] local_packet_out;
 wire local_full, write_req_east, local_neuron_full;
 wire [NUM_AXONS - 1:0] spike;
+wire write_req_local;
 
-Neuron #(.X_ID(X_ID), .Y_ID(Y_ID)) uut (.clk(clk), .rst_n(rst_n), .SpikePacket(SpikePacket), .outSpike(outSpike),. start(start), .inSpike(spike));
+Neuron #(.X_ID(X_ID), .Y_ID(Y_ID), .NUM_NURNS(NUM_NURNS), .NUM_AXONS(NUM_AXONS), .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH), .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH)) 
+//Neuron #(.X_ID(X_ID), .Y_ID(Y_ID)) 
+uut (.clk(clk), .rst_n(rst_n), .SpikePacket(SpikePacket), .outSpike(outSpike),. start(start), .inSpike(spike));
 
 router rt (.clk(rt_clk), .clk_local(clk), .clk_north(clk_north), .clk_south(clk_south), .clk_east(clk_east), .clk_west(clk_west),
 .reset(rt_reset), .local_in(SpikePacket), .north_in(north_in), .south_in(south_in), .east_in(east_in), .west_in(west_in),

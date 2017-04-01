@@ -142,6 +142,7 @@ always @(*)
                     next_state <= read_address;
                 else if (fifo_empty == 1)
                     next_state = idle;
+                //cause latch, need to exmaine transition conditions to eliminate
             suspend:
                 if (stall == 1)
                     next_state = suspend;
@@ -232,6 +233,7 @@ always @(*)
                     clear_request_reg = 0;
                     clear_counter = 1;
                     clear_shift_counter = 1;
+                    //inc_counter = 0; may cause latch, should add this statement, no time to test
                 end
             suspend:
                 begin

@@ -54,7 +54,7 @@ begin
                     destination_port = north;
                     next_address = {y_address_minus, x_address};
                 end
-            else if (y_address < 0)
+            else if (y_address < 0)//cause latch, need to be changed
                 begin
                     request_vector = 5'b00100; //request south arbiter
                     destination_port = south;

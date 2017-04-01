@@ -268,6 +268,7 @@ always @(current_state or ifrequest or counter)
                     write_request = 0;
                     load_grant_reg = 0;
                     clear_counter = 0;
+                    //inc_counter = 0;  --to do,inc_counter may cause latch, should add this statement, no time to test
                 end
         endcase
     end

@@ -40,7 +40,7 @@ module StatusMem
 	
 	parameter X_ID = "1",
 	parameter Y_ID = "1",
-	localparam DIR_ID = {X_ID, "_", Y_ID}
+	parameter DIR_ID = {X_ID, "_", Y_ID}
 )
 (
 	input 			clk_i			,

@@ -10,7 +10,9 @@
 //2017.2.20 posedge reset
 //2017.2.22 rewrite state machine, add signals to control counter, avoid latch of unrotated_grant, round_robin_pointer
 //2017.2.23 modify always blocks of round_robin_pointer and state machine, eliminate latches
-
+//2017.4.1  quartus reports inc_counter causes inferred lathes
+//2017.4.2  remove latch cause by inc_counter
+//          add inc_counter = 0 in idle and defualt state to avoid latch
 
 module round_robin_arbiter(clk, reset, request, grant_vec, crossbar_control, write_request, destination_full);
 
@@ -192,6 +194,7 @@ always @(current_state or ifrequest or counter)
                     //grant_vec <= 0;
                     //grant_vec <= unrotated_grant; 
                     clear_counter = 1;
+                    inc_counter = 0;//2017.4.2 add this line to avoid latch
                 end
             arbitrating_noload:
                 begin
@@ -268,7 +271,7 @@ always @(current_state or ifrequest or counter)
                     write_request = 0;
                     load_grant_reg = 0;
                     clear_counter = 0;
-                    //inc_counter = 0;  --to do,inc_counter may cause latch, should add this statement, no time to test
+                    inc_counter = 0;  //--to do,inc_counter may cause latch, should add this statement, no time to test
                 end
         endcase
     end

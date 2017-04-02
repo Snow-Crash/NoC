@@ -1,5 +1,6 @@
 //2017.2.14 add request_vector
 //2017.2.23 remove latches
+//2017.4.2  add destination_port = 3'd0 at line 44, avoid latch caused by destination_port
 
 module address_compute (address_in, destination_port, next_address, request_vector);
 
@@ -40,6 +41,7 @@ always @(*)
 begin
     next_address = address_in;//prevent latch
     request_vector = 5'b00000;//2.22 avoid latch
+    destination_port = 3'd0;//4.2 avoid latch
     if (x_address == 0) 
         begin
             if (y_address == 0)

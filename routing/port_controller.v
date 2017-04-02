@@ -26,7 +26,8 @@
 //          reduce the number of states, combine read_address and read_address_complete
 //2017.3.21 find a 1 clock delay when stall signal transits from 1 to 0, need to detect stall 
 //          stall signal at suspend stage
-
+//2017.4.2  add inc_counter = 0 in current_addr_ready state, avoid latch 
+//          next_state causes a latch, change state transition condition in send_payload at line 145, avoid latch, works fine. need more testcases to test.
 
 module port_controller(clk, reset, 
 stall, current_address_ready, 
@@ -140,9 +141,9 @@ always @(*)
                     next_state = send_payload;
                 else if(fifo_empty == 0)
                     next_state <= read_address;
-                else if (fifo_empty == 1)
+                else// if (fifo_empty == 1)
                     next_state = idle;
-                //cause latch, need to exmaine transition conditions to eliminate
+                //2017.4.2 cause latch, need to exmaine transition conditions to eliminate
             suspend:
                 if (stall == 1)
                     next_state = suspend;
@@ -233,7 +234,7 @@ always @(*)
                     clear_request_reg = 0;
                     clear_counter = 1;
                     clear_shift_counter = 1;
-                    //inc_counter = 0; may cause latch, should add this statement, no time to test
+                    inc_counter = 0;//may cause latch, should add this statement, no time to test
                 end
             suspend:
                 begin

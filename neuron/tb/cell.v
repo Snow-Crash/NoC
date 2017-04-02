@@ -1,4 +1,6 @@
 //neuron_cell cintains a router and a neuron
+//2017.4.1  fix minor bugs, declare a new wire
+//          change localparam to parameter
 
 module neuron_cell(clk, rt_clk, rst_n, rt_reset, start,
 clk_north, clk_south, clk_east, clk_west,

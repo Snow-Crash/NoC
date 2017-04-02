@@ -12,6 +12,7 @@
 // -ver x.x : date : auth
 //		details
 //------------------------------------------------------------------------
+//2017.4.1  localparam cause error in quartus, unkown reason
 
 `timescale 1ns/100ps
 

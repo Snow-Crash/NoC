@@ -1,3 +1,4 @@
+//2017.3.31 add prameter
 `timescale 1ns/100ps
 `define tpd_clk 5
 

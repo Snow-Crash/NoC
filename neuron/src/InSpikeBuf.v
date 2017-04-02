@@ -10,6 +10,7 @@
 // -ver x.x : date : auth
 //		details
 //------------------------------------------------------------------------
+//2017.4.1  fix multiple drive issue of RclSpikeBuf
 
 `timescale 1ns/100ps
 

@@ -7,7 +7,7 @@
 //              read_req is sent to a FF write_spike, write_spike acts as write enabe signal
 //              of spike reg.
 //              axon_id is used to index spike reg and determines which bit will be set to 1
-//2017.3.35     Add clear signal for spike_reg. spike_reg is cleared after start signal
+//2017.3.25     Add clear signal for spike_reg. spike_reg is cleared after start signal
 
 module interface (router_clk, neuron_clk, rst_n, router_reset, write_en, start, data_in, spike, neuron_full);
 

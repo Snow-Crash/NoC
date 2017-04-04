@@ -49,7 +49,7 @@ module InSpikeBuf
 	reg LrnSpikeBuf [0:NUM_AXONS-1];
 
 	integer i;
-	
+/*	
 	//simulation memory data initialization
 	//--------------------------------------------------//
 	`ifdef SIM_MEM_INIT
@@ -82,35 +82,47 @@ module InSpikeBuf
 			end
 		endtask
 	`endif
-/*
+*/
 //read spike from interface
-always @ (posedge start_i) 
-	begin
-		if(start_i == 1'b1)
-			for(i = 0; i < NUM_AXONS; i = 1 + 1)
-				RclSpikeBuf[i] <= spike_in[i];
-	end
-*/	
+//always @ (posedge start_i) 
+//	begin
+//		if(start_i == 1'b1)
+//			for(i = 0; i < NUM_AXONS; i = 1 + 1)
+//				RclSpikeBuf[i] <= spike_in[i];
+//	end
+	
 	//LOGIC
 	//--------------------------------------------------//
 	// Read spike reg
-	always@(posedge clk_i or negedge rst_n_i or posedge start_i)  begin
+	
+	always @(posedge clk_i or negedge rst_n_i)
+		begin
+			if (rst_n_i == 1'b0)
+				begin
+					for(i = 0 ; i < NUM_AXONS ; i = i + 1)
+						RclSpikeBuf[i] <= 0;
+				end
+
+			else if (start_i == 1'b1)
+		  		begin
+			  		for(i = 0; i < NUM_AXONS; i = 1 + 1)
+						RclSpikeBuf[i] <= spike_in[i];
+				end
+		end
+
+
+	always@(posedge clk_i or negedge rst_n_i)  begin
 		if(rst_n_i == 1'b0) begin
 			Rcl_InSpike_o	<= 1'b0;
 			Lrn_InSpike_o   <= 1'b0;
 
-			for(i = 0 ; i < NUM_AXONS ; i = i + 1)
-				RclSpikeBuf[i] <= 0;
+			//for(i = 0 ; i < NUM_AXONS ; i = i + 1)
+				//RclSpikeBuf[i] <= 0;
 			for(i = 0 ; i < NUM_AXONS ; i = i + 1)
 				LrnSpikeBuf[i] <= 0;
 
 	  	end 
-		  //read spike from interface
-		  else if (start_i == 1'b1)
-		  	begin
-			  	for(i = 0; i < NUM_AXONS; i = 1 + 1)
-					RclSpikeBuf[i] <= spike_in[i];
-			end
+		  
 		  else begin
 	  		if(rdEn_RclInSpike_i == 1'b1) begin
 	  			Rcl_InSpike_o <= RclSpikeBuf[RclAxonAddr_i];

@@ -11,6 +11,11 @@
 //		details
 //------------------------------------------------------------------------
 //2017.4.1  fix multiple drive issue of RclSpikeBuf
+//2017.4.4  find reason which causes wrong spikes. RclSpikeBuf and LrnSpikeBuf
+//			cant write multiple blocks in one clock, that causes RclSpikeBuf can't 
+//			get right spike data when start = 1;
+//			change RclSpikeBuf and LrnSpikeBuf type from memory to register.
+//			doesn't afftect timing, tested and get right result
 
 `timescale 1ns/100ps
 
@@ -45,11 +50,11 @@ module InSpikeBuf
 
 	//REGISTER DECLARATION
 	//--------------------------------------------------//
-	reg RclSpikeBuf [0:NUM_AXONS-1];
-	reg LrnSpikeBuf [0:NUM_AXONS-1];
+	reg  [0:NUM_AXONS-1] RclSpikeBuf;
+	reg  [0:NUM_AXONS-1] LrnSpikeBuf;
 
 	integer i;
-/*	
+
 	//simulation memory data initialization
 	//--------------------------------------------------//
 	`ifdef SIM_MEM_INIT
@@ -82,7 +87,7 @@ module InSpikeBuf
 			end
 		endtask
 	`endif
-*/
+
 //read spike from interface
 //always @ (posedge start_i) 
 //	begin
@@ -99,14 +104,11 @@ module InSpikeBuf
 		begin
 			if (rst_n_i == 1'b0)
 				begin
-					for(i = 0 ; i < NUM_AXONS ; i = i + 1)
-						RclSpikeBuf[i] <= 0;
+						RclSpikeBuf <= 0;
 				end
-
 			else if (start_i == 1'b1)
 		  		begin
-			  		for(i = 0; i < NUM_AXONS; i = 1 + 1)
-						RclSpikeBuf[i] <= spike_in[i];
+						RclSpikeBuf <= spike_in;
 				end
 		end
 
@@ -116,11 +118,7 @@ module InSpikeBuf
 			Rcl_InSpike_o	<= 1'b0;
 			Lrn_InSpike_o   <= 1'b0;
 
-			//for(i = 0 ; i < NUM_AXONS ; i = i + 1)
-				//RclSpikeBuf[i] <= 0;
-			for(i = 0 ; i < NUM_AXONS ; i = i + 1)
-				LrnSpikeBuf[i] <= 0;
-
+				LrnSpikeBuf <= 0;
 	  	end 
 		  
 		  else begin
@@ -133,8 +131,7 @@ module InSpikeBuf
 	  		end
 
 			if(saveRclSpikes_i == 1'b1) begin
-	  			for(i = 0 ; i < NUM_AXONS ; i = i + 1)
-					LrnSpikeBuf[i] <= RclSpikeBuf[i];
+					LrnSpikeBuf <= RclSpikeBuf;
 	  		end	  		
 	  	end
 	end

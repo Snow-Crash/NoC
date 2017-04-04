@@ -5,6 +5,10 @@
 `timescale 1ns/100ps
 `define tpd_clk 10
 
+//`define tb1
+//`define tb2
+//`define tb3
+`define tb4
 
 module single_core_TB();
 
@@ -23,10 +27,10 @@ wire write_req_north, write_req_south, write_req_east, write_req_west;
 
 parameter packet_size = 32;
 parameter flit_size = 4;
-parameter NUM_NURNS = 2;
-parameter NUM_AXONS = 2;
-parameter NURN_CNT_BIT_WIDTH = 1;
-parameter AXON_CNT_BIT_WIDTH = 1;
+parameter NUM_NURNS = 4;
+parameter NUM_AXONS = 4;
+parameter NURN_CNT_BIT_WIDTH = 2;
+parameter AXON_CNT_BIT_WIDTH = 2;
 parameter X_ID = "1";
 parameter Y_ID = "1";
 
@@ -62,8 +66,9 @@ initial
         
 		end
 
-initial
-    begin
+`ifdef tb1
+    initial
+        begin
             rt_clk = 1'b0;
 			rt_reset = 1'b1;
 			east_in = 4'h0;
@@ -173,6 +178,310 @@ initial
             #1000 write_en_east = 1;
             $stop;
     end
+    `endif
+
+`ifdef tb2
+        initial
+            begin
+            rt_clk = 1'b0;
+			rt_reset = 1'b1;
+			east_in = 4'h0;
+            write_en_east = 1'b0;
+        #6  rt_reset = 0;
+            
+            //packet 00000000 axon_id = 0 time step = 3
+             #7000 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00010000 axon_id = 1 time step = 4
+             #1200 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00000000 axon_id = 0 time step = 5
+             #1200 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00010000 axon_id = 1 time step = 6
+             #1200 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00000000 axon_id = 0 time step = 7
+             #1200 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00010000 axon_id = 1 time step = 8
+             #1200 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00000000 axon_id = 0 time step = 9
+             #1200 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00000000 axon_id = 0 time step = 10
+             #1200 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00010000 axon_id = 1 time step = 10
+            #80 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00000000 axon_id = 0 time step = 11
+             #1200 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00010000 axon_id = 1 time step = 11
+            #80 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00000000 axon_id = 0 time step = 12
+             #1200 write_en_east = 1;
+            $stop;
+            end
+    `endif
+
+    `ifdef tb3
+        initial
+            begin
+                rt_clk = 1'b0;
+                rt_reset = 1'b1;
+                east_in = 4'h0;
+                write_en_east = 1'b0;
+            #6  rt_reset = 0;
+            //packet 00000000 axon_id = 0 time step = 1
+            #4500 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00020000 axon_id = 2 time step = 1
+            #80 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h2; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00030000 axon_id = 3 time step = 1
+            #80 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00000000 axon_id = 0 time step = 2
+             #1000 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00010000 axon_id = 1 time step = 2
+            #80 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00030000 axon_id = 3 time step = 2
+            #80 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00010000 axon_id = 1 time step = 3
+             #1000 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00000000 axon_id = 0 time step = 4
+             #1000 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00010000 axon_id = 1 time step = 4
+            #80 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00030000 axon_id = 3 time step = 4
+            #80 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00020000 axon_id = 2 time step = 6
+            #2000 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h2; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00030000 axon_id = 3 time step = 6
+            #80 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00000000 axon_id = 0 time step = 7
+             #1000 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00010000 axon_id = 1 time step = 7
+            #80 write_en_east = 1;
+                east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+            #10 write_en_east = 0; 
+            //packet 00010000 axon_id = 1 time step = 10
+            #6000 write_en_east = 1;
+            $stop;
+        end
+    `endif
+
+    `ifdef tb4
+        initial
+            begin
+                rt_clk = 1'b0;
+                rt_reset = 1'b1;
+                east_in = 4'h0;
+                write_en_east = 1'b0;
+            #6  rt_reset = 0;
+                //packet 00000000 axon_id = 0 time step = 1
+                #4500 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00020000 axon_id = 2 time step = 1
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h2; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00030000 axon_id = 3 time step = 1
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00000000 axon_id = 0 time step = 2
+                 #1000 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00010000 axon_id = 1 time step = 2
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00030000 axon_id = 3 time step = 2
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00010000 axon_id = 1 time step = 3
+                 #600 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00020000 axon_id = 2 time step = 3
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h2; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00030000 axon_id = 3 time step = 3
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00000000 axon_id = 0 time step = 4
+                 #1000 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00010000 axon_id = 1 time step = 4
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00020000 axon_id = 2 time step = 4
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h2; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00030000 axon_id = 3 time step = 4
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00000000 axon_id = 0 time step = 5
+                 #1000 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00020000 axon_id = 2 time step = 5
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h2; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00020000 axon_id = 2 time step = 6
+                 #1000 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h2; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00030000 axon_id = 3 time step = 6
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00000000 axon_id = 0 time step = 7
+                 #1000 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00010000 axon_id = 1 time step = 7
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00030000 axon_id = 3 time step = 7
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00000000 axon_id = 0 time step = 8
+                 #1000 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00010000 axon_id = 1 time step = 9
+                 #1000 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00020000 axon_id = 2 time step = 9
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h2; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00030000 axon_id = 3 time step = 9
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00010000 axon_id = 1 time step = 10
+                 #1000 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h1; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00020000 axon_id = 2 time step = 11
+                 #1000 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h2; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00030000 axon_id = 3 time step = 11
+                #80 write_en_east = 1;
+                    east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 east_in = 4'h3; #10 east_in = 4'h0; #10 east_in = 4'h0; #10 east_in = 4'h0; 
+                #10 write_en_east = 0; 
+                //packet 00000000 axon_id = 0 time step = 16
+                 #5000 write_en_east = 1;
+                 $stop;
+            end
+    `endif
 
 	//cpu clock
 	always
@@ -259,7 +568,23 @@ initial
 		#600 rst_n = 1'b1;
 		#((`tpd_clk*2)*30);
 
+        //#14
+        #((`tpd_clk*2)*2);
+		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
+		#600 rst_n = 1'b1;
+		#((`tpd_clk*2)*30);
 
+        //#15
+        #((`tpd_clk*2)*2);
+		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
+		#600 rst_n = 1'b1;
+		#((`tpd_clk*2)*30);
+
+        //#16
+        #((`tpd_clk*2)*2);
+		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
+		#600 rst_n = 1'b1;
+		#((`tpd_clk*2)*30);
 
 		$stop;
 	end

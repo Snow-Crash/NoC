@@ -4,7 +4,7 @@
 `timescale 1ns/100ps
 `define tpd_clk 10
 
-module mesh_with_controller(neu_clk, neu_reset, rt_clk, rt_reset);
+module mesh_with_controller(neu_clk, neu_reset, rt_clk, rt_reset, result_output);
 
 parameter NUM_NURNS = 2;
 parameter NUM_AXONS = 2;
@@ -14,6 +14,7 @@ parameter step_number = 32; //how many steps in current simulation
 parameter step_cycle = 64;  //how many neuron clocks in one time step
 
 input neu_clk, neu_reset, rt_clk, rt_reset;
+output result_output;
 
 wire start;
 wire [31:0] spike_packet_c2b;
@@ -32,7 +33,8 @@ mesh_control (.neu_clk(neu_clk),
                                 .write_req(write_req_c2b),
                                 .packet_in(spike_packet_b2c),
                                 .write_enable(write_req_b2c),
-                                .receive_full(full_c2b));
+                                .receive_full(full_c2b),
+                                .result_output(result_output));
 
 router boundary (.clk(rt_clk), .clk_local(neu_clk), .clk_north(), .clk_south(rt_clk), .clk_east(rt_clk), .clk_west(rt_clk),
 .reset(rt_reset), .local_in(spike_packet_c2b), .north_in(4'b0), .south_in(4'b0), .east_in(4'b0), .west_in(data_m2b),

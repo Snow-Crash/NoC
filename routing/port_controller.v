@@ -28,6 +28,7 @@
 //          stall signal at suspend stage
 //2017.4.2  add inc_counter = 0 in current_addr_ready state, avoid latch 
 //          next_state causes a latch, change state transition condition in send_payload at line 145, avoid latch, works fine. need more testcases to test.
+//2017.4.6  minor problem fix, line 154 non-blocking to blocking 
 
 module port_controller(clk, reset, 
 stall, current_address_ready, 
@@ -150,7 +151,7 @@ always @(*)
                 else
                     next_state = send_address;
             default:
-                next_state <= idle;
+                next_state = idle;
         endcase
     end
 

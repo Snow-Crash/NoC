@@ -4,13 +4,15 @@
 //          connect with a router's local port.
 
 
-module mesh_controller(neu_clk, rst_n, start, spike_packet, write_req);
+module mesh_controller(neu_clk, rst_n, rt_clk, rt_reset, start, spike_packet, write_req, packet_in, write_enable, receive_full);
 
 
-input neu_clk, rst_n;
+input neu_clk, rst_n, rt_clk, rt_reset, write_enable;
+input [3:0] packet_in;
 output reg start;
 output [31:0] spike_packet;
 output reg write_req;
+output receive_full;
 
 parameter packet_size = 32;
 parameter spike_number = 32;
@@ -38,15 +40,71 @@ reg [9:0] neu_cycle_counter;
 
 reg clear_neu_cycle_counter, inc_neu_cycle_counter;
 
+wire [31:0] result_packet, result_output;
+wire receive_fifo_empty;
+wire read_receive_fifo;
+reg write_result;
+
+spikebuf receive_fifo (
+	.aclr ( rt_reset ),
+	.data ( packet_in ),
+	.rdclk ( neu_clk ),
+	.rdreq ( read_receive_fifo ),
+	.wrclk ( rt_clk ),
+	.wrreq ( write_enable ),
+	.q ( result_packet ),
+	.rdempty ( receive_fifo_empty ),
+	.wrfull ( receive_full )
+	);
+
+
+assign read_receive_fifo = ~ receive_fifo_empty;
+
+reg [31:0] result [2**ADDR_WIDTH-1:0];
+reg [ADDR_WIDTH - 1:0] result_address_reg;
+reg [ADDR_WIDTH - 1:0] result_address;
+
+always @(posedge neu_clk or negedge rst_n)
+    if(rst_n == 1'b0)
+        write_result <= 1'b0;
+    else
+        write_result <= read_receive_fifo;
+
+
+always @(posedge neu_clk or negedge rst_n)
+    begin
+        if(rst_n == 1'b0)
+            result_address <= 0;
+        else if (write_result)
+            result_address <= result_address + 1;
+        else
+            result_address <= result_address;
+    end
+
+
+always @ (posedge neu_clk)
+    begin
+		if (write_result)
+			result[result_address] <= result_packet;
+		result_address_reg <= result_address;
+	end
+
+assign result_output = result[result_address];
+
+
+
 //initialize spike_rom; spike_rom contains all the spike packets
 initial
     begin
 		$readmemh("spikerom.txt", spike_rom);
 	end
 //spike_rom
-always @ (posedge neu_clk)
+always @ (posedge neu_clk or negedge rst_n)
     begin
-		spike_rom_out <= spike_rom[spike_rom_address];
+        if(rst_n == 1'b0)
+            spike_rom_out <= 0;
+        else
+		    spike_rom_out <= spike_rom[spike_rom_address];
 	end
 assign spike_packet = spike_rom_out;
 
@@ -56,9 +114,12 @@ initial
 		$readmemb("steprom.txt", packet_number_rom);
 	end
 //packet_number_rom
-always @ (posedge neu_clk)
+always @ (posedge neu_clk or negedge rst_n)
     begin
-		packet_number_rom_out <= packet_number_rom[step_counter];
+        if (rst_n == 1'b0)
+            packet_number_rom_out <= 0;
+        else
+		    packet_number_rom_out <= packet_number_rom[step_counter];
 	end
 //--------------------------------------------------------------
 

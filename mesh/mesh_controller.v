@@ -2,6 +2,7 @@
 //          sync with neuron clock. Contains two rom. One rom stores all
 //          packet, another stores how many spike are input into network.
 //          connect with a router's local port.
+//2017.4.6  add a new ram to collect result
 
 
 module mesh_controller(neu_clk, rst_n, rt_clk, rt_reset, start, spike_packet, write_req, packet_in, write_enable, receive_full);
@@ -17,8 +18,8 @@ output receive_full;
 parameter packet_size = 32;
 parameter spike_number = 32;
 parameter ADDR_WIDTH = 8;
-parameter step_number = 32;
-parameter step_cycle = 32;
+parameter step_number = 32;//how many steps in current simulation
+parameter step_cycle = 32;//how many neuron clocks in one time step
 
 localparam idle = 3'd0;
 localparam init = 3'd1;
@@ -96,7 +97,7 @@ assign result_output = result[result_address];
 //initialize spike_rom; spike_rom contains all the spike packets
 initial
     begin
-		$readmemh("spikerom.txt", spike_rom);
+		$readmemh("../data1_1/spike_mif.txt", spike_rom);
 	end
 //spike_rom
 always @ (posedge neu_clk or negedge rst_n)
@@ -111,7 +112,7 @@ assign spike_packet = spike_rom_out;
 //initialize packet_number_rom. packet_number_rom store each step how many packets are read
 initial
     begin
-		$readmemb("steprom.txt", packet_number_rom);
+		$readmemh("../data1_1/packet_number_mif.txt", packet_number_rom);
 	end
 //packet_number_rom
 always @ (posedge neu_clk or negedge rst_n)

@@ -86,7 +86,7 @@ module ConfigMem
 	reg [MEM_WIDTH_A-1:0] memOutReg_A;
 	reg [MEM_WIDTH_B-1:0] memOutReg_B;
 	reg 				  memOutReg_C;
-
+// synthesis translate_off
 	//simulation memory data initialization
 	//--------------------------------------------------//
 	
@@ -165,7 +165,7 @@ module ConfigMem
 				
 		end
 	`endif
-	
+// synthesis translate_off
 
 	//LOGIC
 	//--------------------------------------------------//

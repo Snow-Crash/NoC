@@ -111,7 +111,7 @@ module StatusMem
 	wire [1:0] 						Sel_A_Mem1_4  ;
 	wire [NURN_CNT_BIT_WIDTH+2-1:2] Addr_B_Mem1_4 ;
 	wire [1:0] 						Sel_B_Mem1_4  ;	
-
+// synthesis translate_off
 	//simulation memory data initialization
 	//--------------------------------------------------//
 	
@@ -126,7 +126,7 @@ module StatusMem
 			file_name = {"../data", DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_6);
 		end
 	`endif
-	
+// synthesis translate_off	
 
 	//LOGIC
 	//--------------------------------------------------//

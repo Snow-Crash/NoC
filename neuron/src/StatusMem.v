@@ -126,7 +126,7 @@ module StatusMem
 			file_name = {"../data", DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_6);
 		end
 	`endif
-// synthesis translate_off	
+// synthesis translate_on
 
 	//LOGIC
 	//--------------------------------------------------//

@@ -165,7 +165,7 @@ module ConfigMem
 				
 		end
 	`endif
-// synthesis translate_off
+// synthesis translate_on
 
 	//LOGIC
 	//--------------------------------------------------//

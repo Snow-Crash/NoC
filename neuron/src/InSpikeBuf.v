@@ -54,7 +54,7 @@ module InSpikeBuf
 	reg  [0:NUM_AXONS-1] LrnSpikeBuf;
 
 	integer i;
-
+// synthesis translate_off
 	//simulation memory data initialization
 	//--------------------------------------------------//
 	`ifdef SIM_MEM_INIT
@@ -87,7 +87,7 @@ module InSpikeBuf
 			end
 		endtask
 	`endif
-
+// synthesis translate_on
 //read spike from interface
 //always @ (posedge start_i) 
 //	begin

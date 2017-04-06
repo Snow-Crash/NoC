@@ -13,7 +13,7 @@
 //2017.4.1  quartus reports inc_counter causes inferred lathes
 //2017.4.2  remove latch cause by inc_counter
 //          add inc_counter = 0 in idle and defualt state to avoid latch
-
+//2017.4.6  line 174 always block, change sensitivity list to *
 module round_robin_arbiter(clk, reset, request, grant_vec, crossbar_control, write_request, destination_full);
 
 input clk, reset, destination_full;
@@ -171,7 +171,7 @@ always @(*)
         endcase
     end
 
-always @(current_state or ifrequest or counter)
+always @(*)//2017.4.6 used to be: always @(current_state or ifrequest or counter)
     begin
         case (current_state)
             idle:

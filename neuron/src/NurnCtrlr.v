@@ -122,7 +122,7 @@ module NurnCtrlr
 	reg rclCntr_Nurn_inc, rclCntr_Axon_inc, lrnCntr_Axon_inc;
 	reg accEn, StatRd_A_bias, StatRd_A_MembPot, StatRd_A_Th, cmp_th, wr_th, wr_MembPot;
 	reg rstAcc, rstAcc_1_dly, lrn_en, rdPostSpkHist, wrPostSpkHist;
-	reg enLrnWtPipln, enLrnBiasPipln, init_WrBackAddr, inc_wrBackAddr, cmpSTDP_win;
+	reg enLrnWtPipln, enLrnBiasPipln, init_WrBackAddr, inc_wrBackAddr, cmpSTDP_win/* synthesis preserve */;
 
 	reg rstAcc_dly, enLrnWtPipln_dly, PStgEn_lrnRt, PStgEn_quant, PStgEn_shift, PStgEn_deltaW;
 	reg PStgEn_wrBack,cmpSTDP_win_dly;

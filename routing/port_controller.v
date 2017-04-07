@@ -72,7 +72,7 @@ output reg shift_current_address, shift_next_address,
             read_fifo, clear_request_reg;
 
 reg [2:0] counter;
-reg [4:0] current_state, next_state;
+reg [4:0] current_state, next_state/* synthesis noprune */;
 reg [2:0] shift_counter;
 reg clear_counter, clear_shift_counter;
 reg inc_counter; 

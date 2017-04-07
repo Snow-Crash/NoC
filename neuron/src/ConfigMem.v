@@ -83,9 +83,9 @@ module ConfigMem
 
 	//REGISTER DECLARATION
 	//--------------------------------------------------//
-	reg [MEM_WIDTH_A-1:0] memOutReg_A;
-	reg [MEM_WIDTH_B-1:0] memOutReg_B;
-	reg 				  memOutReg_C;
+	reg [MEM_WIDTH_A-1:0] memOutReg_A/* synthesis preserve */;
+	reg [MEM_WIDTH_B-1:0] memOutReg_B/* synthesis preserve */;
+	reg 				  memOutReg_C/* synthesis preserve */;
 // synthesis translate_off
 	//simulation memory data initialization
 	//--------------------------------------------------//

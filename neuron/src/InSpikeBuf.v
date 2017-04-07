@@ -45,7 +45,7 @@ module InSpikeBuf
 	input [NUM_AXONS - 1 : 0]		spike_in,
 
 	output reg		Rcl_InSpike_o   ,
-	output reg		Lrn_InSpike_o
+	output reg		Lrn_InSpike_o /* synthesis noprune */
 );
 
 	//REGISTER DECLARATION

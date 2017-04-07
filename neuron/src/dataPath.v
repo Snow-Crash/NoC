@@ -105,17 +105,17 @@ module dataPath
 	//--------------------------------------------------//
 	reg [DSIZE-1:0]	AccReg, rclAdd_A, rclAdd_B;
 	reg [DSIZE-1:0]	bufMembPot, bufBias, bufTh;
-	reg comp_out, lrnOutSpikeReg, enLTP, enLTD, expPreHist;
-	reg [1:0] rclOutSpikeReg_dly, rdLFSR_dly;
+	reg comp_out, lrnOutSpikeReg, enLTP, enLTD, expPreHist/* synthesis preserve */;
+	reg [1:0] rclOutSpikeReg_dly, rdLFSR_dly/* synthesis noprune */;
 	reg [STDP_WIN_BIT_WIDTH-1:0] PostSpkHist;
-	reg [STDP_WIN_BIT_WIDTH-1:0] PreSpikeHist_Ppln[0:4];
+	reg [STDP_WIN_BIT_WIDTH-1:0] PreSpikeHist_Ppln[0:4] /* synthesis noprune */;
 	reg [DSIZE-1:0] WeightBias_Ppln[0:2];
 	reg [DSIZE-1:0] updtReg_WeightBias, delta_WtBias;
 	reg [4:0] enLrn_Ppln;
-	reg [DSIZE-1:0] eta_prime, sign_WtBias, quant_Dlta_Wt_Bias_reg;
+	reg [DSIZE-1:0] eta_prime, sign_WtBias, quant_Dlta_Wt_Bias_reg/* synthesis noprune */;
 	reg [DATA_BIT_WIDTH_INT-2:0] pEnc_in;
 	reg shiftRight, shiftRight_dly, deltaAdder_signed;
-	reg [PRIORITY_ENC_OUT_BIT_WIDTH-1:0] quantVal;
+	reg [PRIORITY_ENC_OUT_BIT_WIDTH-1:0] quantVal/* synthesis preserve */;
 	reg [DSIZE-1:0] deltaAdder_inA, deltaAdder_inB;
 	reg [STDP_WIN_BIT_WIDTH-1:0] preSpikeHist;
 	reg valid_PreHist, lrnUseBias_dly;

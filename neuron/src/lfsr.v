@@ -29,7 +29,7 @@ module Lfsr
 	output [DSIZE-1:0]  lfsr_dat_o
 );
  
-	reg [DSIZE:1]     random;
+	reg [DSIZE:1]     random/* synthesis noprune */;
 	reg            			feedback;
 
 

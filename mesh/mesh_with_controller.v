@@ -21,7 +21,17 @@ wire [31:0] spike_packet_c2b;
 wire [3:0] data_b2m, data_m2b, spike_packet_b2c;
 wire write_req_b2m, write_req_m2b, write_req_c2b, write_req_b2c;
 wire full_m2b, fullb2m, full_c2b;
+wire [7:0] north_boundary, south_boundary, east_boundary, west_boundary;
 
+wire xor_north, xor_south, xor_east, xor_west;
+wire result_output_controller;
+
+assign xor_north = ^north_boundary;
+assign xor_south = ^south_boundary;
+assign xor_east = ^east_boundary;
+assign xor_west = ^west_boundary;
+
+assign result_output = ^{xor_east, xor_north, xor_south, xor_west, result_output_controller};
 
 mesh_controller #(.step_number(step_number), .step_cycle(step_cycle)) 
 mesh_control (.neu_clk(neu_clk),
@@ -34,9 +44,9 @@ mesh_control (.neu_clk(neu_clk),
                                 .packet_in(spike_packet_b2c),
                                 .write_enable(write_req_b2c),
                                 .receive_full(full_c2b),
-                                .result_output(result_output));
+                                .result_output(result_output_controller));
 
-router boundary (.clk(rt_clk), .clk_local(neu_clk), .clk_north(), .clk_south(rt_clk), .clk_east(rt_clk), .clk_west(rt_clk),
+router boundary (.clk(rt_clk), .clk_local(neu_clk), .clk_north(rt_clk), .clk_south(rt_clk), .clk_east(rt_clk), .clk_west(rt_clk),
 .reset(rt_reset), .local_in(spike_packet_c2b), .north_in(4'b0), .south_in(4'b0), .east_in(4'b0), .west_in(data_m2b),
 .local_out(spike_packet_b2c), .north_out(), .south_out(), .east_out(), .west_out(data_b2m),
 .local_full(), .north_full(), .south_full(), .east_full(), .west_full(fullb2m),
@@ -50,8 +60,8 @@ mesh_ap #(.NUM_NURNS(NUM_NURNS),
             .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
             .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH))
 mesh (.clk(neu_clk), .rt_clk(rt_clk), .rst_n(neu_reset), .rt_reset(rt_reset), .start(start),
-.north_out_1_1(), .north_out_1_2(), .south_out_2_1(), .south_out_2_2(), 
-.east_out_1_2(data_m2b), .east_out_2_2(), .west_out_1_1(), .west_out_2_1(), 
+.north_out_1_1(north_boundary[7:4]), .north_out_1_2(north_boundary[3:0]), .south_out_2_1(south_boundary[7:4]), .south_out_2_2(south_boundary[3:0]), 
+.east_out_1_2(data_m2b), .east_out_2_2(east_boundary[3:0]), .west_out_1_1(west_boundary[7:4]), .west_out_2_1(west_boundary[3:0]), 
 .south_full_2_1(), .south_full_2_2(), .north_full_1_1(), .north_full_1_2(),
 .east_full_1_2(full_m2b), .east_full_2_2(), .west_full_1_1(), .west_full_2_1(),
 .north_w_1_1(), .north_w_1_2(), .south_w_2_1(), .south_w_2_2(),//write request

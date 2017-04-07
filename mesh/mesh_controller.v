@@ -28,13 +28,13 @@ localparam wait4clk = 3'd3;
 
 
 //packet rom, stores all packet
-reg [31:0] packet_rom[2**ADDR_WIDTH - 1:0];//
-reg [31:0] packet_rom_out;
+//reg [31:0] packet_rom[2**ADDR_WIDTH - 1:0];//
+//reg [31:0] packet_rom_out;
 reg [ADDR_WIDTH - 1:0] packet_rom_address;
 reg inc_packet_rom_address;
 // store how many packets are read in one step
-reg [7:0] packet_number_rom[2**ADDR_WIDTH - 1:0];
-reg [7:0] packet_number_rom_out/* synthesis noprune */;
+//reg [7:0] packet_number_rom[2**ADDR_WIDTH - 1:0];
+//reg [7:0] packet_number_rom_out/* synthesis noprune */;
 reg [ADDR_WIDTH - 1:0] packet_counter;
 reg clear_packet_counter, inc_packet_counter, inc_step;
 reg [7:0] step_counter/* synthesis noprune */;
@@ -76,11 +76,11 @@ initial
 	end
 */
 //initialize packet_rom; packet_rom contains all the spike packets
-initial
-    begin
-		$readmemb("../data1_1/spike_mif.txt", packet_rom);
-        $readmemb("../data1_1/packet_number_mif.txt", packet_number_rom);
-	end
+//initial
+   // begin
+	//	$readmemb("../data1_1/spike_mif.txt", packet_rom);
+   //    // $readmemb("../data1_1/packet_number_mif.txt", packet_number_rom);
+	//end
 
 
 always @(posedge neu_clk or negedge rst_n)
@@ -131,6 +131,8 @@ always @ (posedge neu_clk or negedge rst_n)
 	end
 //--------------------------------------------------------------
 */
+/*
+//
 always @ (posedge neu_clk)
 	begin
 		packet_number_rom_out <= packet_number_rom[step_counter];
@@ -142,6 +144,29 @@ always @ (posedge neu_clk)
 		packet_rom_out <= packet_rom[packet_rom_address];
 	end
 assign spike_packet = packet_rom_out;
+*/
+/*
+//----------------------------------------------------------
+single_port_rom  #(.DATA_WIDTH(8), .ADDR_WIDTH(8), .INIT_FILE_PATH("../data1_1/packet_number_mif.txt"))
+packet_number_rom (	.addr(step_counter),
+	.clk(neu_clk), 
+	.q(packet_number));
+
+single_port_rom  #(.DATA_WIDTH(32), .ADDR_WIDTH(8), .INIT_FILE_PATH("../data1_1/spike_mif.txt"))
+packet_rom (	.addr(packet_rom_address),
+	.clk(neu_clk), 
+	.q(spike_packet));
+*/
+
+single_port_rom1  #(.DATA_WIDTH(8), .ADDR_WIDTH(8))
+packet_number_rom (	.addr(step_counter),
+	.clk(neu_clk), 
+	.q(packet_number));
+
+single_port_rom2  #(.DATA_WIDTH(32), .ADDR_WIDTH(8))
+packet_rom (	.addr(packet_rom_address),
+	.clk(neu_clk), 
+	.q(spike_packet));
 
 
 //--------------------------step_counter---------------------

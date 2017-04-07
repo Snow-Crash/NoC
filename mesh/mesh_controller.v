@@ -26,17 +26,18 @@ localparam init = 3'd1;
 localparam send = 3'd2;
 localparam wait4clk = 3'd3;
 
-reg [ADDR_WIDTH - 1:0] packet_rom_address;
-reg inc_packet_rom_address;
+
 //packet rom, stores all packet
 reg [31:0] packet_rom[2**ADDR_WIDTH - 1:0];//
 reg [31:0] packet_rom_out;
+reg [ADDR_WIDTH - 1:0] packet_rom_address;
+reg inc_packet_rom_address;
 // store how many packets are read in one step
 reg [7:0] packet_number_rom[2**ADDR_WIDTH - 1:0];
-reg [7:0] packet_number_rom_out;
-reg [7:0] packet_counter;
+reg [7:0] packet_number_rom_out/* synthesis noprune */;
+reg [ADDR_WIDTH - 1:0] packet_counter;
 reg clear_packet_counter, inc_packet_counter, inc_step;
-reg [7:0] step_counter;
+reg [7:0] step_counter/* synthesis noprune */;
 reg [7:0] neu_cycle_counter;
 
 reg clear_neu_cycle_counter, inc_neu_cycle_counter;
@@ -45,6 +46,7 @@ wire [31:0] result_packet;
 wire receive_fifo_empty;
 wire read_receive_fifo;
 reg write_result;
+wire [7:0] packet_number; //number of packets in each step
 
 spikebuf receive_fifo (
 	.aclr ( rt_reset ),
@@ -67,16 +69,17 @@ reg [ADDR_WIDTH - 1:0] result_address;
 assign read_receive_fifo = ~ receive_fifo_empty;
 
 //initialize packet_number_rom. packet_number_rom store each step how many packets are read
-
+/*
 initial
     begin
 		$readmemh("../data1_1/packet_number_mif.txt", packet_number_rom);
 	end
-
+*/
 //initialize packet_rom; packet_rom contains all the spike packets
 initial
     begin
-		$readmemh("../data1_1/spike_mif.txt", packet_rom);
+		$readmemb("../data1_1/spike_mif.txt", packet_rom);
+        $readmemb("../data1_1/packet_number_mif.txt", packet_number_rom);
 	end
 
 
@@ -106,7 +109,7 @@ always @ (posedge neu_clk)
 	end
 
 assign result_output = ^result[result_address];
-
+/*
 //packet_rom
 always @ (posedge neu_clk or negedge rst_n)
     begin
@@ -127,6 +130,18 @@ always @ (posedge neu_clk or negedge rst_n)
 		    packet_number_rom_out <= packet_number_rom[step_counter];
 	end
 //--------------------------------------------------------------
+*/
+always @ (posedge neu_clk)
+	begin
+		packet_number_rom_out <= packet_number_rom[step_counter];
+	end
+assign packet_number = packet_number_rom_out;
+
+always @ (posedge neu_clk)
+	begin
+		packet_rom_out <= packet_rom[packet_rom_address];
+	end
+assign spike_packet = packet_rom_out;
 
 
 //--------------------------step_counter---------------------
@@ -140,6 +155,18 @@ always @(posedge neu_clk or negedge rst_n)
             step_counter <= step_counter;
     end
 //---------------------------------------------------------
+
+//spike rom address
+always @(posedge neu_clk or negedge rst_n)
+    begin
+        if(rst_n == 1'b0)
+            packet_rom_address <= 0;
+        else if (inc_packet_rom_address)
+            packet_rom_address <= packet_rom_address + 1;
+        else
+            packet_rom_address <= packet_rom_address;
+    end
+
 
 //packet_counter
 
@@ -170,16 +197,6 @@ always @(posedge neu_clk or negedge rst_n)
             fourclk_counter <= fourclk_counter;
     end
 
-//spike rom address
-always @(posedge neu_clk or negedge rst_n)
-    begin
-        if(rst_n == 1'b0)
-            packet_rom_address <= 0;
-        else if (inc_packet_rom_address)
-            packet_rom_address <= packet_rom_address + 1;
-        else
-            packet_rom_address <= packet_rom_address;
-    end
 
 //fsm
 reg [2:0] current_state;
@@ -212,7 +229,7 @@ always @(*)
                 begin
                     if (fourclk_counter < 4)
                         next_state = wait4clk;
-                    else if (packet_counter < packet_number_rom_out)
+                    else if (packet_counter < packet_number)
                         next_state = send;
                     else
                         next_state = idle;

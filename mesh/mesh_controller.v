@@ -158,12 +158,12 @@ packet_rom (	.addr(packet_rom_address),
 	.q(spike_packet));
 */
 
-single_port_rom1  #(.DATA_WIDTH(8), .ADDR_WIDTH(8))
+single_port_rom  #(.DATA_WIDTH(8), .ADDR_WIDTH(8), .INIT_PATH("packet_number.mif"))
 packet_number_rom (	.addr(step_counter),
 	.clk(neu_clk), 
 	.q(packet_number));
 
-single_port_rom2  #(.DATA_WIDTH(32), .ADDR_WIDTH(8))
+single_port_rom  #(.DATA_WIDTH(32), .ADDR_WIDTH(8), .INIT_PATH("packet.mif"))
 packet_rom (	.addr(packet_rom_address),
 	.clk(neu_clk), 
 	.q(spike_packet));

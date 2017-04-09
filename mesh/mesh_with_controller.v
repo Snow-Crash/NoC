@@ -33,7 +33,7 @@ assign xor_west = ^west_boundary;
 
 assign result_output = ^{xor_east, xor_north, xor_south, xor_west, result_output_controller};
 
-mesh_controller #(.step_number(step_number), .step_cycle(step_cycle)) 
+mesh_controller #(.step_number(step_number), .clk_per_step(step_cycle)) 
 mesh_control (.neu_clk(neu_clk),
                                 .rst_n(neu_reset),
                                 .rt_clk(rt_clk),

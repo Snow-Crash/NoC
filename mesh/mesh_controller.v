@@ -16,37 +16,151 @@ output reg write_req;
 output receive_full, result_output;
 
 parameter packet_size = 32;
-parameter spike_number = 32;
 parameter ADDR_WIDTH = 8;
 parameter step_number = 32;//how many steps in current simulation
-parameter step_cycle = 32;//how many neuron clocks in one time step
+parameter clk_per_step = 32;//how many neuron clocks in one time step
+parameter start_delayed_steps = 0;
+parameter packet_delayed_steps = 0;
 
-localparam idle = 3'd0;
-localparam init = 3'd1;
+localparam init = 3'd0;
+localparam delay = 3'd1;
 localparam send = 3'd2;
 localparam wait4clk = 3'd3;
+localparam idle = 3'd4;
+localparam finish = 3'd5;
 
 
-//packet rom, stores all packet
-//reg [31:0] packet_rom[2**ADDR_WIDTH - 1:0];//
-//reg [31:0] packet_rom_out;
-reg [ADDR_WIDTH - 1:0] packet_rom_address;
-reg inc_packet_rom_address;
-// store how many packets are read in one step
-//reg [7:0] packet_number_rom[2**ADDR_WIDTH - 1:0];
-//reg [7:0] packet_number_rom_out/* synthesis noprune */;
-reg [ADDR_WIDTH - 1:0] packet_counter;
-reg clear_packet_counter, inc_packet_counter, inc_step;
+
+wire [7:0] packet_number; //number of packets in each step
+
+//--------------------------step_counter---------------------
+//recode time step
 reg [7:0] step_counter/* synthesis noprune */;
-reg [7:0] neu_cycle_counter;
+reg inc_step;
+always @(posedge neu_clk or negedge rst_n)
+    begin
+        if (rst_n == 1'b0)
+            step_counter <= 0;
+        else if (inc_step)
+            step_counter <= step_counter + 1;
+        else
+            step_counter <= step_counter;
+    end
+//---------------------------------------------------------
 
-reg clear_neu_cycle_counter, inc_neu_cycle_counter;
+//------------------------packet rom, stores all packet---------------
+reg [ADDR_WIDTH - 1:0] packet_address;
+reg inc_packet_address;
+single_port_rom  #(.DATA_WIDTH(32), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/code/SimulationFile/packet.txt"))
+packet_rom (	.addr(packet_address),
+	.clk(neu_clk), 
+	.q(spike_packet));
 
+//packet rom address
+always @(posedge neu_clk or negedge rst_n)
+    begin
+        if(rst_n == 1'b0)
+            packet_address <= 0;
+        else if (inc_packet_address)
+            packet_address <= packet_address + 1;
+        else
+            packet_address <= packet_address;
+    end
+//------------------------------------------------------------------
+
+//-----------------------------packet number rom--------------------
+reg [7:0] packet_number_address;
+reg inc_packet_number_address;
+single_port_rom  #(.DATA_WIDTH(8), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/code/SimulationFile/packet_number.txt"))
+packet_number_rom (	.addr(packet_number_address),
+	.clk(neu_clk), 
+	.q(packet_number));
+
+//packet_number address
+always @(posedge neu_clk or negedge rst_n)
+    begin
+        if (rst_n == 1'b0)
+            packet_number_address <= 0;
+        else if (inc_packet_number_address)
+            packet_number_address <= packet_number_address + 1;
+        else
+            packet_number_address <= packet_number_address;
+    end
+//--------------------------------------------------------------
+
+//----------------------packet_counter-----------------
+// count how many packets are read in one step
+reg [ADDR_WIDTH - 1:0] packet_counter;
+reg clear_packet_counter, inc_packet_counter;
+
+always @(posedge neu_clk or negedge rst_n)
+    begin
+        if ( rst_n == 1'b0)
+            packet_counter <= 0;
+        else if(clear_packet_counter == 1'b1)
+            packet_counter <= 0;
+        else if(inc_packet_counter)
+            packet_counter <= packet_counter + 1;
+        else
+            packet_counter <= packet_counter;
+    end
+//-----------------------------------------------------------------------
+
+//-----------------------------fourclk_counter------------------------------
+reg [3:0] fourclk_counter;
+reg clear_fourclk_counter, inc_fourclk_counter;
+always @(posedge neu_clk or negedge rst_n)
+    begin
+        if (rst_n == 1'b0)
+            fourclk_counter <= 0;
+        else if(clear_fourclk_counter == 1'b1)
+            fourclk_counter <= 0;
+        else if(inc_fourclk_counter)
+            fourclk_counter <= fourclk_counter + 1;
+        else
+            fourclk_counter <= fourclk_counter;
+    end
+//----------------------------------------------------------------------------
+
+//-------------------------neuron clock counter---------------------------------
+//record how many clock passes in one step
+reg [7:0] neu_clk_counter;
+reg clear_neu_clk_counter, inc_neu_clk_counter;
+
+
+//generate start signal
+always @(posedge neu_clk or negedge rst_n)
+    begin
+        if(rst_n == 1'b0)
+            neu_clk_counter <= 0;
+        else if(clear_neu_clk_counter)
+            neu_clk_counter <= 0;
+        else if (inc_neu_clk_counter)
+            neu_clk_counter <= neu_clk_counter + 1;
+        else
+            neu_clk_counter <= neu_clk_counter;
+    end
+
+always @(*)
+    begin
+        if (step_counter >= start_delayed_steps)
+            begin
+                if (neu_clk_counter == clk_per_step)
+                    start = 1'b1;
+                else
+                    start = 1'b0;
+            end
+        else
+            start = 1'b0;
+    end
+//---------------------------------------------------------
+
+//----------------------------------result------------------------------
 wire [31:0] result_packet;
 wire receive_fifo_empty;
 wire read_receive_fifo;
 reg write_result;
-wire [7:0] packet_number; //number of packets in each step
+
 
 spikebuf receive_fifo (
 	.aclr ( rt_reset ),
@@ -61,27 +175,10 @@ spikebuf receive_fifo (
 	);
 
 
-reg [31:0] result [2**ADDR_WIDTH-1:0];
+reg [39:0] result [2**ADDR_WIDTH-1:0];  //8 msb record step number
 reg [ADDR_WIDTH - 1:0] result_address_reg;
 reg [ADDR_WIDTH - 1:0] result_address;
-
-
 assign read_receive_fifo = ~ receive_fifo_empty;
-
-//initialize packet_number_rom. packet_number_rom store each step how many packets are read
-/*
-initial
-    begin
-		$readmemh("../data1_1/packet_number_mif.txt", packet_number_rom);
-	end
-*/
-//initialize packet_rom; packet_rom contains all the spike packets
-//initial
-   // begin
-	//	$readmemb("../data1_1/spike_mif.txt", packet_rom);
-   //    // $readmemb("../data1_1/packet_number_mif.txt", packet_number_rom);
-	//end
-
 
 always @(posedge neu_clk or negedge rst_n)
     if(rst_n == 1'b0)
@@ -104,124 +201,13 @@ always @(posedge neu_clk or negedge rst_n)
 always @ (posedge neu_clk)
     begin
 		if (write_result)
-			result[result_address] <= result_packet;
+			result[result_address] <= {step_counter, result_packet};
 		result_address_reg <= result_address;
 	end
 
 assign result_output = ^result[result_address];
-/*
-//packet_rom
-always @ (posedge neu_clk or negedge rst_n)
-    begin
-        if(rst_n == 1'b0)
-            packet_rom_out <= 0;
-        else
-		    packet_rom_out <= packet_rom[packet_rom_address];
-	end
-assign spike_packet = packet_rom_out;
 
-
-//packet_number_rom
-always @ (posedge neu_clk or negedge rst_n)
-    begin
-        if (rst_n == 1'b0)
-            packet_number_rom_out <= 0;
-        else
-		    packet_number_rom_out <= packet_number_rom[step_counter];
-	end
-//--------------------------------------------------------------
-*/
-/*
-//
-always @ (posedge neu_clk)
-	begin
-		packet_number_rom_out <= packet_number_rom[step_counter];
-	end
-assign packet_number = packet_number_rom_out;
-
-always @ (posedge neu_clk)
-	begin
-		packet_rom_out <= packet_rom[packet_rom_address];
-	end
-assign spike_packet = packet_rom_out;
-*/
-/*
-//----------------------------------------------------------
-single_port_rom  #(.DATA_WIDTH(8), .ADDR_WIDTH(8), .INIT_FILE_PATH("../data1_1/packet_number_mif.txt"))
-packet_number_rom (	.addr(step_counter),
-	.clk(neu_clk), 
-	.q(packet_number));
-
-single_port_rom  #(.DATA_WIDTH(32), .ADDR_WIDTH(8), .INIT_FILE_PATH("../data1_1/spike_mif.txt"))
-packet_rom (	.addr(packet_rom_address),
-	.clk(neu_clk), 
-	.q(spike_packet));
-*/
-
-single_port_rom  #(.DATA_WIDTH(8), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/code/SimulationFile/packet_number.txt"))
-packet_number_rom (	.addr(step_counter),
-	.clk(neu_clk), 
-	.q(packet_number));
-
-single_port_rom  #(.DATA_WIDTH(32), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/code/SimulationFile/packet.txt"))
-packet_rom (	.addr(packet_rom_address),
-	.clk(neu_clk), 
-	.q(spike_packet));
-
-
-//--------------------------step_counter---------------------
-always @(posedge neu_clk or negedge rst_n)
-    begin
-        if (rst_n == 1'b0)
-            step_counter <= 0;
-        else if (inc_step)
-            step_counter <= step_counter + 1;
-        else
-            step_counter <= step_counter;
-    end
-//---------------------------------------------------------
-
-//spike rom address
-always @(posedge neu_clk or negedge rst_n)
-    begin
-        if(rst_n == 1'b0)
-            packet_rom_address <= 0;
-        else if (inc_packet_rom_address)
-            packet_rom_address <= packet_rom_address + 1;
-        else
-            packet_rom_address <= packet_rom_address;
-    end
-
-
-//packet_counter
-
-always @(posedge neu_clk or negedge rst_n)
-    begin
-        if ( rst_n == 1'b0)
-            packet_counter <= 0;
-        else if(clear_packet_counter == 1'b1)
-            packet_counter <= 0;
-        else if(inc_packet_counter)
-            packet_counter <= packet_counter + 1;
-        else
-            packet_counter <= packet_counter;
-    end
-
-//fourclk_counter
-reg [3:0] fourclk_counter;
-reg clear_fourclk_counter, inc_fourclk_counter;
-always @(posedge neu_clk or negedge rst_n)
-    begin
-        if (rst_n == 1'b0)
-            fourclk_counter <= 0;
-        else if(clear_fourclk_counter == 1'b1)
-            fourclk_counter <= 0;
-        else if(inc_fourclk_counter)
-            fourclk_counter <= fourclk_counter + 1;
-        else
-            fourclk_counter <= fourclk_counter;
-    end
-
+//---------------------------------------------------------------
 
 //fsm
 reg [2:0] current_state;
@@ -231,7 +217,7 @@ reg [2:0] next_state;
 always @(posedge neu_clk or negedge rst_n)
     begin
         if (rst_n == 1'b0)
-            current_state <= idle;
+            current_state <= init;
         else
             current_state <= next_state;
     end
@@ -241,10 +227,19 @@ always @(*)
         case (current_state)
             init:
                 begin
-                    if (step_counter < step_number)
-                        next_state = send;
+                    if (neu_clk_counter < clk_per_step)
+                        next_state <= init;
+                    else if (packet_delayed_steps == 0)
+                        next_state <= send;
                     else
-                        next_state = init;
+                        next_state <= delay;
+                end
+            delay:
+                begin
+                    if (step_counter > packet_delayed_steps)
+                        next_state <= send;
+                    else
+                        next_state <= delay;
                 end
             send:
                 begin
@@ -261,13 +256,20 @@ always @(*)
                 end
             idle:
                 begin
-                    if (neu_cycle_counter < step_cycle)
-                            next_state = idle;
+                    if (step_counter > step_number)
+                        next_state = finish;
+                    else if (neu_clk_counter != clk_per_step)
+                        next_state <= idle;
                     else
                         next_state = send;
                 end
+            finish:
+                begin
+                    next_state <= finish;
+
+                end
         default:
-                next_state = init;
+                next_state = finish;
         endcase
 end
 
@@ -276,97 +278,135 @@ always @(*)
         case(current_state)
             init:
                 begin
-                    clear_fourclk_counter = 1'b1;
+                    clear_fourclk_counter = 1'b0;
                     inc_fourclk_counter = 1'b0;
-                    inc_neu_cycle_counter = 1'b0;
-                    clear_neu_cycle_counter = 1'b1;
                     inc_packet_counter = 1'b0;
-                    clear_packet_counter = 1'b1;
-                    inc_packet_rom_address = 1'b0;
-                    inc_step = 1'b0;
+                    clear_packet_counter = 1'b0;
+                    inc_packet_address = 1'b0;
+                    inc_packet_number_address = 1'b0;
                     write_req = 1'b0;
+                    if (neu_clk_counter == clk_per_step)
+                        begin
+                            clear_neu_clk_counter = 1'b1;
+                            inc_neu_clk_counter = 1'b0;
+                            inc_step = 1'b1;
+                        end
+                    else
+                        begin
+                            clear_neu_clk_counter = 1'b0;
+                            inc_neu_clk_counter = 1'b1;
+                            inc_step = 1'b0;
+                        end
+                end
+            delay:
+                begin
+                    clear_fourclk_counter = 1'b0;
+                    inc_fourclk_counter = 1'b0;
+                    inc_packet_counter = 1'b0;
+                    clear_packet_counter = 1'b0;
+                    inc_packet_address = 1'b0;
+                    inc_packet_number_address = 1'b0;
+                    write_req = 1'b0;
+                    if (neu_clk_counter == clk_per_step)
+                        begin
+                            inc_step = 1'b1;
+                            clear_neu_clk_counter = 1'b1;
+                            inc_neu_clk_counter = 1'b0;
+                        end
+                    else
+                        begin
+                            inc_step = 1'b0;
+                            clear_neu_clk_counter = 1'b0;
+                            inc_neu_clk_counter = 1'b1;
+                        end
                 end
             send:
                 begin
-                    write_req = 1'b1;
                     clear_fourclk_counter = 1'b0;
                     inc_fourclk_counter = 1'b0;
-                    inc_neu_cycle_counter = 1'b1;
-                    clear_neu_cycle_counter = 1'b0;
+                    inc_neu_clk_counter = 1'b1;
+                    clear_neu_clk_counter = 1'b0;
                     inc_packet_counter = 1'b1;
                     clear_packet_counter = 1'b0;
-                    inc_packet_rom_address = 1'b1;
+                    inc_packet_address = 1'b0;
+                    inc_packet_number_address = 1'b0;
                     inc_step = 1'b0;
+                    write_req = 1'b1;
                 end
             wait4clk:
                 begin
-                    write_req = 1'b0;
-                    inc_neu_cycle_counter = 1'b1;
-                    clear_neu_cycle_counter = 1'b0;
-                    clear_packet_counter = 1'b0;
+                    if (fourclk_counter == 4) 
+                        begin
+                            clear_fourclk_counter = 1'b1;
+                            inc_fourclk_counter = 1'b0;    
+                        end
+                    else  
+                        begin
+                            clear_fourclk_counter = 1'b0;
+                            inc_fourclk_counter = 1'b1;    
+                        end
+                    inc_neu_clk_counter = 1'b1;
+                    clear_neu_clk_counter = 1'b0;
                     inc_packet_counter = 1'b0;
-                    inc_packet_rom_address = 1'b0;
+                    clear_packet_counter = 1'b0;
+                    inc_packet_address = 1'b0;
+                    inc_packet_number_address = 1'b0;
                     inc_step = 1'b0;
-                    if (fourclk_counter == 4) begin
-                        clear_fourclk_counter = 1'b1;
-                        inc_fourclk_counter = 1'b0;    end
-                    else  begin
-                        clear_fourclk_counter = 1'b0;
-                        inc_fourclk_counter = 1'b1;    end
+                    write_req = 1'b0;
                 end
             idle:
                 begin
-                    write_req = 1'b0;
+                    if (neu_clk_counter == clk_per_step) 
+                        begin
+                            inc_neu_clk_counter = 1'b0;
+                            clear_neu_clk_counter = 1'b1;
+                            inc_step = 1'b1;  
+                            clear_packet_counter = 1'b1;    
+                            inc_packet_address = 1'b1;
+                            inc_packet_number_address = 1'b1;
+                        end
+                    else 
+                        begin
+                            clear_packet_counter = 1'b0;
+                            inc_neu_clk_counter = 1'b1;
+                            clear_neu_clk_counter = 1'b0;
+                            inc_step = 1'b0; 
+                            inc_packet_address = 1'b0;
+                            inc_packet_number_address = 1'b0;
+                        end
+
                     clear_fourclk_counter = 1'b0;
                     inc_fourclk_counter = 1'b0;
-                    
                     inc_packet_counter = 1'b0;
-                    inc_packet_rom_address = 1'b0;
-                    clear_neu_cycle_counter = 1'b0;
-                    if (neu_cycle_counter == step_cycle) begin
-                        inc_neu_cycle_counter = 1'b0;
-                        clear_neu_cycle_counter = 1'b1;
-                        inc_step = 1'b1;  
-                        clear_packet_counter = 1'b1;    end
-                    else begin
-                        clear_packet_counter = 1'b0;
-                        inc_neu_cycle_counter = 1'b1;
-                        clear_neu_cycle_counter = 1'b0;
-                        inc_step = 1'b0; end
+                    write_req = 1'b0;
+                end
+            finish:
+                begin
+                    clear_fourclk_counter = 1'b0;
+                    inc_fourclk_counter = 1'b0;
+                    inc_neu_clk_counter = 1'b0;
+                    clear_neu_clk_counter = 1'b0;
+                    inc_packet_counter = 1'b0;
+                    clear_packet_counter = 1'b0;
+                    inc_packet_address = 1'b0;
+                    inc_packet_number_address = 1'b0;
+                    inc_step = 1'b0;
+                    write_req = 1'b0;
                 end
             default:
                 begin
-                    write_req = 1'b0;
                     clear_fourclk_counter = 1'b0;
                     inc_fourclk_counter = 1'b0;
-                    clear_packet_counter = 1'b0;
+                    inc_neu_clk_counter = 1'b0;
+                    clear_neu_clk_counter = 1'b0;
                     inc_packet_counter = 1'b0;
-                    inc_packet_rom_address = 1'b0;
-                    inc_neu_cycle_counter = 1'b0;
-                    clear_neu_cycle_counter = 1'b0;
+                    clear_packet_counter = 1'b0;
+                    inc_packet_address = 1'b0;
+                    inc_packet_number_address = 1'b0;
                     inc_step = 1'b0;
+                    write_req = 1'b0;
                 end
         endcase
 end
-
-
-//generate start signal
-always @(posedge neu_clk or negedge rst_n)
-    begin
-        if(rst_n == 1'b0)
-            neu_cycle_counter <= 0;
-        else if(clear_neu_cycle_counter)
-            neu_cycle_counter <= 0;
-        else if (inc_neu_cycle_counter)
-            neu_cycle_counter <= neu_cycle_counter + 1;
-        else
-            neu_cycle_counter <= neu_cycle_counter;
-    end
-
-always @(*)
-    if (neu_cycle_counter == step_cycle)
-        start = 1'b1;
-    else
-        start = 1'b0;
-        
+     
 endmodule

@@ -48,7 +48,7 @@ reg [2:0] next_state;
 reg [3:0] counter;
 
 reg update_pointer, clear_counter, inc_counter;
-reg [3:0] round_robin_pointer/* synthesis noprune */;
+reg [2:0] round_robin_pointer/* synthesis noprune */;
 reg [4:0] shifted_request, shifted_grant, unrotated_grant;
 
 reg [4:0] grant_reg;
@@ -57,11 +57,11 @@ reg [4:0] grant_reg;
 always @(*)
     begin
         case (round_robin_pointer)
-            4'd0: shifted_request = request;
-            4'd1: shifted_request = {request[0], request[4:1]};
-            4'd2: shifted_request = {request[1:0], request[4:2]};
-            4'd3: shifted_request = {request[2:0], request[4:3]};
-            4'd4: shifted_request = {request[3:0], request[4]};
+            3'd0: shifted_request = request;
+            3'd1: shifted_request = {request[0], request[4:1]};
+            3'd2: shifted_request = {request[1:0], request[4:2]};
+            3'd3: shifted_request = {request[2:0], request[4:3]};
+            3'd4: shifted_request = {request[3:0], request[4]};
         default:
             shifted_request = request;
         endcase

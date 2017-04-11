@@ -20,6 +20,8 @@
 //		details
 //------------------------------------------------------------------------
 //2017.4.1  localparam cause error in quartus, unkown reason
+//2017.4.11 split mem_6 into two memory: mem_6 and mem_7. Because quartus doesn't support 3-port memory
+//			mem_7 has the same content as mem_6. Verified and works OK.
 
 `timescale 1ns/100ps
 
@@ -97,6 +99,7 @@ module StatusMem
 	reg [STDP_WIN_BIT_WIDTH-1:0] Mem_4 [0:NUM_NURNS-1];
 	reg [STDP_WIN_BIT_WIDTH-1:0] Mem_5 [0:NUM_NURNS*NUM_AXONS-1];
 	reg [DSIZE-1:0] 			 Mem_6 [0:NUM_NURNS*NUM_AXONS-1];
+	reg [DSIZE-1:0] 			 Mem_7 [0:NUM_NURNS*NUM_AXONS-1];
 
 	//REGISTER DECLARATION
 	//--------------------------------------------------//
@@ -124,6 +127,7 @@ module StatusMem
 			file_name = {"../data", DIR_ID, "/PostSpikeHistory.txt"};	$readmemh (file_name,Mem_4);
 			file_name = {"../data", DIR_ID, "/PreSpikeHistory.txt"};	$readmemh (file_name,Mem_5);
 			file_name = {"../data", DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_6);
+			file_name = {"../data", DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_7);
 		end
 	`endif
 // synthesis translate_on
@@ -171,7 +175,7 @@ module StatusMem
         	end
 
         	if(rdEn_StatRd_F_i == 1'b1) begin
-	        	memOutReg_F   <=  Mem_6[Addr_StatRd_F_i];
+	        	memOutReg_F   <=  Mem_7[Addr_StatRd_F_i];
         	end
 	  	end
 	end
@@ -199,6 +203,9 @@ module StatusMem
 		end
 		if (wrEn_StatWr_G_i == 1'b1) begin
 			Mem_6[Addr_StatWr_G_i] <= data_StatWr_G_i;
+		end
+		if (wrEn_StatWr_G_i == 1'b1) begin
+			Mem_7[Addr_StatWr_G_i] <= data_StatWr_G_i;
 		end
 	end
 

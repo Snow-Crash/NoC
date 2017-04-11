@@ -217,8 +217,8 @@ assign result_output = ^result[result_address];
 //---------------------------------------------------------------
 
 //fsm
-reg [2:0] current_state;
-reg [2:0] next_state;
+reg [3:0] current_state;
+reg [3:0] next_state;
 
 //state transition
 always @(posedge neu_clk or negedge rst_n)

@@ -4,6 +4,10 @@
 //          connect with a router's local port.
 //2017.4.6  add a new ram to collect result
 //          change packet_number_rom size from 6 to 8
+//2017.4.10 change result ram size to 40 bit. High 8 bits record the step when receive spike.
+//          lower 32 bits are spike packet.
+//2017.4.11 add wait_packet_number state.Because output of rom is buffered, output has one clock
+//          delay. 
 
 module mesh_controller(neu_clk, rst_n, rt_clk, rt_reset, start, spike_packet, write_req, packet_in, write_enable, receive_full, result_output);
 
@@ -20,14 +24,17 @@ parameter ADDR_WIDTH = 8;
 parameter step_number = 32;//how many steps in current simulation
 parameter clk_per_step = 32;//how many neuron clocks in one time step
 parameter start_delayed_steps = 0;
-parameter packet_delayed_steps = 0;
+parameter packet_delayed_steps = 2;
 
-localparam init = 3'd0;
-localparam delay = 3'd1;
-localparam send = 3'd2;
-localparam wait4clk = 3'd3;
-localparam idle = 3'd4;
-localparam finish = 3'd5;
+localparam init = 4'd0;
+localparam delay = 4'd1;
+localparam read_packet_number = 4'd2;
+localparam wait_packet_number = 4'd3;
+localparam decision = 4'd4;
+localparam send = 4'd5;
+localparam wait4clk = 4'd6;
+localparam idle = 4'd7;
+localparam finish = 4'd8;
 
 
 
@@ -51,7 +58,7 @@ always @(posedge neu_clk or negedge rst_n)
 //------------------------packet rom, stores all packet---------------
 reg [ADDR_WIDTH - 1:0] packet_address;
 reg inc_packet_address;
-single_port_rom  #(.DATA_WIDTH(32), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/code/SimulationFile/packet.txt"))
+single_port_rom  #(.DATA_WIDTH(32), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/code/controller/packet.txt"))
 packet_rom (	.addr(packet_address),
 	.clk(neu_clk), 
 	.q(spike_packet));
@@ -71,7 +78,7 @@ always @(posedge neu_clk or negedge rst_n)
 //-----------------------------packet number rom--------------------
 reg [7:0] packet_number_address;
 reg inc_packet_number_address;
-single_port_rom  #(.DATA_WIDTH(8), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/code/SimulationFile/packet_number.txt"))
+single_port_rom  #(.DATA_WIDTH(8), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/code/controller/packet_number.txt"))
 packet_number_rom (	.addr(packet_number_address),
 	.clk(neu_clk), 
 	.q(packet_number));
@@ -230,16 +237,29 @@ always @(*)
                     if (neu_clk_counter < clk_per_step)
                         next_state <= init;
                     else if (packet_delayed_steps == 0)
-                        next_state <= send;
+                        next_state <= read_packet_number;
                     else
                         next_state <= delay;
                 end
             delay:
                 begin
                     if (step_counter > packet_delayed_steps)
-                        next_state <= send;
+                        next_state <= decision;
                     else
                         next_state <= delay;
+                end
+            read_packet_number:
+                begin
+                    next_state <= wait_packet_number;
+                end
+            wait_packet_number:
+                next_state <= decision;
+            decision:
+                begin
+                    if (packet_number != 0)
+                        next_state <= send;
+                    else
+                        next_state <= idle;
                 end
             send:
                 begin
@@ -261,7 +281,7 @@ always @(*)
                     else if (neu_clk_counter != clk_per_step)
                         next_state <= idle;
                     else
-                        next_state = send;
+                        next_state = read_packet_number;
                 end
             finish:
                 begin
@@ -320,6 +340,45 @@ always @(*)
                             inc_neu_clk_counter = 1'b1;
                         end
                 end
+            read_packet_number:
+                begin
+                    clear_fourclk_counter = 1'b0;
+                    inc_fourclk_counter = 1'b0;
+                    inc_packet_counter = 1'b0;
+                    clear_packet_counter = 1'b0;
+                    inc_packet_address = 1'b0;
+                    inc_packet_number_address = 1'b1;
+                    write_req = 1'b0;
+                    inc_step = 1'b0;
+                    clear_neu_clk_counter = 1'b0;
+                    inc_neu_clk_counter = 1'b1;
+                end
+            wait_packet_number:
+                begin
+                    clear_fourclk_counter = 1'b0;
+                    inc_fourclk_counter = 1'b0;
+                    inc_packet_counter = 1'b0;
+                    clear_packet_counter = 1'b0;
+                    inc_packet_address = 1'b0;
+                    inc_packet_number_address = 1'b0;
+                    write_req = 1'b0;
+                    inc_step = 1'b0;
+                    clear_neu_clk_counter = 1'b0;
+                    inc_neu_clk_counter = 1'b1;
+                end
+            decision:
+                begin
+                    clear_fourclk_counter = 1'b0;
+                    inc_fourclk_counter = 1'b0;
+                    inc_packet_counter = 1'b0;
+                    clear_packet_counter = 1'b0;
+                    inc_packet_address = 1'b0;
+                    inc_packet_number_address = 1'b0;
+                    write_req = 1'b0;
+                    inc_step = 1'b0;
+                    clear_neu_clk_counter = 1'b0;
+                    inc_neu_clk_counter = 1'b1;
+                end
             send:
                 begin
                     clear_fourclk_counter = 1'b0;
@@ -328,7 +387,7 @@ always @(*)
                     clear_neu_clk_counter = 1'b0;
                     inc_packet_counter = 1'b1;
                     clear_packet_counter = 1'b0;
-                    inc_packet_address = 1'b0;
+                    inc_packet_address = 1'b1;
                     inc_packet_number_address = 1'b0;
                     inc_step = 1'b0;
                     write_req = 1'b1;
@@ -362,8 +421,8 @@ always @(*)
                             clear_neu_clk_counter = 1'b1;
                             inc_step = 1'b1;  
                             clear_packet_counter = 1'b1;    
-                            inc_packet_address = 1'b1;
-                            inc_packet_number_address = 1'b1;
+                            inc_packet_address = 1'b0;
+                            inc_packet_number_address = 1'b0;
                         end
                     else 
                         begin

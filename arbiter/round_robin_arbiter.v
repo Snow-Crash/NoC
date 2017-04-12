@@ -48,7 +48,7 @@ reg [2:0] next_state;
 reg [3:0] counter;
 
 reg update_pointer, clear_counter, inc_counter;
-reg [2:0] round_robin_pointer/* synthesis noprune */;
+reg [2:0] round_robin_pointer/* synthesis preserve */;
 reg [4:0] shifted_request, shifted_grant, unrotated_grant;
 
 reg [4:0] grant_reg;

@@ -16,6 +16,15 @@ parameter NUM_NURNS = 2;
 parameter NUM_AXONS = 2;
 parameter NURN_CNT_BIT_WIDTH = 1;
 parameter AXON_CNT_BIT_WIDTH = 1;
+parameter MEM_A_MIF_PATH = "D:/code/synth/data1_1/mem_A.mif";
+parameter MEM_B_MIF_PATH = "D:/code/synth/data1_1/mem_B.mif";
+parameter MEM_C_MIF_PATH = "D:/code/synth/data1_1/mem_C.mif";
+parameter BIAS_MIF_PATH = "D:/code/synth/data1_1/Bias.mif";
+parameter MEMBPOT_MIF_PATH = "D:/code/synth/data1_1/MembPot.mif";
+parameter TH_MIF_PATH = "D:/code/synth/data1_1/Th.mif";
+parameter POSTSPIKEHISTORY_MIF_PATH = "D:/code/synth/data1_1/PostSpikeHistory.mif";
+parameter PRESPIKEHISTORY_MIF_PATH = "D:/code/synth/data1_1/PreSpikeHistory.mif";
+parameter WEIGHTS_MIF_PATH = "D:/code/synth/data1_1/Weights.mif";
 
 input n_en_1_1, n_en_1_2, e_en_1_2, e_en_2_2, w_en_1_1, w_en_2_1, s_en_2_1, s_en_2_2;
 input clk, rt_clk, rt_reset, rst_n, start;
@@ -31,7 +40,16 @@ wire [1:0] full_row1, full_row2, full_column1, full_column2;
 wire [1:0] write_row1, write_row2, write_column1, write_column2;
 
 
-neuron_cell #(.X_ID("1"), .Y_ID("1"), .NUM_NURNS(NUM_NURNS), .NUM_AXONS(NUM_AXONS), .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH), .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH))
+neuron_cell #(.X_ID("1"), .Y_ID("1"), .NUM_NURNS(NUM_NURNS), .NUM_AXONS(NUM_AXONS), .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH), .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+        .MEM_A_MIF_PATH("D:/code/synth/data1_1/mem_A.mif"),
+        .MEM_B_MIF_PATH("D:/code/synth/data1_1/mem_B.mif"),
+        .MEM_C_MIF_PATH("D:/code/synth/data1_1/mem_C.mif"),
+        .BIAS_MIF_PATH("D:/code/synth/data1_1/Bias.mif"),
+        .MEMBPOT_MIF_PATH("D:/code/synth/data1_1/MembPot.mif"),
+        .TH_MIF_PATH("D:/code/synth/data1_1/Th.mif"),
+        .PRESPIKEHISTORY_MIF_PATH("D:/code/synth/data1_1/PreSpikeHistory.mif"),
+        .POSTSPIKEHISTORY_MIF_PATH("D:/code/synth/data1_1/PostSpikeHistory.mif"),
+        .WEIGHTS_MIF_PATH("D:/code/synth/data1_1/Weights.mif"))
 cell_1_1(.clk(clk), .rt_clk(rt_clk), .rst_n(rst_n), .rt_reset(rt_reset),
 .clk_north(rt_clk), .clk_south(rt_clk), .clk_east(rt_clk), .clk_west(rt_clk),
 .north_in(n_in_1_1), .south_in(data_wire_column1[3:0]), .east_in(data_wire_row1[3:0]), .west_in(w_in_1_1),
@@ -41,7 +59,16 @@ cell_1_1(.clk(clk), .rt_clk(rt_clk), .rst_n(rst_n), .rt_reset(rt_reset),
 .write_req_north(north_w_1_1), .write_req_south(write_column1[1]), .write_req_east(write_row1[1]), .write_req_west(west_w_1_1),
 .write_en_north(n_en_1_1), .write_en_south(write_column1[0]), .write_en_east(write_row1[0]), .write_en_west(w_en_1_1), .start(start));
 
-neuron_cell #(.X_ID("1"), .Y_ID("2"), .NUM_NURNS(NUM_NURNS), .NUM_AXONS(NUM_AXONS), .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH), .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH)) 
+neuron_cell #(.X_ID("1"), .Y_ID("2"), .NUM_NURNS(NUM_NURNS), .NUM_AXONS(NUM_AXONS), .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH), .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+        .MEM_A_MIF_PATH("D:/code/synth/data1_2/mem_A.mif"),
+        .MEM_B_MIF_PATH("D:/code/synth/data1_2/mem_B.mif"),
+        .MEM_C_MIF_PATH("D:/code/synth/data1_2/mem_C.mif"),
+        .BIAS_MIF_PATH("D:/code/synth/data1_2/Bias.mif"),
+        .MEMBPOT_MIF_PATH("D:/code/synth/data1_2/MembPot.mif"),
+        .TH_MIF_PATH("D:/code/synth/data1_2/Th.mif"),
+        .PRESPIKEHISTORY_MIF_PATH("D:/code/synth/data1_2/PreSpikeHistory.mif"),
+        .POSTSPIKEHISTORY_MIF_PATH("D:/code/synth/data1_2/PostSpikeHistory.mif"),
+        .WEIGHTS_MIF_PATH("D:/code/synth/data1_2/Weights.mif"))
 cell_1_2(.clk(clk), .rt_clk(rt_clk), .rst_n(rst_n), .rt_reset(rt_reset),
 .clk_north(rt_clk), .clk_south(rt_clk), .clk_east(rt_clk), .clk_west(rt_clk),
 .north_in(n_in_1_2), .south_in(data_wire_column2[3:0]), .east_in(e_in_1_2), .west_in(data_wire_row1[7:4]),
@@ -51,7 +78,16 @@ cell_1_2(.clk(clk), .rt_clk(rt_clk), .rst_n(rst_n), .rt_reset(rt_reset),
 .write_req_north(north_w_1_2), .write_req_south(write_column2[1]), .write_req_east(east_w_1_2), .write_req_west(write_row1[0]),
 .write_en_north(n_en_1_2), .write_en_south(write_column2[0]), .write_en_east(e_en_1_2), .write_en_west(write_row1[1]), .start(start));
 
-neuron_cell #(.X_ID("2"), .Y_ID("1"), .NUM_NURNS(NUM_NURNS), .NUM_AXONS(NUM_AXONS), .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH), .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH)) 
+neuron_cell #(.X_ID("2"), .Y_ID("1"), .NUM_NURNS(NUM_NURNS), .NUM_AXONS(NUM_AXONS), .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH), .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+        .MEM_A_MIF_PATH("D:/code/synth/data1_2/mem_A.mif"),
+        .MEM_B_MIF_PATH("D:/code/synth/data1_2/mem_B.mif"),
+        .MEM_C_MIF_PATH("D:/code/synth/data1_2/mem_C.mif"),
+        .BIAS_MIF_PATH("D:/code/synth/data1_2/Bias.mif"),
+        .MEMBPOT_MIF_PATH("D:/code/synth/data1_2/MembPot.mif"),
+        .TH_MIF_PATH("D:/code/synth/data1_2/Th.mif"),
+        .PRESPIKEHISTORY_MIF_PATH("D:/code/synth/data1_2/PreSpikeHistory.mif"),
+        .POSTSPIKEHISTORY_MIF_PATH("D:/code/synth/data1_2/PostSpikeHistory.mif"),
+        .WEIGHTS_MIF_PATH("D:/code/synth/data1_2/Weights.mif"))
 cell_2_1(.clk(clk), .rt_clk(rt_clk), .rst_n(rst_n), .rt_reset(rt_reset),
 .clk_north(rt_clk), .clk_south(rt_clk), .clk_east(rt_clk), .clk_west(rt_clk),
 .north_in(data_wire_column1[7:4]), .south_in(s_in_2_1), .east_in(data_wire_row2[3:0]), .west_in(w_in_2_1),
@@ -61,7 +97,16 @@ cell_2_1(.clk(clk), .rt_clk(rt_clk), .rst_n(rst_n), .rt_reset(rt_reset),
 .write_req_north(write_column1[0]), .write_req_south(south_w_2_1), .write_req_east(write_row2[1]), .write_req_west(west_w_2_1),
 .write_en_north(write_column1[1]), .write_en_south(s_en_2_1), .write_en_east(write_row2[0]), .write_en_west(w_en_2_1), .start(start));
 
-neuron_cell #(.X_ID("2"), .Y_ID("2"), .NUM_NURNS(NUM_NURNS), .NUM_AXONS(NUM_AXONS), .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH), .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH)) 
+neuron_cell #(.X_ID("2"), .Y_ID("2"), .NUM_NURNS(NUM_NURNS), .NUM_AXONS(NUM_AXONS), .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH), .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+        .MEM_A_MIF_PATH("D:/code/synth/data1_2/mem_A.mif"),
+        .MEM_B_MIF_PATH("D:/code/synth/data1_2/mem_B.mif"),
+        .MEM_C_MIF_PATH("D:/code/synth/data1_2/mem_C.mif"),
+        .BIAS_MIF_PATH("D:/code/synth/data1_2/Bias.mif"),
+        .MEMBPOT_MIF_PATH("D:/code/synth/data1_2/MembPot.mif"),
+        .TH_MIF_PATH("D:/code/synth/data1_2/Th.mif"),
+        .PRESPIKEHISTORY_MIF_PATH("D:/code/synth/data1_2/PreSpikeHistory.mif"),
+        .POSTSPIKEHISTORY_MIF_PATH("D:/code/synth/data1_2/PostSpikeHistory.mif"),
+        .WEIGHTS_MIF_PATH("D:/code/synth/data1_2/Weights.mif"))
 cell_2_2(.clk(clk), .rt_clk(rt_clk), .rst_n(rst_n), .rt_reset(rt_reset),
 .clk_north(rt_clk), .clk_south(rt_clk), .clk_east(rt_clk), .clk_west(rt_clk),
 .north_in(data_wire_column2[7:4]), .south_in(s_in_2_2), .east_in(e_in_2_2), .west_in(data_wire_row2[7:4]),

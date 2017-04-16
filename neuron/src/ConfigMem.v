@@ -35,7 +35,11 @@ module ConfigMem
 
 	parameter X_ID = "1",
 	parameter Y_ID = "1",
-	parameter DIR_ID = {X_ID, "_", Y_ID}
+	parameter DIR_ID = {X_ID, "_", Y_ID},
+	parameter MEM_A_MIF_PATH = "D:/code/synth/data1_1/mem_A.mif",
+	parameter MEM_B_MIF_PATH = "D:/code/synth/data1_1/mem_B.mif",
+	parameter MEM_C_MIF_PATH = "D:/code/synth/data1_1/mem_C.mif"
+
 )
 (
 	input 			clk_i			,
@@ -77,9 +81,15 @@ module ConfigMem
 
 	//MEMORY DECLARATION
 	//--------------------------------------------------//
-	reg [MEM_WIDTH_A-1:0] mem_A [0:NUM_NURNS-1];
-	reg [MEM_WIDTH_B-1:0] mem_B [0:NUM_NURNS-1];
-	reg 				  mem_C [0:NUM_NURNS*NUM_AXONS-1];
+	`ifdef SIM_MEM_INIT
+		reg [MEM_WIDTH_A-1:0] mem_A [0:NUM_NURNS-1];
+		reg [MEM_WIDTH_B-1:0] mem_B [0:NUM_NURNS-1];
+		reg 				  mem_C [0:NUM_NURNS*NUM_AXONS-1];
+	`else
+		(* ram_init_file = MEM_A_MIF_PATH *) reg [MEM_WIDTH_A-1:0] mem_A [0:NUM_NURNS-1];
+		(* ram_init_file = MEM_B_MIF_PATH *) reg [MEM_WIDTH_B-1:0] mem_B [0:NUM_NURNS-1];
+		(* ram_init_file = MEM_C_MIF_PATH *) reg 				  mem_C [0:NUM_NURNS*NUM_AXONS-1];
+	`endif
 
 	//REGISTER DECLARATION
 	//--------------------------------------------------//

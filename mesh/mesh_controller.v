@@ -25,6 +25,8 @@ parameter step_number = 32;//how many steps in current simulation
 parameter clk_per_step = 32;//how many neuron clocks in one time step
 parameter start_delayed_steps = 0;
 parameter packet_delayed_steps = 2;
+parameter SIM_FILE_PATH = "D:/GoogleDrive/NoC/data1_1/packet.txt";
+parameter INIT_FILE_PATH = "‪D:/code/SimulationFile/packet.mif";
 
 localparam init = 4'd0;
 localparam delay = 4'd1;
@@ -58,7 +60,7 @@ always @(posedge neu_clk or negedge rst_n)
 //------------------------packet rom, stores all packet---------------
 reg [ADDR_WIDTH - 1:0] packet_address;
 reg inc_packet_address;
-single_port_rom  #(.DATA_WIDTH(32), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/code/controller/packet.txt"))
+single_port_rom  #(.DATA_WIDTH(32), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/GoogleDrive/NoC/data1_1/packet.txt"))
 packet_rom (	.addr(packet_address),
 	.clk(neu_clk), 
 	.q(spike_packet));
@@ -78,7 +80,7 @@ always @(posedge neu_clk or negedge rst_n)
 //-----------------------------packet number rom--------------------
 reg [7:0] packet_number_address;
 reg inc_packet_number_address;
-single_port_rom  #(.DATA_WIDTH(8), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/code/controller/packet_number.txt"))
+single_port_rom  #(.DATA_WIDTH(8), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/GoogleDrive/NoC/data1_1/packet_number.txt"))
 packet_number_rom (	.addr(packet_number_address),
 	.clk(neu_clk), 
 	.q(packet_number));

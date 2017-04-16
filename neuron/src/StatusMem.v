@@ -43,7 +43,14 @@ module StatusMem
 	
 	parameter X_ID = "1",
 	parameter Y_ID = "1",
-	parameter DIR_ID = {X_ID, "_", Y_ID}
+	parameter DIR_ID = {X_ID, "_", Y_ID},
+
+	parameter BIAS_MIF_PATH = "D:/code/synth/data1_1/Bias.mif",
+	parameter MEMBPOT_MIF_PATH = "D:/code/synth/data1_1/MembPot.mif",
+	parameter TH_MIF_PATH = "D:/code/synth/data1_1/Th.mif",
+	parameter POSTSPIKEHISTORY_MIF_PATH = "D:/code/synth/data1_1/PostSpikeHistory.mif",
+	parameter PRESPIKEHISTORY_MIF_PATH = "D:/code/synth/data1_1/PreSpikeHistory.mif",
+	parameter WEIGHTS_MIF_PATH = "D:/code/synth/data1_1/Weights.mif"
 )
 (
 	input 			clk_i			,
@@ -93,21 +100,28 @@ module StatusMem
 
 	//MEMORY DECLARATION
 	//--------------------------------------------------//
-	reg [DSIZE-1:0] 			 Mem_1 [0:NUM_NURNS-1];
-	reg [DSIZE-1:0] 			 Mem_2 [0:NUM_NURNS-1];
-	reg [DSIZE-1:0] 			 Mem_3 [0:NUM_NURNS-1];
-	reg [STDP_WIN_BIT_WIDTH-1:0] Mem_4 [0:NUM_NURNS-1];
-	reg [STDP_WIN_BIT_WIDTH-1:0] Mem_5 [0:NUM_NURNS*NUM_AXONS-1];
-	reg [DSIZE-1:0] 			 Mem_6 [0:NUM_NURNS*NUM_AXONS-1];
-	reg [DSIZE-1:0] 			 Mem_7 [0:NUM_NURNS*NUM_AXONS-1];
-
+	`ifdef SIM_MEM_INIT
+		reg [DSIZE-1:0] 			 Mem_1 [0:NUM_NURNS-1];
+		reg [DSIZE-1:0] 			 Mem_2 [0:NUM_NURNS-1];
+		reg [DSIZE-1:0] 			 Mem_3 [0:NUM_NURNS-1];
+		reg [STDP_WIN_BIT_WIDTH-1:0] Mem_4 [0:NUM_NURNS-1];
+		reg [STDP_WIN_BIT_WIDTH-1:0] Mem_5 [0:NUM_NURNS*NUM_AXONS-1];
+		reg [DSIZE-1:0] 			 Mem_6 [0:NUM_NURNS*NUM_AXONS-1];
+	`else
+		(* ram_init_file = BIAS_MIF_PATH *) reg [DSIZE-1:0] 			 Mem_1 [0:NUM_NURNS-1];
+		(* ram_init_file = MEMBPOT_MIF_PATH *) reg [DSIZE-1:0] 			 Mem_2 [0:NUM_NURNS-1];
+		(* ram_init_file = TH_MIF_PATH *) reg [DSIZE-1:0] 			 Mem_3 [0:NUM_NURNS-1];
+		(* ram_init_file = POSTSPIKEHISTORY_MIF_PATH *) reg [STDP_WIN_BIT_WIDTH-1:0] Mem_4 [0:NUM_NURNS-1];
+		(* ram_init_file = PRESPIKEHISTORY_MIF_PATH *) reg [STDP_WIN_BIT_WIDTH-1:0] Mem_5 [0:NUM_NURNS*NUM_AXONS-1];
+		(* ram_init_file = WEIGHTS_MIF_PATH *) reg [DSIZE-1:0] 			 Mem_6 [0:NUM_NURNS*NUM_AXONS-1];
+	`endif
 	//REGISTER DECLARATION
 	//--------------------------------------------------//
 	reg [DSIZE-1:0] 			 memOutReg_A;
 	reg [STDP_WIN_BIT_WIDTH-1:0] memOutReg_C;
 	reg [DSIZE-1:0] 			 memOutReg_E;
 	reg [DSIZE-1:0] 			 memOutReg_F;
-
+	wire [DSIZE-1:0]			memOut_F_fifo;
 	//WIRE DECLARATION
 	//--------------------------------------------------//
 	wire [NURN_CNT_BIT_WIDTH+2-1:2] Addr_A_Mem1_4 ;
@@ -127,7 +141,7 @@ module StatusMem
 			file_name = {"../data", DIR_ID, "/PostSpikeHistory.txt"};	$readmemh (file_name,Mem_4);
 			file_name = {"../data", DIR_ID, "/PreSpikeHistory.txt"};	$readmemh (file_name,Mem_5);
 			file_name = {"../data", DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_6);
-			file_name = {"../data", DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_7);
+			//file_name = {"../data", DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_7);
 		end
 	`endif
 // synthesis translate_on
@@ -174,9 +188,9 @@ module StatusMem
 	        	memOutReg_E   <=  Mem_6[Addr_StatRd_E_i];
         	end
 
-        	if(rdEn_StatRd_F_i == 1'b1) begin
-	        	memOutReg_F   <=  Mem_7[Addr_StatRd_F_i];
-        	end
+        	//if(rdEn_StatRd_F_i == 1'b1) begin
+	        //	memOutReg_F   <=  Mem_6[Addr_StatRd_F_i];
+        	//end
 	  	end
 	end
 
@@ -204,14 +218,35 @@ module StatusMem
 		if (wrEn_StatWr_G_i == 1'b1) begin
 			Mem_6[Addr_StatWr_G_i] <= data_StatWr_G_i;
 		end
-		if (wrEn_StatWr_G_i == 1'b1) begin
-			Mem_7[Addr_StatWr_G_i] <= data_StatWr_G_i;
-		end
 	end
+
+	reg weight_fifo_WrReq;
+	wire [2:0] usedw;
+	wire weight_fifo_full, weight_fifo_empty;
+
+	always @(posedge clk_i or negedge rst_n_i)
+		begin
+			if (rst_n_i == 1'b0)
+				weight_fifo_WrReq <= 1'b0;
+			else
+				weight_fifo_WrReq <= rdEn_StatRd_E_i;
+		end
+
+	weight_fifo	weight_fifo_inst (
+	.aclr ( ~rst_n_i),
+	.clock ( clk_i ),
+	.data ( memOutReg_E ),
+	.rdreq ( rdEn_StatRd_F_i),
+	.wrreq ( weight_fifo_WrReq ),
+	.empty ( weight_fifo_empty ),
+	.full ( weight_fifo_full ),
+	.q ( memOut_F_fifo ),
+	.usedw ( usedw )
+	);
 
 	assign data_StatRd_A_o = memOutReg_A;
 	assign data_StatRd_C_o = memOutReg_C;
 	assign data_StatRd_E_o = memOutReg_E;
-	assign data_StatRd_F_o = memOutReg_F;
+	assign data_StatRd_F_o = memOut_F_fifo;
 	
 endmodule

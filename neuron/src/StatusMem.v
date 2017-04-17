@@ -22,8 +22,23 @@
 //2017.4.1  localparam cause error in quartus, unkown reason
 //2017.4.11 split mem_6 into two memory: mem_6 and mem_7. Because quartus doesn't support 3-port memory
 //			mem_7 has the same content as mem_6. Verified and works OK.
+//2017.4.15 mem 6 is a three port memory, which is not supported by cyclone v. 
+//			split mem_6 into two memory can solve this problem but wastes a lot resource.
+//			use a fifo to solve it. fifo's input connects to output of mem_6,
+//			fifo's output connects to memOut_F_fifo, and assign memOut_F_fifo to output port data_StatRd_F_o,
+//			hence memOutReg_F is removed.
+//			if rdEn_StatRd_E_i == 1'b1, output of mem_6 is pushed into fifo.
+//			if rdEn_StatRd_F_i == 1'b1, read from fifo and output to output port data_StatRd_F_o
+//			tested, in learn mode works ok.
+//2017.4.17 rewrite entire status memory because quartus cannot infer ram coorecly.
+//			This one works fine, tested recall mode and compared with original version. 
+//			spike results are the same. 
 
-`timescale 1ns/100ps
+//todo		fifo clear signal: it is not mandatory. if use async signal, and if it's cleared,
+//			output of fifo is red line. Need to test sync clear.
+//			need to test learn mode.
+
+//`timescale 1ns/100ps
 
 `define SIM_MEM_INIT
 `define NULL 0
@@ -128,6 +143,9 @@ module StatusMem
 	wire [1:0] 						Sel_A_Mem1_4  ;
 	wire [NURN_CNT_BIT_WIDTH+2-1:2] Addr_B_Mem1_4 ;
 	wire [1:0] 						Sel_B_Mem1_4  ;	
+	//--------------------------------------------------//
+	reg Wr_En_Mem_1,  Wr_En_Mem_2,  Wr_En_Mem_3,  Wr_En_Mem_4;
+	reg [DSIZE-1:0] memOutReg_A_1, memOutReg_A_2, memOutReg_A_3, memOutReg_A_4;
 // synthesis translate_off
 	//simulation memory data initialization
 	//--------------------------------------------------//
@@ -154,70 +172,124 @@ module StatusMem
 	assign Addr_B_Mem1_4 = Addr_StatWr_B_i[NURN_CNT_BIT_WIDTH+2-1:2];
 	assign Sel_B_Mem1_4  = Addr_StatWr_B_i[1:0];
 
-	// Read status Memory
-	always@(posedge clk_i or negedge rst_n_i)  begin
-		if(rst_n_i == 1'b0) begin
-			memOutReg_A	<= 0;
-			memOutReg_C	<= 0;
-			memOutReg_E	<= 0;    
-			memOutReg_F	<= 0;    
-	  	end
-	  	else begin
-	  		if(rdEn_StatRd_A_i == 1'b1) begin
-	  			case (Sel_A_Mem1_4)
-	        		2'b00: begin
-	        			memOutReg_A   <=  Mem_1[Addr_A_Mem1_4] ;
-	        		end
-	        		2'b01: begin
-	        			memOutReg_A   <=  Mem_2[Addr_A_Mem1_4] ;
-	        		end
-	        		2'b10: begin
-	        			memOutReg_A   <=  Mem_3[Addr_A_Mem1_4] ;
-	        		end
-	        		default: begin//2'b11
-	        			memOutReg_A   <=  Mem_4[Addr_A_Mem1_4] ;
-	        		end
-	        	endcase
-        	end
+	//Mem_1, Mem_2, Mem_3, Mem_4 Write_enable signal
 
-        	if(rdEn_StatRd_C_i == 1'b1) begin
-	        	memOutReg_C   <=  Mem_5[Addr_StatRd_C_i];
-        	end
+	always @(*)
+		begin
+		  	if(wrEn_StatWr_B_i == 1'b1) 
+				begin
+					case (Sel_B_Mem1_4)
+						2'b00: 
+							begin
+								Wr_En_Mem_1 = 1'b1;
+								Wr_En_Mem_2 = 1'b0; 
+								Wr_En_Mem_3 = 1'b0; 
+								Wr_En_Mem_4 = 1'b0;
+							end
+						2'b01: 
+							begin
+								Wr_En_Mem_1 = 1'b0; 
+								Wr_En_Mem_2 = 1'b1; 
+								Wr_En_Mem_3 = 1'b0; 
+								Wr_En_Mem_4 = 1'b0;
+							end
+						2'b10: 
+							begin
+								Wr_En_Mem_1 = 1'b0; 
+								Wr_En_Mem_2 = 1'b0; 
+								Wr_En_Mem_3 = 1'b1; 
+								Wr_En_Mem_4 = 1'b0;
+							end
+						default: 
+							begin//2'b11
+								Wr_En_Mem_1 = 1'b0; 
+								Wr_En_Mem_2 = 1'b0; 
+								Wr_En_Mem_3 = 1'b0; 
+								Wr_En_Mem_4 = 1'b1;
+							end
+					endcase
+		        end
+            else
+                begin
+                    Wr_En_Mem_1 = 1'b0; Wr_En_Mem_2 = 1'b0; Wr_En_Mem_3 = 1'b0; Wr_En_Mem_4 = 1'b0;
+                end
+	    end
 
-        	if(rdEn_StatRd_E_i == 1'b1) begin
-	        	memOutReg_E   <=  Mem_6[Addr_StatRd_E_i];
-        	end
-
-        	//if(rdEn_StatRd_F_i == 1'b1) begin
-	        //	memOutReg_F   <=  Mem_6[Addr_StatRd_F_i];
-        	//end
-	  	end
+	//-----------------------Mem_1---------------------------
+	
+	always @ (posedge clk_i)
+	begin
+		if (Wr_En_Mem_1)
+			Mem_1[Addr_B_Mem1_4] <= data_StatWr_B_i;
+		//if (rdEn_StatRd_A_i == 1'b1)
+			memOutReg_A_1 <= Mem_1[Addr_A_Mem1_4];
 	end
 
-	//write status memory
-	always @(posedge clk_i) begin
-		if (wrEn_StatWr_B_i == 1'b1) begin
-			case (Sel_B_Mem1_4)
-        		2'b00: begin
-        			Mem_1[Addr_B_Mem1_4] <= data_StatWr_B_i;
-        		end
-        		2'b01: begin
-        			Mem_2[Addr_B_Mem1_4] <= data_StatWr_B_i;
-        		end
-        		2'b10: begin
-        			Mem_3[Addr_B_Mem1_4] <= data_StatWr_B_i;
-        		end
-        		default: begin//2'b11
-        			Mem_4[Addr_B_Mem1_4] <= data_StatWr_B_i;
-        		end
-        	endcase
+	//-----------------------Mem_2---------------------------
+	
+	always @ (posedge clk_i)
+	begin
+		if (Wr_En_Mem_2)
+			Mem_2[Addr_B_Mem1_4] <= data_StatWr_B_i;
+		//if (rdEn_StatRd_A_i == 1'b1)
+			memOutReg_A_2 <= Mem_2[Addr_A_Mem1_4];
+	end
+
+	//-----------------------Mem_3---------------------------
+	//reg [DSIZE-1:0] memOutReg_A_3;
+	always @ (posedge clk_i)
+	begin
+		if (Wr_En_Mem_3)
+			Mem_3[Addr_B_Mem1_4] <= data_StatWr_B_i;
+		//if (rdEn_StatRd_A_i == 1'b1)
+			memOutReg_A_3 <= Mem_3[Addr_A_Mem1_4];
+	end
+
+	//-----------------------Mem_4---------------------------
+	//reg [DSIZE-1:0] memOutReg_A_4;
+	always @ (posedge clk_i)
+	begin
+		if (Wr_En_Mem_4)
+			Mem_4[Addr_B_Mem1_4] <= data_StatWr_B_i;
+		//if (rdEn_StatRd_A_i == 1'b1)
+			memOutReg_A_4 <= Mem_4[Addr_A_Mem1_4];
+	end
+	//-----------------MUX memOutReg_A----------------
+	always @(posedge clk_i)
+	begin
+		if (rdEn_StatRd_A_i == 1'b1) begin
+		case (Sel_A_Mem1_4)
+	        2'b00: begin
+	        	memOutReg_A = memOutReg_A_1 ;
+	        end
+	        2'b01: begin
+	        	memOutReg_A = memOutReg_A_2 ;
+	        end
+	        2'b10: begin
+	        	memOutReg_A = memOutReg_A_3 ;
+	        end
+	        default: begin//2'b11
+	        	memOutReg_A = memOutReg_A_4 ;
+	        end
+		endcase
 		end
-		if (wrEn_StatWr_D_i == 1'b1) begin
+	end
+
+	//--------------------------Mem_5------------
+	always @ (posedge clk_i)
+	begin
+		if (wrEn_StatWr_D_i == 1'b1)
 			Mem_5[Addr_StatWr_D_i] <= data_StatWr_D_i;
-		end
-		if (wrEn_StatWr_G_i == 1'b1) begin
+		if(rdEn_StatRd_C_i == 1'b1)
+			memOutReg_C <= Mem_5[Addr_A_Mem1_4];
+	end
+	//-------------------------Mem_6
+	always @ (posedge clk_i)
+	begin
+		if (wrEn_StatWr_G_i == 1'b1)
 			Mem_6[Addr_StatWr_G_i] <= data_StatWr_G_i;
-		end
+		if(rdEn_StatRd_E_i == 1'b1)
+			memOutReg_E <= Mem_6[Addr_StatRd_E_i];
 	end
 
 	reg weight_fifo_WrReq;
@@ -233,7 +305,7 @@ module StatusMem
 		end
 
 	weight_fifo	weight_fifo_inst (
-	.aclr ( ~rst_n_i),
+	.aclr ( 1'b0),
 	.clock ( clk_i ),
 	.data ( memOutReg_E ),
 	.rdreq ( rdEn_StatRd_F_i),

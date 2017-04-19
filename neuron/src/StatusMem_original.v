@@ -39,7 +39,7 @@
 
 `timescale 1ns/100ps
 
-//`define SIM_MEM_INIT
+`define SIM_MEM_INIT
 `define NULL 0
 
 module StatusMem
@@ -202,9 +202,9 @@ module StatusMem
 	        	memOutReg_E   <=  Mem_6[Addr_StatRd_E_i];
         	end
 
-        	//if(rdEn_StatRd_F_i == 1'b1) begin
-	        //	memOutReg_F   <=  Mem_6[Addr_StatRd_F_i];
-        	//end
+        	if(rdEn_StatRd_F_i == 1'b1) begin
+	        	memOutReg_F   <=  Mem_6[Addr_StatRd_F_i];
+        	end
 	  	end
 	end
 
@@ -261,6 +261,6 @@ module StatusMem
 	assign data_StatRd_A_o = memOutReg_A;
 	assign data_StatRd_C_o = memOutReg_C;
 	assign data_StatRd_E_o = memOutReg_E;
-	assign data_StatRd_F_o = memOut_F_fifo;
+	assign data_StatRd_F_o = memOutReg_F;
 	
 endmodule

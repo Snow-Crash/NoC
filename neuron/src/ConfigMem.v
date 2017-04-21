@@ -13,6 +13,14 @@
 //		details
 //------------------------------------------------------------------------
 //2017.4.1  localparam cause error in quartus, unkown reason
+//2017.4.21 rewrite config memory. Simulated in recall mode, timing is not affacted.
+
+//Todo		If rdEn_Config_A_i, rdEn_Config_A_i and rdEn_Config_A_i are not delayed,
+//			use these three signal as enable signal of the latched, still get right
+//			result. 
+//			1: need to check if it is necessary to delay the 3 signals.
+//			2: check if it is necessasy to have the three signal: rdEn_Config_A_i, 
+//			rdEn_Config_A_i and rdEn_Config_A_i
 
 `timescale 1ns/100ps
 
@@ -71,7 +79,7 @@ module ConfigMem
 
 	output												axonLrnMode_o
 );
-	
+
 	//port A memory -- {LTP_Win, LTD_Win, LTP_LrnRt, LTD_LrnRt, LrnModeBias}
 	parameter MEM_WIDTH_A = STDP_WIN_BIT_WIDTH + STDP_WIN_BIT_WIDTH + DSIZE + DSIZE + 1;
 	//port B memory -- {NurnType, RandTh, Th_Mask, RstPot, SpikeAER}
@@ -79,143 +87,106 @@ module ConfigMem
 	//port C memory -- LrnModeWght
 	parameter MEM_WIDTH_C = 1;
 
-	//MEMORY DECLARATION
-	//--------------------------------------------------//
-	`ifdef SIM_MEM_INIT
-		reg [MEM_WIDTH_A-1:0] mem_A [0:NUM_NURNS-1];
-		reg [MEM_WIDTH_B-1:0] mem_B [0:NUM_NURNS-1];
-		reg 				  mem_C [0:NUM_NURNS*NUM_AXONS-1];
-	`else
-		(* ram_init_file = MEM_A_MIF_PATH *) reg [MEM_WIDTH_A-1:0] mem_A [0:NUM_NURNS-1];
-		(* ram_init_file = MEM_B_MIF_PATH *) reg [MEM_WIDTH_B-1:0] mem_B [0:NUM_NURNS-1];
-		(* ram_init_file = MEM_C_MIF_PATH *) reg 				  mem_C [0:NUM_NURNS*NUM_AXONS-1];
-	`endif
+	//wire [MEM_WIDTH_A - 1:0] mem_A_out;
+	//wire [MEM_WIDTH_B - 1:0] mem_B_out;
 
-	//REGISTER DECLARATION
-	//--------------------------------------------------//
-	reg [MEM_WIDTH_A-1:0] memOutReg_A/* synthesis preserve */;
-	reg [MEM_WIDTH_B-1:0] memOutReg_B/* synthesis preserve */;
-	reg 				  memOutReg_C/* synthesis preserve */;
-// synthesis translate_off
-	//simulation memory data initialization
-	//--------------------------------------------------//
+	wire [STDP_WIN_BIT_WIDTH - 1:0] mem_LTP_WIN_out, mem_LTD_WIN_out;
+	wire [DSIZE - 1:0]	mem_LTP_LrnRt_out, mem_LTD_LrnRt_out;
+	wire mem_LrnModeBias_out;
+	wire mem_NurnType_out, mem_RandTh_out;
+	wire [DSIZE - 1:0] mem_Th_Mask_out, mem_RstPot_out;
+	wire [AER_BIT_WIDTH - 1:0] mem_SpikeAER_out;
+	wire mem_C_out;
+
+	reg [MEM_WIDTH_A - 1:0] latch_mem_A;
+	reg [MEM_WIDTH_B - 1:0] latch_mem_B;
+	reg latch_mem_C;
+	reg rdEn_Config_A_delay, rdEn_Config_B_delay, rdEn_Config_C_delay;
+
+//rdEn_Config_A_i, rdEn_Config_B_i and rdEn_Config_C_i are delayed 1 clock
+	always @(posedge clk_i or negedge rst_n_i)
+		if(rst_n_i == 1'b0)
+			rdEn_Config_A_delay <= 1'b0;
+		else
+			rdEn_Config_A_delay <= rdEn_Config_A_i;
+
+	always @(posedge clk_i or negedge rst_n_i)
+		if(rst_n_i == 1'b0)
+			rdEn_Config_B_delay <= 1'b0;
+		else
+			rdEn_Config_B_delay <= rdEn_Config_B_i;
+
+	always @(posedge clk_i or negedge rst_n_i)
+		if(rst_n_i == 1'b0)
+			rdEn_Config_C_delay <= 1'b0;
+		else
+			rdEn_Config_C_delay <= rdEn_Config_C_i;
+//latch
+	always @(rdEn_Config_A_delay)
+		if (rdEn_Config_A_i == 1'b1)
+			latch_mem_A <= {mem_LTP_WIN_out, mem_LTD_WIN_out, mem_LTP_LrnRt_out, mem_LTD_LrnRt_out, mem_LrnModeBias_out};
 	
-	`ifdef SIM_MEM_INIT
-		integer file1, file2, file3, file4, file5, idx;
-		reg [100*8:1] file_name;
-		reg [STDP_WIN_BIT_WIDTH-1:0] data_S1, data_S2;
-		reg [DSIZE-1:0] data_D1, data_D2;
-		reg data_B1, data_B2;
-		reg [AER_BIT_WIDTH-1:0] data_A1;
-			
-		initial begin
+	always @(rdEn_Config_B_delay)
+		if (rdEn_Config_B_i == 1'b1)
+			latch_mem_B <= {mem_NurnType_out, mem_RandTh_out, mem_Th_Mask_out, mem_RstPot_out, mem_SpikeAER_out};
 
-			// initialize mem_A
-			file_name = {"../data", DIR_ID, "/LTP_Win.txt"}; 		file1 = $fopen(file_name, "r+");
-			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/LTD_Win.txt"}; 		file2 = $fopen(file_name, "r+");
-			if (file2 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/LTP_LrnRt.txt"}; 	file3 = $fopen(file_name, "r+");
-			if (file3 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/LTD_LrnRt.txt"}; 	file4 = $fopen(file_name, "r+");
-			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/LrnModeBias.txt"}; 	file5 = $fopen(file_name, "r+");
-			if (file5 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+	always @(rdEn_Config_C_delay)
+		if (rdEn_Config_C_i == 1'b1)
+			latch_mem_C <= mem_C_out;
 
-			for(idx = 0 ; idx <= (NUM_NURNS - 1) ; idx = idx + 1)
-			begin
-				$fscanf (file1, "%h\n", data_S1);
-				$fscanf (file2, "%h\n", data_S2);
-				$fscanf (file3, "%h\n", data_D1);
-				$fscanf (file4, "%h\n", data_D2);
-				$fscanf (file5, "%h\n", data_B1);
-				mem_A[idx]   =  {data_S1,data_S2,data_D1,data_D2,data_B1};
-			end
-		
-			$fclose(file1);
-			$fclose(file2);
-			$fclose(file3);
-			$fclose(file4);
-			$fclose(file5);
-			//-----------------------------
+//port A memory -- {LTP_Win, LTD_Win, LTP_LrnRt, LTD_LrnRt, LrnModeBias}
+//split mem_A into 5 memories
+single_port_rom	#(.DATA_WIDTH(STDP_WIN_BIT_WIDTH), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LTP_Win.txt"}))
+				mem_LTP_WIN (.addr(Addr_Config_A_i), .clk(clk_i), .q(mem_LTP_WIN_out));
 
-			// initialize mem_B
-			file_name = {"../data", DIR_ID, "/NurnType.txt"}; 	file1 = $fopen(file_name, "r+");
-			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/RandTh.txt"}; 		file2 = $fopen(file_name, "r+");
-			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/Th_Mask.txt"}; 		file3 = $fopen(file_name, "r+");
-			if (file2 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/RstPot.txt"};	 	file4 = $fopen(file_name, "r+");
-			if (file3 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/SpikeAER.txt"};	 	file5 = $fopen(file_name, "r+");
-			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+single_port_rom	#(.DATA_WIDTH(STDP_WIN_BIT_WIDTH), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LTD_Win.txt"}))
+				mem_LTD_WIN (.addr(Addr_Config_A_i), .clk(clk_i), .q(mem_LTD_WIN_out));
 
-			for(idx = 0 ; idx <= (NUM_NURNS - 1) ; idx = idx + 1)
-			begin
-				$fscanf (file1, "%h\n", data_B1);
-				$fscanf (file2, "%h\n", data_B2);
-				$fscanf (file3, "%h\n", data_D1);
-				$fscanf (file4, "%h\n", data_D2);
-				$fscanf (file5, "%h\n", data_A1);
-				mem_B[idx]   =  {data_B1,data_B2,data_D1,data_D2,data_A1};
-			end
-		
-			$fclose(file1);
-			$fclose(file2);
-			$fclose(file3);
-			$fclose(file4);
-			$fclose(file5);
-			//-----------------------------
-			
-			// initialize mem_C
-			file_name = {"../data", DIR_ID, "/LrnModeWght.txt"};
-			$readmemh (file_name,mem_C);
-			//-----------------------------
-				
-		end
-	`endif
-// synthesis translate_on
+single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LTP_LrnRt.txt"}))
+				mem_LTP_LrnRt (.addr(Addr_Config_A_i), .clk(clk_i), .q(mem_LTP_LrnRt_out));
 
-	//LOGIC
-	//--------------------------------------------------//
-	// Read configuration Memory
-	always@(posedge clk_i or negedge rst_n_i)  begin
-		if(rst_n_i == 1'b0) begin
-			memOutReg_A    <=  0   ;
-			memOutReg_B   <=  0 ;
-			memOutReg_C    <=  0;    
-	  	end
-	  	else begin
-	  		if(rdEn_Config_A_i == 1'b1) begin
-	        	memOutReg_A   <=  mem_A[Addr_Config_A_i] ;
-        	end
+single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LTD_LrnRt.txt"}))
+				mem_LTD_LrnRt (.addr(Addr_Config_A_i), .clk(clk_i), .q(mem_LTD_LrnRt_out));
 
-        	if(rdEn_Config_B_i == 1'b1) begin
-	        	memOutReg_B <= mem_B[Addr_Config_B_i] ;
-  			end
+single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LrnModeBias.txt"}))
+				mem_LrnModeBias (.addr(Addr_Config_A_i), .clk(clk_i), .q(mem_LrnModeBias_out));
 
-  			if(rdEn_Config_C_i == 1'b1) begin
-				memOutReg_C    <=   mem_C[Addr_Config_C_i] ;    
-			end
-	  	end
-	end
+//port B memory -- {NurnType, RandTh, Th_Mask, RstPot, SpikeAER}
+
+single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/NurnType.txt"}))
+				mem_NurnType (.addr(Addr_Config_B_i), .clk(clk_i), .q(mem_NurnType_out));
+
+single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/RandTh.txt"}))
+				mem_RandTh (.addr(Addr_Config_B_i), .clk(clk_i), .q(mem_RandTh_out));
+
+single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/Th_Mask.txt"}))
+				mem_Th_Mask (.addr(Addr_Config_B_i), .clk(clk_i), .q(mem_Th_Mask_out));
+
+single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/RstPot.txt"}))
+				mem_RstPot (.addr(Addr_Config_B_i), .clk(clk_i), .q(mem_RstPot_out));
+
+single_port_rom	#(.DATA_WIDTH(AER_BIT_WIDTH), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/SpikeAER.txt"}))
+				mem_SpikeAER (.addr(Addr_Config_B_i), .clk(clk_i), .q(mem_SpikeAER_out));
+
+//mem_C LrnModeWght
+single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH + AXON_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LrnModeWght.txt"}))
+				mem_C (.addr(Addr_Config_C_i), .clk(clk_i), .q(mem_C_out));
 
 	//output bus splitting mem A
-	assign LTP_Win_o 		= memOutReg_A[MEM_WIDTH_A-1 : MEM_WIDTH_A-STDP_WIN_BIT_WIDTH];
-	assign LTD_Win_o 		= memOutReg_A[MEM_WIDTH_A-STDP_WIN_BIT_WIDTH-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH];
-	assign LTP_LrnRt_o 		= memOutReg_A[MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-DSIZE];
-	assign LTD_LrnRt_o 		= memOutReg_A[MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-DSIZE-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-2*DSIZE];
-	assign biasLrnMode_o 	= memOutReg_A[0];
+	assign LTP_Win_o 		= latch_mem_A[MEM_WIDTH_A-1 : MEM_WIDTH_A-STDP_WIN_BIT_WIDTH];
+	assign LTD_Win_o 		= latch_mem_A[MEM_WIDTH_A-STDP_WIN_BIT_WIDTH-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH];
+	assign LTP_LrnRt_o 		= latch_mem_A[MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-DSIZE];
+	assign LTD_LrnRt_o 		= latch_mem_A[MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-DSIZE-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-2*DSIZE];
+	assign biasLrnMode_o 	= latch_mem_A[0];
 
 	//output bus splitting mem B
-	assign NurnType_o		= memOutReg_B[MEM_WIDTH_B-1];
-	assign RandTh_o			= memOutReg_B[MEM_WIDTH_B-1-1];
-	assign Th_Mask_o		= memOutReg_B[MEM_WIDTH_B-1-1-1 : MEM_WIDTH_B-1-1-DSIZE];
-	assign RstPot_o			= memOutReg_B[MEM_WIDTH_B-1-1-DSIZE-1 : MEM_WIDTH_B-1-1-2*DSIZE];
-	assign SpikeAER_o		= memOutReg_B[MEM_WIDTH_B-1-1-2*DSIZE-1 : 0];
+	assign NurnType_o		= latch_mem_B[MEM_WIDTH_B-1];
+	assign RandTh_o			= latch_mem_B[MEM_WIDTH_B-1-1];
+	assign Th_Mask_o		= latch_mem_B[MEM_WIDTH_B-1-1-1 : MEM_WIDTH_B-1-1-DSIZE];
+	assign RstPot_o			= latch_mem_B[MEM_WIDTH_B-1-1-DSIZE-1 : MEM_WIDTH_B-1-1-2*DSIZE];
+	assign SpikeAER_o		= latch_mem_B[MEM_WIDTH_B-1-1-2*DSIZE-1 : 0];
 
 	//output bus splitting mem C
-	assign axonLrnMode_o 	= memOutReg_C;
+	assign axonLrnMode_o 	= latch_mem_C;
 	
 endmodule

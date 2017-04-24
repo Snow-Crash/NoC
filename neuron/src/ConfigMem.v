@@ -15,6 +15,8 @@
 //2017.4.1  localparam cause error in quartus, unkown reason
 //2017.4.21 rewrite config memory. Simulated in recall mode, timing is not affacted.
 //2017.4.24 add two parameter SYNTH_PATH and SIM_PATH.
+//			change sensitivity list of the three latches. sensitivity list was incomplete
+//			only includes enable signal.　data shoule also be included.	
 
 //Todo		If rdEn_Config_A_i, rdEn_Config_A_i and rdEn_Config_A_i are not delayed,
 //			use these three signal as enable signal of the latched, still get right
@@ -126,15 +128,15 @@ module ConfigMem
 		else
 			rdEn_Config_C_delay <= rdEn_Config_C_i;
 //latch
-	always @(rdEn_Config_A_delay)
+	always @(*)
 		if (rdEn_Config_A_i == 1'b1)
 			latch_mem_A <= {mem_LTP_WIN_out, mem_LTD_WIN_out, mem_LTP_LrnRt_out, mem_LTD_LrnRt_out, mem_LrnModeBias_out};
 	
-	always @(rdEn_Config_B_delay)
+	always @(*)
 		if (rdEn_Config_B_i == 1'b1)
 			latch_mem_B <= {mem_NurnType_out, mem_RandTh_out, mem_Th_Mask_out, mem_RstPot_out, mem_SpikeAER_out};
 
-	always @(rdEn_Config_C_delay)
+	always @(*)
 		if (rdEn_Config_C_i == 1'b1)
 			latch_mem_C <= mem_C_out;
 

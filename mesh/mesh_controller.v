@@ -8,6 +8,7 @@
 //          lower 32 bits are spike packet.
 //2017.4.11 add wait_packet_number state.Because output of rom is buffered, output has one clock
 //          delay. 
+//2017.4.24 add two parameter SYNTH_PATH and SIM_PATH.
 
 module mesh_controller(neu_clk, rst_n, rt_clk, rt_reset, start, spike_packet, write_req, packet_in, write_enable, receive_full, result_output);
 
@@ -25,8 +26,12 @@ parameter step_number = 32;//how many steps in current simulation
 parameter clk_per_step = 32;//how many neuron clocks in one time step
 parameter start_delayed_steps = 0;
 parameter packet_delayed_steps = 2;
-parameter SIM_FILE_PATH = "D:/GoogleDrive/NoC/data1_1/packet.txt";
-parameter INIT_FILE_PATH = "‪D:/code/SimulationFile/packet.mif";
+parameter SIM_PATH = "D:/code/Sim2Core";
+parameter SYNTH_PATH = "D:/code/Sim2Core";
+parameter INIT_FILE_PATH_PACKET = {SYNTH_PATH, "/packet.mif"};
+parameter INIT_FILE_PATH_PACKET_NUMBER = {SYNTH_PATH, "/packet_number.mif"};
+parameter SIM_FILE_PATH_PACKET = {SIM_PATH,"/packet.txt"};
+parameter SIM_FILE_PATH_PACKET_NUMBER = {SIM_PATH, "/packet_number.txt"};
 
 localparam init = 4'd0;
 localparam delay = 4'd1;
@@ -60,7 +65,7 @@ always @(posedge neu_clk or negedge rst_n)
 //------------------------packet rom, stores all packet---------------
 reg [ADDR_WIDTH - 1:0] packet_address;
 reg inc_packet_address;
-single_port_rom  #(.DATA_WIDTH(32), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/GoogleDrive/NoC/data1_1/packet.txt"))
+single_port_rom  #(.DATA_WIDTH(32), .ADDR_WIDTH(8), .INIT_FILE_PATH(INIT_FILE_PATH_PACKET), .SIM_FILE_PATH(SIM_FILE_PATH_PACKET))
 packet_rom (	.addr(packet_address),
 	.clk(neu_clk), 
 	.q(spike_packet));
@@ -80,7 +85,7 @@ always @(posedge neu_clk or negedge rst_n)
 //-----------------------------packet number rom--------------------
 reg [7:0] packet_number_address;
 reg inc_packet_number_address;
-single_port_rom  #(.DATA_WIDTH(8), .ADDR_WIDTH(8), .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH("D:/GoogleDrive/NoC/data1_1/packet_number.txt"))
+single_port_rom  #(.DATA_WIDTH(8), .ADDR_WIDTH(8), .INIT_FILE_PATH(INIT_FILE_PATH_PACKET_NUMBER), .SIM_FILE_PATH(SIM_FILE_PATH_PACKET_NUMBER))
 packet_number_rom (	.addr(packet_number_address),
 	.clk(neu_clk), 
 	.q(packet_number));

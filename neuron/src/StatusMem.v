@@ -33,6 +33,7 @@
 //2017.4.17 rewrite entire status memory because quartus cannot infer ram coorecly.
 //			This one works fine, tested recall mode and compared with original version. 
 //			spike results are the same. 
+//2017.4.24 add two parameter SYNTH_PATH and SIM_PATH.
 
 //todo		fifo clear signal: it is not mandatory. if use async signal, and if it's cleared,
 //			output of fifo is red line. Need to test sync clear.
@@ -59,13 +60,16 @@ module StatusMem
 	parameter X_ID = "1",
 	parameter Y_ID = "1",
 	parameter DIR_ID = {X_ID, "_", Y_ID},
+	parameter SIM_PATH = "D:/code/data",
+	parameter SYNTH_PATH = "D:/code/synth/data",
 
-	parameter BIAS_MIF_PATH = "D:/code/synth/data1_1/Bias.mif",
-	parameter MEMBPOT_MIF_PATH = "D:/code/synth/data1_1/MembPot.mif",
-	parameter TH_MIF_PATH = "D:/code/synth/data1_1/Th.mif",
-	parameter POSTSPIKEHISTORY_MIF_PATH = "D:/code/synth/data1_1/PostSpikeHistory.mif",
-	parameter PRESPIKEHISTORY_MIF_PATH = "D:/code/synth/data1_1/PreSpikeHistory.mif",
-	parameter WEIGHTS_MIF_PATH = "D:/code/synth/data1_1/Weights.mif"
+	parameter BIAS_MIF_PATH = {SYNTH_PATH, DIR_ID, "/Bias.mif"},
+	parameter MEMBPOT_MIF_PATH = {SYNTH_PATH, DIR_ID, "/MembPot.mif"},
+	parameter TH_MIF_PATH ={SYNTH_PATH, DIR_ID, "/Th.mif"},
+	parameter POSTSPIKEHISTORY_MIF_PATH ={SYNTH_PATH, DIR_ID, "/PostSpikeHistory.mif"},
+	parameter PRESPIKEHISTORY_MIF_PATH = {SYNTH_PATH, DIR_ID, "/PreSpikeHistory.mif"},
+	parameter WEIGHTS_MIF_PATH = {SYNTH_PATH, DIR_ID, "/Weights.mif"}
+	
 )
 (
 	input 			clk_i			,
@@ -153,12 +157,12 @@ module StatusMem
 	`ifdef SIM_MEM_INIT
 		reg [100*8:1] file_name;
 		initial begin
-			file_name = {"../data", DIR_ID, "/Bias.txt"};				$readmemh (file_name,Mem_1);
-			file_name = {"../data", DIR_ID, "/MembPot.txt"};			$readmemh (file_name,Mem_2);
-			file_name = {"../data", DIR_ID, "/Th.txt"};				$readmemh (file_name,Mem_3);
-			file_name = {"../data", DIR_ID, "/PostSpikeHistory.txt"};	$readmemh (file_name,Mem_4);
-			file_name = {"../data", DIR_ID, "/PreSpikeHistory.txt"};	$readmemh (file_name,Mem_5);
-			file_name = {"../data", DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_6);
+			file_name = {SIM_PATH, DIR_ID, "/Bias.txt"};				$readmemh (file_name,Mem_1);
+			file_name = {SIM_PATH, DIR_ID, "/MembPot.txt"};			$readmemh (file_name,Mem_2);
+			file_name = {SIM_PATH, DIR_ID, "/Th.txt"};				$readmemh (file_name,Mem_3);
+			file_name = {SIM_PATH, DIR_ID, "/PostSpikeHistory.txt"};	$readmemh (file_name,Mem_4);
+			file_name = {SIM_PATH, DIR_ID, "/PreSpikeHistory.txt"};	$readmemh (file_name,Mem_5);
+			file_name = {SIM_PATH, DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_6);
 			//file_name = {"../data", DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_7);
 		end
 	`endif

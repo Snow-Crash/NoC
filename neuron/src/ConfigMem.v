@@ -14,6 +14,7 @@
 //------------------------------------------------------------------------
 //2017.4.1  localparam cause error in quartus, unkown reason
 //2017.4.21 rewrite config memory. Simulated in recall mode, timing is not affacted.
+//2017.4.24 add two parameter SYNTH_PATH and SIM_PATH.
 
 //Todo		If rdEn_Config_A_i, rdEn_Config_A_i and rdEn_Config_A_i are not delayed,
 //			use these three signal as enable signal of the latched, still get right
@@ -44,9 +45,12 @@ module ConfigMem
 	parameter X_ID = "1",
 	parameter Y_ID = "1",
 	parameter DIR_ID = {X_ID, "_", Y_ID},
-	parameter MEM_A_MIF_PATH = "D:/code/synth/data1_1/mem_A.mif",
-	parameter MEM_B_MIF_PATH = "D:/code/synth/data1_1/mem_B.mif",
-	parameter MEM_C_MIF_PATH = "D:/code/synth/data1_1/mem_C.mif"
+	parameter SYNTH_PATH = "D:/code/synth/data",
+	parameter SIM_PATH = "D:/code/data"
+	//parameter MEM_A_MIF_PATH = {SYNTH_PATH, DIR_ID, "/mem_A.mif"},
+	//parameter MEM_B_MIF_PATH = {SYNTH_PATH, DIR_ID, "/mem_B.mif"},
+	//parameter MEM_C_MIF_PATH = {SYNTH_PATH, DIR_ID, "/mem_C.mif"}
+	
 
 )
 (
@@ -136,40 +140,40 @@ module ConfigMem
 
 //port A memory -- {LTP_Win, LTD_Win, LTP_LrnRt, LTD_LrnRt, LrnModeBias}
 //split mem_A into 5 memories
-single_port_rom	#(.DATA_WIDTH(STDP_WIN_BIT_WIDTH), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LTP_Win.txt"}))
+single_port_rom	#(.DATA_WIDTH(STDP_WIN_BIT_WIDTH), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/LTP_Win.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/LTP_Win.txt"}))
 				mem_LTP_WIN (.addr(Addr_Config_A_i), .clk(clk_i), .q(mem_LTP_WIN_out));
 
-single_port_rom	#(.DATA_WIDTH(STDP_WIN_BIT_WIDTH), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LTD_Win.txt"}))
+single_port_rom	#(.DATA_WIDTH(STDP_WIN_BIT_WIDTH), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/LTD_Win.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/LTD_Win.txt"}))
 				mem_LTD_WIN (.addr(Addr_Config_A_i), .clk(clk_i), .q(mem_LTD_WIN_out));
 
-single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LTP_LrnRt.txt"}))
+single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/LTP_LrnRt.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/LTP_LrnRt.txt"}))
 				mem_LTP_LrnRt (.addr(Addr_Config_A_i), .clk(clk_i), .q(mem_LTP_LrnRt_out));
 
-single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LTD_LrnRt.txt"}))
+single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/LTD_LrnRt.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/LTD_LrnRt.txt"}))
 				mem_LTD_LrnRt (.addr(Addr_Config_A_i), .clk(clk_i), .q(mem_LTD_LrnRt_out));
 
-single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LrnModeBias.txt"}))
+single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/LrnModeBias.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/LrnModeBias.txt"}))
 				mem_LrnModeBias (.addr(Addr_Config_A_i), .clk(clk_i), .q(mem_LrnModeBias_out));
 
 //port B memory -- {NurnType, RandTh, Th_Mask, RstPot, SpikeAER}
 
-single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/NurnType.txt"}))
+single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/NurnType.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/NurnType.txt"}))
 				mem_NurnType (.addr(Addr_Config_B_i), .clk(clk_i), .q(mem_NurnType_out));
 
-single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/RandTh.txt"}))
+single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/RandTh.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/RandTh.txt"}))
 				mem_RandTh (.addr(Addr_Config_B_i), .clk(clk_i), .q(mem_RandTh_out));
 
-single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/Th_Mask.txt"}))
+single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/Th_Mask.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/Th_Mask.txt"}))
 				mem_Th_Mask (.addr(Addr_Config_B_i), .clk(clk_i), .q(mem_Th_Mask_out));
 
-single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/RstPot.txt"}))
+single_port_rom	#(.DATA_WIDTH(DSIZE), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/RstPot.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/RstPot.txt"}))
 				mem_RstPot (.addr(Addr_Config_B_i), .clk(clk_i), .q(mem_RstPot_out));
 
-single_port_rom	#(.DATA_WIDTH(AER_BIT_WIDTH), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/SpikeAER.txt"}))
+single_port_rom	#(.DATA_WIDTH(AER_BIT_WIDTH), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/SpikeAER.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/SpikeAER.txt"}))
 				mem_SpikeAER (.addr(Addr_Config_B_i), .clk(clk_i), .q(mem_SpikeAER_out));
 
 //mem_C LrnModeWght
-single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH + AXON_CNT_BIT_WIDTH), .INIT_FILE_PATH("D:/code/SimulationFile/packet.mif"), .SIM_FILE_PATH({"../data", DIR_ID, "/LrnModeWght.txt"}))
+single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH + AXON_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/LrnModeWght.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/LrnModeWght.txt"}))
 				mem_C (.addr(Addr_Config_C_i), .clk(clk_i), .q(mem_C_out));
 
 	//output bus splitting mem A

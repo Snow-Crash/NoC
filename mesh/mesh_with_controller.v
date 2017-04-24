@@ -1,5 +1,6 @@
 //1017.4.6  fix connection error
 //          add parameter step_number, step_cycle, nuron_num, axon_num..
+//2017.4.24 add two parameter SYNTH_PATH and SIM_PATH.
 
 `timescale 1ns/100ps
 `define tpd_clk 10
@@ -34,8 +35,8 @@ assign xor_west = ^west_boundary;
 assign result_output = ^{xor_east, xor_north, xor_south, xor_west, result_output_controller};
 
 mesh_controller #(.step_number(step_number), .clk_per_step(step_cycle),
-                .SIM_FILE_PATH("D:/GoogleDrive/NoC/data1_1/packet.txt"),
-                .INIT_FILE_PATH("‪D:/code/SimulationFile/packet.mif"))
+                .SIM_PATH("D:/code/Sim2Core"),
+                .SYNTH_PATH("D:/code/Sim2Core"))
 mesh_control (.neu_clk(neu_clk),
                                 .rst_n(neu_reset),
                                 .rt_clk(rt_clk),
@@ -60,7 +61,9 @@ router boundary (.clk(rt_clk), .clk_local(neu_clk), .clk_north(rt_clk), .clk_sou
 mesh_ap #(.NUM_NURNS(NUM_NURNS),
             .NUM_AXONS(NUM_AXONS),
             .NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
-            .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH))
+            .AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+            .SYNTH_PATH("D:/code/synth/data"),
+            .SIM_PATH("D:/code/data"))
 mesh (.clk(neu_clk), .rt_clk(rt_clk), .rst_n(neu_reset), .rt_reset(rt_reset), .start(start),
 .north_out_1_1(north_boundary[7:4]), .north_out_1_2(north_boundary[3:0]), .south_out_2_1(south_boundary[7:4]), .south_out_2_2(south_boundary[3:0]), 
 .east_out_1_2(data_m2b), .east_out_2_2(east_boundary[3:0]), .west_out_1_1(west_boundary[7:4]), .west_out_2_1(west_boundary[3:0]), 

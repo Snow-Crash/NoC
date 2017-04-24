@@ -10,6 +10,7 @@
 // -ver x.x : date : auth
 //		details
 //------------------------------------------------------------------------
+//2017.4.24 add two parameter SYNTH_PATH and SIM_PATH.
 
 `timescale 1ns/100ps
 `define tpd_clk 5
@@ -40,15 +41,17 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	parameter X_ID = "1";
 	parameter Y_ID = "1";
 
-	parameter MEM_A_MIF_PATH = "D:/code/synth/data1_1/mem_A.mif";
-	parameter MEM_B_MIF_PATH = "D:/code/synth/data1_1/mem_B.mif";
-	parameter MEM_C_MIF_PATH = "D:/code/synth/data1_1/mem_C.mif";
-	parameter BIAS_MIF_PATH = "D:/code/synth/data1_1/Bias.mif";
-	parameter MEMBPOT_MIF_PATH = "D:/code/synth/data1_1/MembPot.mif";
-	parameter TH_MIF_PATH = "D:/code/synth/data1_1/Th.mif";
-	parameter POSTSPIKEHISTORY_MIF_PATH = "D:/code/synth/data1_1/PostSpikeHistory.mif";
-	parameter PRESPIKEHISTORY_MIF_PATH = "D:/code/synth/data1_1/PreSpikeHistory.mif";
-	parameter WEIGHTS_MIF_PATH = "D:/code/synth/data1_1/Weights.mif";
+	//parameter MEM_A_MIF_PATH = "D:/code/synth/data1_1/mem_A.mif";
+	//parameter MEM_B_MIF_PATH = "D:/code/synth/data1_1/mem_B.mif";
+	//parameter MEM_C_MIF_PATH = "D:/code/synth/data1_1/mem_C.mif";
+	//parameter BIAS_MIF_PATH = "D:/code/synth/data1_1/Bias.mif";
+	//parameter MEMBPOT_MIF_PATH = "D:/code/synth/data1_1/MembPot.mif";
+	//parameter TH_MIF_PATH = "D:/code/synth/data1_1/Th.mif";
+	//parameter POSTSPIKEHISTORY_MIF_PATH = "D:/code/synth/data1_1/PostSpikeHistory.mif";
+	//parameter PRESPIKEHISTORY_MIF_PATH = "D:/code/synth/data1_1/PreSpikeHistory.mif";
+	//parameter WEIGHTS_MIF_PATH = "D:/code/synth/data1_1/Weights.mif";
+	parameter SYNTH_PATH = "D:/code/synth/data";
+	parameter SIM_PATH =  "D:/code/data";
 
 	input clk, rst_n, start;
 	input [NUM_AXONS - 1:0] inSpike;
@@ -239,9 +242,11 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
 		.X_ID					(X_ID),
 		.Y_ID					(Y_ID),
-		.MEM_A_MIF_PATH			(MEM_A_MIF_PATH),
-		.MEM_B_MIF_PATH			(MEM_B_MIF_PATH),
-		.MEM_C_MIF_PATH			(MEM_C_MIF_PATH)
+		.SYNTH_PATH				(SYNTH_PATH),
+		.SIM_PATH				(SIM_PATH)
+		//.MEM_A_MIF_PATH			(MEM_A_MIF_PATH),
+		//.MEM_B_MIF_PATH			(MEM_B_MIF_PATH),
+		//.MEM_C_MIF_PATH			(MEM_C_MIF_PATH)
 	)
 	CONFIGMEM
 	(
@@ -289,12 +294,15 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
 		.X_ID				(X_ID),
 		.Y_ID				(Y_ID),
-		.BIAS_MIF_PATH		(BIAS_MIF_PATH),
-		.MEMBPOT_MIF_PATH	(MEMBPOT_MIF_PATH),
-		.TH_MIF_PATH		(TH_MIF_PATH),
-		.POSTSPIKEHISTORY_MIF_PATH	(POSTSPIKEHISTORY_MIF_PATH),
-		.PRESPIKEHISTORY_MIF_PATH	(PRESPIKEHISTORY_MIF_PATH),
-		.WEIGHTS_MIF_PATH 	(WEIGHTS_MIF_PATH)
+		.SIM_PATH			(SIM_PATH),
+		.SYNTH_PATH			(SYNTH_PATH)
+		//.BIAS_MIF_PATH		(BIAS_MIF_PATH),
+		//.MEMBPOT_MIF_PATH	(MEMBPOT_MIF_PATH),
+		//.TH_MIF_PATH		(TH_MIF_PATH),
+		//.POSTSPIKEHISTORY_MIF_PATH	(POSTSPIKEHISTORY_MIF_PATH),
+		//.PRESPIKEHISTORY_MIF_PATH	(PRESPIKEHISTORY_MIF_PATH),
+		//.WEIGHTS_MIF_PATH 	(WEIGHTS_MIF_PATH)
+
 	)
 	STATUSMEM
 	(

@@ -58,6 +58,8 @@ module StatusMem
 	parameter X_ID = "1",
 	parameter Y_ID = "1",
 	parameter DIR_ID = {X_ID, "_", Y_ID},
+	parameter SIM_PATH = "D:/code/data",
+	parameter SYNTH_PATH = "D:/code/synth/data",
 
 	parameter BIAS_MIF_PATH = "D:/code/synth/data1_1/Bias.mif",
 	parameter MEMBPOT_MIF_PATH = "D:/code/synth/data1_1/MembPot.mif",
@@ -149,12 +151,12 @@ module StatusMem
 	`ifdef SIM_MEM_INIT
 		reg [100*8:1] file_name;
 		initial begin
-			file_name = {"../data", DIR_ID, "/Bias.txt"};				$readmemh (file_name,Mem_1);
-			file_name = {"../data", DIR_ID, "/MembPot.txt"};			$readmemh (file_name,Mem_2);
-			file_name = {"../data", DIR_ID, "/Th.txt"};				$readmemh (file_name,Mem_3);
-			file_name = {"../data", DIR_ID, "/PostSpikeHistory.txt"};	$readmemh (file_name,Mem_4);
-			file_name = {"../data", DIR_ID, "/PreSpikeHistory.txt"};	$readmemh (file_name,Mem_5);
-			file_name = {"../data", DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_6);
+			file_name = {SIM_PATH, DIR_ID, "/Bias.txt"};				$readmemh (file_name,Mem_1);
+			file_name = {SIM_PATH, DIR_ID, "/MembPot.txt"};			$readmemh (file_name,Mem_2);
+			file_name = {SIM_PATH, DIR_ID, "/Th.txt"};				$readmemh (file_name,Mem_3);
+			file_name = {SIM_PATH, DIR_ID, "/PostSpikeHistory.txt"};	$readmemh (file_name,Mem_4);
+			file_name = {SIM_PATH, DIR_ID, "/PreSpikeHistory.txt"};	$readmemh (file_name,Mem_5);
+			file_name = {SIM_PATH, DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_6);
 			//file_name = {"../data", DIR_ID, "/Weights.txt"};			$readmemh (file_name,Mem_7);
 		end
 	`endif

@@ -36,6 +36,8 @@ module ConfigMem
 	parameter X_ID = "1",
 	parameter Y_ID = "1",
 	parameter DIR_ID = {X_ID, "_", Y_ID},
+	parameter SYNTH_PATH = "D:/code/synth/data",
+	parameter SIM_PATH = "D:/code/data",
 	parameter MEM_A_MIF_PATH = "D:/code/synth/data1_1/mem_A.mif",
 	parameter MEM_B_MIF_PATH = "D:/code/synth/data1_1/mem_B.mif",
 	parameter MEM_C_MIF_PATH = "D:/code/synth/data1_1/mem_C.mif"
@@ -111,15 +113,15 @@ module ConfigMem
 		initial begin
 
 			// initialize mem_A
-			file_name = {"../data", DIR_ID, "/LTP_Win.txt"}; 		file1 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, DIR_ID, "/LTP_Win.txt"}; 		file1 = $fopen(file_name, "r+");
 			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/LTD_Win.txt"}; 		file2 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, DIR_ID, "/LTD_Win.txt"}; 		file2 = $fopen(file_name, "r+");
 			if (file2 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/LTP_LrnRt.txt"}; 	file3 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, DIR_ID, "/LTP_LrnRt.txt"}; 	file3 = $fopen(file_name, "r+");
 			if (file3 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/LTD_LrnRt.txt"}; 	file4 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, DIR_ID, "/LTD_LrnRt.txt"}; 	file4 = $fopen(file_name, "r+");
 			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/LrnModeBias.txt"}; 	file5 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, DIR_ID, "/LrnModeBias.txt"}; 	file5 = $fopen(file_name, "r+");
 			if (file5 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
 
 			for(idx = 0 ; idx <= (NUM_NURNS - 1) ; idx = idx + 1)
@@ -140,15 +142,15 @@ module ConfigMem
 			//-----------------------------
 
 			// initialize mem_B
-			file_name = {"../data", DIR_ID, "/NurnType.txt"}; 	file1 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, DIR_ID, "/NurnType.txt"}; 	file1 = $fopen(file_name, "r+");
 			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/RandTh.txt"}; 		file2 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, DIR_ID, "/RandTh.txt"}; 		file2 = $fopen(file_name, "r+");
 			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/Th_Mask.txt"}; 		file3 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, DIR_ID, "/Th_Mask.txt"}; 		file3 = $fopen(file_name, "r+");
 			if (file2 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/RstPot.txt"};	 	file4 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, DIR_ID, "/RstPot.txt"};	 	file4 = $fopen(file_name, "r+");
 			if (file3 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
-			file_name = {"../data", DIR_ID, "/SpikeAER.txt"};	 	file5 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, DIR_ID, "/SpikeAER.txt"};	 	file5 = $fopen(file_name, "r+");
 			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
 
 			for(idx = 0 ; idx <= (NUM_NURNS - 1) ; idx = idx + 1)
@@ -169,7 +171,7 @@ module ConfigMem
 			//-----------------------------
 			
 			// initialize mem_C
-			file_name = {"../data", DIR_ID, "/LrnModeWght.txt"};
+			file_name = {SIM_PATH, DIR_ID, "/LrnModeWght.txt"};
 			$readmemh (file_name,mem_C);
 			//-----------------------------
 				

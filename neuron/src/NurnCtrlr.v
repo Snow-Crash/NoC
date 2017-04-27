@@ -442,13 +442,17 @@ module NurnCtrlr
 
 			//learn pipeline
 			lrnCntr_Axon_Pipln <= lrnCntr_Axon;
+			//LRN_WEIGHT_S: enLrnWtPipln <= 1
 			enLrnWtPipln_dly <= enLrnWtPipln;
+			//PStgEn_rdWt = axonLrnMode_i & enLrnWtPipln_dly;
 			PStgEn_lrnRt <= PStgEn_rdWt | PStgEn_rdBias;
 			PStgEn_quant <= PStgEn_lrnRt;
 			PStgEn_shift <= PStgEn_quant;
 			PStgEn_deltaW <= PStgEn_shift;
 			PStgEn_wrBack <= PStgEn_deltaW;
+			//LRN_WEIGHT_S: inc_wrBackAddr = 1'b1;
 			inc_wrBackAddr_Pipln <= {inc_wrBackAddr,inc_wrBackAddr_Pipln[5:1]};
+			//wrEn_StatWr_G_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
 			init_WrBackAddr_Pipln <= {init_WrBackAddr,init_WrBackAddr_Pipln[3:1]};
 			LrnBias_Pipln <= {enLrnBiasPipln,LrnBias_Pipln[5:1]};
 			//------------------------
@@ -469,6 +473,7 @@ module NurnCtrlr
 	assign enShift_o = PStgEn_shift;
 	assign enDeltaW_o = PStgEn_deltaW;
 	assign wrEn_StatWr_D_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
+	//weight memory writing enable signal
 	assign wrEn_StatWr_G_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
 	assign PStgEn_rdBias = LrnBias_Pipln[5];
 	assign lrnUseBias_o = PStgEn_rdBias;

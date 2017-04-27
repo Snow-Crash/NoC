@@ -129,9 +129,12 @@ module ConfigMem
 			rdEn_Config_C_delay <= rdEn_Config_C_i;
 //latch
 	always @(*)
-		if (rdEn_Config_A_i == 1'b1)
-			latch_mem_A <= {mem_LTP_WIN_out, mem_LTD_WIN_out, mem_LTP_LrnRt_out, mem_LTD_LrnRt_out, mem_LrnModeBias_out};
-	
+		begin
+			if (rst_n_i == 1'b0 )
+				latch_mem_A <= 48'b0;
+			else if (rdEn_Config_A_i == 1'b1)
+				latch_mem_A <= {mem_LTP_WIN_out, mem_LTD_WIN_out, mem_LTP_LrnRt_out, mem_LTD_LrnRt_out, mem_LrnModeBias_out};
+		end	
 	always @(*)
 		if (rdEn_Config_B_i == 1'b1)
 			latch_mem_B <= {mem_NurnType_out, mem_RandTh_out, mem_Th_Mask_out, mem_RstPot_out, mem_SpikeAER_out};

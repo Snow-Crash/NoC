@@ -297,9 +297,17 @@ module dataPath
 		if (enLTP == 1'b1) begin
 			eta_prime = LTP_LrnRt_i;
 			sign_WtBias =  negWtBias[DSIZE-1:0];
-		end else begin //if (enLTD == 1'b1)
+			end 
+		else if (enLTD == 1'b1) 
+			begin
 			eta_prime = LTD_LrnRt_i;
 			sign_WtBias =  WtBias_in;
+			end
+		else
+			begin
+			eta_prime = 0;
+			sign_WtBias =  0;
+			end
 		end
 
 		if (delta_WtBias[DSIZE-1] == 1'b1) begin

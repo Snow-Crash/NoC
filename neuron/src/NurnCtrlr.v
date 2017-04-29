@@ -474,6 +474,8 @@ module NurnCtrlr
 	assign enDeltaW_o = PStgEn_deltaW;
 	assign wrEn_StatWr_D_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
 	//weight memory writing enable signal
+	//bug: write enable of weight memoey is always high.
+	//controller doesn't check prespike history and postspike history
 	assign wrEn_StatWr_G_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
 	assign PStgEn_rdBias = LrnBias_Pipln[5];
 	assign lrnUseBias_o = PStgEn_rdBias;

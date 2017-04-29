@@ -279,6 +279,7 @@ module dataPath
 			preSpikeHist = 0;
 			valid_PreHist = 1'b1;
 		end else begin
+		//bug: mismatch with SpnSim
 			if (data_StatRd_C_i > LTP_Win_i) begin
 				preSpikeHist = data_StatRd_C_i;
 				valid_PreHist = 1'b0;
@@ -298,17 +299,17 @@ module dataPath
 			eta_prime = LTP_LrnRt_i;
 			sign_WtBias =  negWtBias[DSIZE-1:0];
 			end 
+		//end else begin //if (enLTD == 1'b1)   bug: enLTD is not used
 		else if (enLTD == 1'b1) 
 			begin
 			eta_prime = LTD_LrnRt_i;
 			sign_WtBias =  WtBias_in;
 			end
-		else
+		else	//prevent latch
 			begin
 			eta_prime = 0;
 			sign_WtBias =  0;
 			end
-		end
 
 		if (delta_WtBias[DSIZE-1] == 1'b1) begin
 			shiftRight = 1'b1;

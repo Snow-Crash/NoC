@@ -17,6 +17,8 @@
 //		details
 //------------------------------------------------------------------------
 
+//2017.4.29 PreSpikeHist_Ppln[3] has multiple drive. Fixed it.
+
 `timescale 1ns/100ps
 
 module dataPath
@@ -362,6 +364,7 @@ module dataPath
 			enLTP <= 1'b0;
 			enLTD <= 1'b0;
 			expPreHist <= 1'b0;
+			//bug: if condition mismatch with SpnSim
 			if ((axonLrnMode_i == 1'b1) && (lrnUseBias_i == 1'b0)) begin
 				if ((valid_PostHist == 1'b1) && (valid_PreHist == 1'b1) && (CorSpike == 1'b1)) begin
 					enLTP <= 1'b1;
@@ -383,13 +386,33 @@ module dataPath
 			delta_WtBias <= delta_WtBias_Th;
 			quant_Dlta_Wt_Bias_reg <= quant_Dlta_Wt_Bias;
 
-			if (expPreHist == 1'b1) begin
-				PreSpikeHist_Ppln[3] <= LTP_Win_i + 1;
-			end else if (axonLrnMode_i == 1'b1) begin
-				PreSpikeHist_Ppln[4] <= preSpikeHist;	
-			end
-			for(i = 0; i < 4; i = i + 1)
-				PreSpikeHist_Ppln[i] <= PreSpikeHist_Ppln[i+1];
+			
+			// if (expPreHist == 1'b1) begin
+			// 	PreSpikeHist_Ppln[3] <= LTP_Win_i + 1;
+			// 	//should PreSpikeHist_Ppln[4] be updated if expPreHist == 1 ?
+			// end else if (axonLrnMode_i == 1'b1) begin
+			// 	PreSpikeHist_Ppln[4] <= preSpikeHist;	
+			// end
+			// //bug: PreSpikeHist_Ppln[3] multiplle drive
+			// for(i = 0; i < 4; i = i + 1)
+			// 	PreSpikeHist_Ppln[i] <= PreSpikeHist_Ppln[i+1];
+			
+
+			//fix:
+			if (expPreHist == 1'b1) 
+				begin
+					PreSpikeHist_Ppln[3] <= LTP_Win_i + 1;
+				end
+			else if (axonLrnMode_i == 1'b1) 
+				begin
+					PreSpikeHist_Ppln[4] <= preSpikeHist;
+					PreSpikeHist_Ppln[3] <= PreSpikeHist_Ppln[4];
+				end
+		
+			PreSpikeHist_Ppln[0] <= PreSpikeHist_Ppln[1];
+			PreSpikeHist_Ppln[1] <= PreSpikeHist_Ppln[2];
+			PreSpikeHist_Ppln[2] <= PreSpikeHist_Ppln[3];
+
 
 			lrnUseBias_dly <= lrnUseBias_i;
 			if (lrnUseBias_dly == 1'b1) begin

@@ -16,7 +16,10 @@
 //2017.4.21 rewrite config memory. Simulated in recall mode, timing is not affacted.
 //2017.4.24 add two parameter SYNTH_PATH and SIM_PATH.
 //			change sensitivity list of the three latches. sensitivity list was incomplete
-//			only includes enable signal.　data shoule also be included.	
+//			only includes enable signal.　data shoule also be included.
+//2017.4.30 compared with old vrsion. In learn mode, there is timing issues. output is one
+//			clock earlier than old version. Remove latches and add three registers to regist
+//			the output of memories.	Simulated, get same timing as old version.
 
 //Todo		If rdEn_Config_A_i, rdEn_Config_A_i and rdEn_Config_A_i are not delayed,
 //			use these three signal as enable signal of the latched, still get right
@@ -104,10 +107,14 @@ module ConfigMem
 	wire [AER_BIT_WIDTH - 1:0] mem_SpikeAER_out;
 	wire mem_C_out;
 
-	reg [MEM_WIDTH_A - 1:0] latch_mem_A;
-	reg [MEM_WIDTH_B - 1:0] latch_mem_B;
-	reg latch_mem_C;
+	// reg [MEM_WIDTH_A - 1:0] latch_mem_A;
+	// reg [MEM_WIDTH_B - 1:0] latch_mem_B;
+	// reg latch_mem_C;
 	reg rdEn_Config_A_delay, rdEn_Config_B_delay, rdEn_Config_C_delay;
+
+	reg [MEM_WIDTH_A - 1:0] reg_mem_A;
+	reg [MEM_WIDTH_B - 1:0] reg_mem_B;
+	reg reg_mem_C;
 
 //rdEn_Config_A_i, rdEn_Config_B_i and rdEn_Config_C_i are delayed 1 clock
 	always @(posedge clk_i or negedge rst_n_i)
@@ -127,21 +134,46 @@ module ConfigMem
 			rdEn_Config_C_delay <= 1'b0;
 		else
 			rdEn_Config_C_delay <= rdEn_Config_C_i;
+
+// //latch
+// 	always @(*)
+// 		begin
+// 			if (rst_n_i == 1'b0 )
+// 				latch_mem_A <= 48'b0;
+// 			else if (rdEn_Config_A_i == 1'b1)
+// 				latch_mem_A <= {mem_LTP_WIN_out, mem_LTD_WIN_out, mem_LTP_LrnRt_out, mem_LTD_LrnRt_out, mem_LrnModeBias_out};
+// 		end	
+// 	always @(*)
+// 		if (rdEn_Config_B_i == 1'b1)
+// 			latch_mem_B <= {mem_NurnType_out, mem_RandTh_out, mem_Th_Mask_out, mem_RstPot_out, mem_SpikeAER_out};
+
+// 	always @(*)
+// 		if (rdEn_Config_C_i == 1'b1)
+// 			latch_mem_C <= mem_C_out;
+
+
 //latch
-	always @(*)
+	always @(posedge clk_i or negedge rst_n_i)
 		begin
 			if (rst_n_i == 1'b0 )
-				latch_mem_A <= 48'b0;
+				reg_mem_A <= 48'b0;
 			else if (rdEn_Config_A_i == 1'b1)
-				latch_mem_A <= {mem_LTP_WIN_out, mem_LTD_WIN_out, mem_LTP_LrnRt_out, mem_LTD_LrnRt_out, mem_LrnModeBias_out};
+				reg_mem_A <= {mem_LTP_WIN_out, mem_LTD_WIN_out, mem_LTP_LrnRt_out, mem_LTD_LrnRt_out, mem_LrnModeBias_out};
 		end	
-	always @(*)
-		if (rdEn_Config_B_i == 1'b1)
-			latch_mem_B <= {mem_NurnType_out, mem_RandTh_out, mem_Th_Mask_out, mem_RstPot_out, mem_SpikeAER_out};
-
-	always @(*)
-		if (rdEn_Config_C_i == 1'b1)
-			latch_mem_C <= mem_C_out;
+	always @(posedge clk_i or negedge rst_n_i)
+		begin
+			if (rst_n_i == 1'b0)
+				reg_mem_B <= 0;
+			else if (rdEn_Config_B_i == 1'b1)
+				reg_mem_B <= {mem_NurnType_out, mem_RandTh_out, mem_Th_Mask_out, mem_RstPot_out, mem_SpikeAER_out};
+		end
+	always @(posedge clk_i or negedge rst_n_i)
+		begin
+			if (rst_n_i == 1'b0)
+				reg_mem_C <= 0;
+			else if (rdEn_Config_C_i == 1'b1)
+				reg_mem_C <= mem_C_out;
+		end
 
 //port A memory -- {LTP_Win, LTD_Win, LTP_LrnRt, LTD_LrnRt, LrnModeBias}
 //split mem_A into 5 memories
@@ -181,21 +213,38 @@ single_port_rom	#(.DATA_WIDTH(AER_BIT_WIDTH), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH), .
 single_port_rom	#(.DATA_WIDTH(1), .ADDR_WIDTH(NURN_CNT_BIT_WIDTH + AXON_CNT_BIT_WIDTH), .INIT_FILE_PATH({SYNTH_PATH, DIR_ID, "/LrnModeWght.mif"}), .SIM_FILE_PATH({SIM_PATH, DIR_ID, "/LrnModeWght.txt"}))
 				mem_C (.addr(Addr_Config_C_i), .clk(clk_i), .q(mem_C_out));
 
+	// //output bus splitting mem A
+	// assign LTP_Win_o 		= latch_mem_A[MEM_WIDTH_A-1 : MEM_WIDTH_A-STDP_WIN_BIT_WIDTH];
+	// assign LTD_Win_o 		= latch_mem_A[MEM_WIDTH_A-STDP_WIN_BIT_WIDTH-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH];
+	// assign LTP_LrnRt_o 		= latch_mem_A[MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-DSIZE];
+	// assign LTD_LrnRt_o 		= latch_mem_A[MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-DSIZE-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-2*DSIZE];
+	// assign biasLrnMode_o 	= latch_mem_A[0];
+
+	// //output bus splitting mem B
+	// assign NurnType_o		= latch_mem_B[MEM_WIDTH_B-1];
+	// assign RandTh_o			= latch_mem_B[MEM_WIDTH_B-1-1];
+	// assign Th_Mask_o		= latch_mem_B[MEM_WIDTH_B-1-1-1 : MEM_WIDTH_B-1-1-DSIZE];
+	// assign RstPot_o			= latch_mem_B[MEM_WIDTH_B-1-1-DSIZE-1 : MEM_WIDTH_B-1-1-2*DSIZE];
+	// assign SpikeAER_o		= latch_mem_B[MEM_WIDTH_B-1-1-2*DSIZE-1 : 0];
+
+	// //output bus splitting mem C
+	// assign axonLrnMode_o 	= latch_mem_C;
+
 	//output bus splitting mem A
-	assign LTP_Win_o 		= latch_mem_A[MEM_WIDTH_A-1 : MEM_WIDTH_A-STDP_WIN_BIT_WIDTH];
-	assign LTD_Win_o 		= latch_mem_A[MEM_WIDTH_A-STDP_WIN_BIT_WIDTH-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH];
-	assign LTP_LrnRt_o 		= latch_mem_A[MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-DSIZE];
-	assign LTD_LrnRt_o 		= latch_mem_A[MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-DSIZE-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-2*DSIZE];
-	assign biasLrnMode_o 	= latch_mem_A[0];
+	assign LTP_Win_o 		= reg_mem_A[MEM_WIDTH_A-1 : MEM_WIDTH_A-STDP_WIN_BIT_WIDTH];
+	assign LTD_Win_o 		= reg_mem_A[MEM_WIDTH_A-STDP_WIN_BIT_WIDTH-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH];
+	assign LTP_LrnRt_o 		= reg_mem_A[MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-DSIZE];
+	assign LTD_LrnRt_o 		= reg_mem_A[MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-DSIZE-1 : MEM_WIDTH_A-2*STDP_WIN_BIT_WIDTH-2*DSIZE];
+	assign biasLrnMode_o 	= reg_mem_A[0];
 
 	//output bus splitting mem B
-	assign NurnType_o		= latch_mem_B[MEM_WIDTH_B-1];
-	assign RandTh_o			= latch_mem_B[MEM_WIDTH_B-1-1];
-	assign Th_Mask_o		= latch_mem_B[MEM_WIDTH_B-1-1-1 : MEM_WIDTH_B-1-1-DSIZE];
-	assign RstPot_o			= latch_mem_B[MEM_WIDTH_B-1-1-DSIZE-1 : MEM_WIDTH_B-1-1-2*DSIZE];
-	assign SpikeAER_o		= latch_mem_B[MEM_WIDTH_B-1-1-2*DSIZE-1 : 0];
+	assign NurnType_o		= reg_mem_B[MEM_WIDTH_B-1];
+	assign RandTh_o			= reg_mem_B[MEM_WIDTH_B-1-1];
+	assign Th_Mask_o		= reg_mem_B[MEM_WIDTH_B-1-1-1 : MEM_WIDTH_B-1-1-DSIZE];
+	assign RstPot_o			= reg_mem_B[MEM_WIDTH_B-1-1-DSIZE-1 : MEM_WIDTH_B-1-1-2*DSIZE];
+	assign SpikeAER_o		= reg_mem_B[MEM_WIDTH_B-1-1-2*DSIZE-1 : 0];
 
 	//output bus splitting mem C
-	assign axonLrnMode_o 	= latch_mem_C;
+	assign axonLrnMode_o 	= reg_mem_C;
 	
 endmodule

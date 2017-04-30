@@ -34,6 +34,8 @@
 //			This one works fine, tested recall mode and compared with original version. 
 //			spike results are the same. 
 //2017.4.24 add two parameter SYNTH_PATH and SIM_PATH.
+//2017.4.30 add reset to memOutReg_C of memory5. Doesn't affect timing and function.
+//			Need to verify if it can be synthesized as RAM.
 
 //todo		fifo clear signal: it is not mandatory. if use async signal, and if it's cleared,
 //			output of fifo is red line. Need to test sync clear.
@@ -280,11 +282,13 @@ module StatusMem
 	end
 
 	//--------------------------Mem_5------------
-	always @ (posedge clk_i)
+	always @ (posedge clk_i or negedge rst_n_i)
 	begin
 		if (wrEn_StatWr_D_i == 1'b1)
 			Mem_5[Addr_StatWr_D_i] <= data_StatWr_D_i;
-		if(rdEn_StatRd_C_i == 1'b1)
+		if (rst_n_i == 1'b0)
+			memOutReg_C <= 0;
+		else if(rdEn_StatRd_C_i == 1'b1)
 			memOutReg_C <= Mem_5[Addr_A_Mem1_4];
 	end
 	//-------------------------Mem_6

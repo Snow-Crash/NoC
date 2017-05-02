@@ -222,7 +222,7 @@ module StatusMem
 	    end
 
 	//-----------------------Mem_1---------------------------
-	
+	//						Mem_1 (0x00) - Bias
 	always @ (posedge clk_i)
 	begin
 		if (Wr_En_Mem_1)
@@ -232,7 +232,8 @@ module StatusMem
 	end
 
 	//-----------------------Mem_2---------------------------
-	
+	//						Mem_2 (0x01) - MembPot
+
 	always @ (posedge clk_i)
 	begin
 		if (Wr_En_Mem_2)
@@ -242,6 +243,7 @@ module StatusMem
 	end
 
 	//-----------------------Mem_3---------------------------
+	//						Mem_3 (0x10) - Th
 	//reg [DSIZE-1:0] memOutReg_A_3;
 	always @ (posedge clk_i)
 	begin
@@ -252,6 +254,7 @@ module StatusMem
 	end
 
 	//-----------------------Mem_4---------------------------
+	//						Mem_4 (0x11) - PostSpikeHist
 	//reg [DSIZE-1:0] memOutReg_A_4;
 	always @ (posedge clk_i)
 	begin
@@ -266,22 +269,23 @@ module StatusMem
 		if (rdEn_StatRd_A_i == 1'b1) begin
 		case (Sel_A_Mem1_4)
 	        2'b00: begin
-	        	memOutReg_A = memOutReg_A_1 ;
+	        	memOutReg_A = memOutReg_A_1 ;//Bias
 	        end
 	        2'b01: begin
-	        	memOutReg_A = memOutReg_A_2 ;
+	        	memOutReg_A = memOutReg_A_2 ;//MembPot
 	        end
 	        2'b10: begin
-	        	memOutReg_A = memOutReg_A_3 ;
+	        	memOutReg_A = memOutReg_A_3 ;//Th
 	        end
 	        default: begin//2'b11
-	        	memOutReg_A = memOutReg_A_4 ;
+	        	memOutReg_A = memOutReg_A_4 ;//PostSpikeHist
 	        end
 		endcase
 		end
 	end
 
 	//--------------------------Mem_5------------
+	//						Mem_5 - PreSpikeHistory
 	always @ (posedge clk_i or negedge rst_n_i)
 	begin
 		if (wrEn_StatWr_D_i == 1'b1)
@@ -292,6 +296,7 @@ module StatusMem
 			memOutReg_C <= Mem_5[Addr_A_Mem1_4];
 	end
 	//-------------------------Mem_6
+	//						Mem_6 - Weights
 	always @ (posedge clk_i)
 	begin
 		if (wrEn_StatWr_G_i == 1'b1)

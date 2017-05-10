@@ -277,6 +277,8 @@ module NurnCtrlr
 			end
 
 			LRN_RD_PARM_S: begin
+				//read Config Memory A:
+				//LTP_WIN, LTD_WIN, LTP_LrnRt_out, LTD_LrnRt_out, LrnModeBias_out
 				rdEn_Config_A_o = 1'b1;
 				rdPostSpkHist = 1'b1;
 				init_WrBackAddr = 1'b1;
@@ -285,6 +287,8 @@ module NurnCtrlr
 			end
 
 			LRN_WEIGHT_S: begin
+				//read PreSpikeHistory
+				//read LrnModeWght
 				lrnCntr_Axon_inc = 1'b1;
 				enLrnWtPipln = 1'b1;
 				inc_wrBackAddr = 1'b1;
@@ -464,14 +468,16 @@ module NurnCtrlr
 	assign cmpSTDP_o = cmpSTDP_win_dly;
 	
 	//learn pipeline
-	assign rdEn_StatRd_C_o = enLrnWtPipln;
-	assign rdEn_Config_C_o = enLrnWtPipln;
+	assign rdEn_StatRd_C_o = enLrnWtPipln;//read PreSpikeHistory
+	assign rdEn_Config_C_o = enLrnWtPipln;//read LrnModeWght
 	assign PStgEn_rdWt = axonLrnMode_i & enLrnWtPipln_dly;
+	//read weight
 	assign rdEn_StatRd_F_o = PStgEn_rdWt;
 	assign addLrnRt_o = PStgEn_lrnRt;
 	assign enQuant_o = PStgEn_quant;
 	assign enShift_o = PStgEn_shift;
 	assign enDeltaW_o = PStgEn_deltaW;
+	//write PreSpikeHistory
 	assign wrEn_StatWr_D_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
 	//weight memory writing enable signal
 	//bug: write enable of weight memoey is always high.

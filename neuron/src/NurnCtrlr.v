@@ -13,6 +13,10 @@
 //		details
 //------------------------------------------------------------------------
 
+//2017.8.31  add a new reg: shift_writeback_en_buffer_o. when learning state machine is in learning weight stage,
+//			 shift_writeback_en_buffer_o is 1, otherwise 0. This signal is delayed 2 clocks in datapath, It controls weight_writeback_enable_buffer, which is a shift register, used to determine if weights
+//			 should be updated.
+
 `timescale 1ns/100ps
 
 module NurnCtrlr
@@ -44,6 +48,7 @@ module NurnCtrlr
 	output 												cmpSTDP_o 		,
 	output 	reg [1:0] 									sel_rclAdd_B_o,
 	output 	reg [1:0] 									sel_wrBackStat_B_o,
+	output  reg											shift_writeback_en_buffer_o,
 
 	//config mem
 	input 												biasLrnMode_i 	,
@@ -264,6 +269,7 @@ module NurnCtrlr
 		init_WrBackAddr = 1'b0;
 		inc_wrBackAddr = 1'b0;
 		cmpSTDP_win = 1'b0;
+		shift_writeback_en_buffer_o = 1'b0;
 
 		case (Lrn_CurrState)
 			LRN_IDLE_S: begin
@@ -293,6 +299,7 @@ module NurnCtrlr
 				enLrnWtPipln = 1'b1;
 				inc_wrBackAddr = 1'b1;
 				cmpSTDP_win = 1'b1;
+				shift_writeback_en_buffer_o = 1'b1;
 				
 				if (lrnCntr_Axon_done == 1'b1) begin
 					Lrn_NextState = LRN_BIAS_S;

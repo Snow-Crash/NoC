@@ -76,6 +76,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_StatWr_D, Addr_StatRd_E;
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_StatRd_F, Addr_StatWr_G;
 	wire [NURN_CNT_BIT_WIDTH+2-1:0] Addr_StatRd_A, Addr_StatWr_B;
+	wire shift_writeback_en_buffer;
 
 	//config mem
 	wire [STDP_WIN_BIT_WIDTH-1:0] LTP_Win, LTD_Win;
@@ -129,6 +130,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.cmpSTDP_o 			(  ),
 		.sel_rclAdd_B_o 	( sel_rclAdd_B ),
 		.sel_wrBackStat_B_o ( sel_wrBackStat_B ),
+		.shift_writeback_en_buffer_o (shift_writeback_en_buffer),
 		
 		//config mem
 		.biasLrnMode_i  	( biasLrnMode   ),
@@ -232,7 +234,8 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.lrnUseBias_i 		( lrnUseBias ),
 		.cmpSTDP_i 			(),
 
-		.update_weight_enable_o		(update_weight_enable)
+		.update_weight_enable_o		(update_weight_enable),
+		.shift_writeback_en_buffer_i (shift_writeback_en_buffer)
 
 	);
 

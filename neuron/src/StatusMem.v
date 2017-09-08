@@ -36,6 +36,8 @@
 //2017.4.24 add two parameter SYNTH_PATH and SIM_PATH.
 //2017.4.30 add reset to memOutReg_C of memory5. Doesn't affect timing and function.
 //			Need to verify if it can be synthesized as RAM.
+//2017.9.7  Add input expired_post_history_write_back_i, which comes from controller.
+//			It determines memory port b mux select signal. When it's 1, select post history.
 
 //todo		fifo clear signal: it is not mandatory. if use async signal, and if it's cleared,
 //			output of fifo is red line. Need to test sync clear.
@@ -114,7 +116,9 @@ module StatusMem
 	//write port G
 	input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	Addr_StatWr_G_i,
 	input 												wrEn_StatWr_G_i,
-	input [DSIZE-1:0]									data_StatWr_G_i
+	input [DSIZE-1:0]									data_StatWr_G_i,
+
+	input 												expired_post_history_write_back_i
 );
 	
 	
@@ -176,7 +180,10 @@ module StatusMem
 	assign Addr_A_Mem1_4 = Addr_StatRd_A_i[NURN_CNT_BIT_WIDTH+2-1:2];
 	assign Sel_A_Mem1_4  = Addr_StatRd_A_i[1:0];
 	assign Addr_B_Mem1_4 = Addr_StatWr_B_i[NURN_CNT_BIT_WIDTH+2-1:2];
-	assign Sel_B_Mem1_4  = Addr_StatWr_B_i[1:0];
+	//assign Sel_B_Mem1_4  = Addr_StatWr_B_i[1:0];
+	assign Sel_B_Mem1_4 = (expired_post_history_write_back_i == 1'b0) ? Addr_StatWr_B_i[1:0] : 2'b11;
+
+
 
 	//Mem_1, Mem_2, Mem_3, Mem_4 Write_enable signal
 

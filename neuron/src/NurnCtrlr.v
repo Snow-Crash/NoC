@@ -16,6 +16,13 @@
 //2017.8.31  add a new reg: shift_writeback_en_buffer_o. when learning state machine is in learning weight stage,
 //			 shift_writeback_en_buffer_o is 1, otherwise 0. This signal is delayed 2 clocks in datapath, It controls weight_writeback_enable_buffer, which is a shift register, used to determine if weights
 //			 should be updated.
+//2017.9.7  Add new control signal 'expired_post_history_write_back' for learning state machine. it is 1 when learnning
+//			state machine is at LRN_BIAS_S state. This signal is delayed by 'expired_post_history_write_back_delay' and then 
+//			sent to datapath and status memory.
+//			Controller cannot determin whether to use expired post synaptic history to overwrite post history. The decision
+//			is made by datapath. en_expired_post_history_write_back_i is the decision signal, it's sent to an AND gate with
+//			'expired_post_history_write_back_delay' to generate over_write_post_history. Only when both signals are high, expired post history is write to memory.
+//			expired_post_history_write_back_o is sent to datapath and status memory to control mux.
 
 `timescale 1ns/100ps
 
@@ -49,6 +56,8 @@ module NurnCtrlr
 	output 	reg [1:0] 									sel_rclAdd_B_o,
 	output 	reg [1:0] 									sel_wrBackStat_B_o,
 	output  reg											shift_writeback_en_buffer_o,
+	output  											expired_post_history_write_back_o,
+	input												en_expired_post_history_write_back_i,
 
 	//config mem
 	input 												biasLrnMode_i 	,
@@ -138,6 +147,9 @@ module NurnCtrlr
 
 	reg [NURN_CNT_BIT_WIDTH-1:0] rclNurnAddr_buff, lrnWrBack_Nurn;
 	reg [AXON_CNT_BIT_WIDTH-1:0] lrnCntr_Axon_Pipln, lrnWrBackCntr_Axon;
+	reg over_write_post_history;
+	reg expired_post_history_write_back;
+	reg expired_post_history_write_back_delay;
 
 
 	//LOGIC
@@ -270,6 +282,7 @@ module NurnCtrlr
 		inc_wrBackAddr = 1'b0;
 		cmpSTDP_win = 1'b0;
 		shift_writeback_en_buffer_o = 1'b0;
+		expired_post_history_write_back = 1'b0;
 
 		case (Lrn_CurrState)
 			LRN_IDLE_S: begin
@@ -312,7 +325,7 @@ module NurnCtrlr
 				if (biasLrnMode_i == 1'b1) begin
 					enLrnBiasPipln = 1'b1;
 				end
-
+				expired_post_history_write_back = 1'b1;
 				Lrn_NextState = LRN_IDLE_S;
 			end
 
@@ -469,8 +482,22 @@ module NurnCtrlr
 			//------------------------
 		end
 	end
+
+	always @(posedge clk_i or negedge rst_n_i)
+		begin
+			if (rst_n_i == 1'b0)
+				expired_post_history_write_back_delay <= 1'b0;
+			else
+				expired_post_history_write_back_delay <= expired_post_history_write_back;
+		end
+	
+
+	always @(*)
+		over_write_post_history = expired_post_history_write_back_delay & en_expired_post_history_write_back_i;
+	assign expired_post_history_write_back_o = expired_post_history_write_back_delay;
+
 	assign rstAcc_o = rstAcc_dly | rstAcc;
-	assign wrEn_StatWr_B_o = wr_MembPot_dly[0] | wrEn_th_dly[0] | wrPostSpkHist | LrnBias_Pipln[0];
+	assign wrEn_StatWr_B_o = wr_MembPot_dly[0] | wrEn_th_dly[0] | wrPostSpkHist | LrnBias_Pipln[0] | over_write_post_history;
 	assign buffMembPot_o = wr_MembPot_dly[1];
 	assign cmpSTDP_o = cmpSTDP_win_dly;
 	

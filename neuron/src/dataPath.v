@@ -44,6 +44,8 @@
 //				6, en_expired_post_history_write_back determines whether to write back expired post history.
 //			Accoring to timing diagram, looks right, need testbench to verify.
 //2017.9.16  Remove sel_wrBackStat_B_mux, controller can generate right select signal.
+//2017.9.16  Add a register to delay lrnoutspike(the spike generaetd at current tick) 2 clocks for LTP/LTD condition.
+//			 change condition of determining LTP/LTP
 
 //Todo:
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
@@ -167,6 +169,7 @@ module dataPath
 	reg [STDP_WIN_BIT_WIDTH-1:0] expired_post_history;
 	reg [STDP_WIN_BIT_WIDTH-1:0] post_history_mux;
 	reg en_expired_post_history_write_back;
+	reg [1:0] lrnOutSpikeReg_delay;
 	
 
 	//WIRE DECLARATION
@@ -432,7 +435,7 @@ module dataPath
 
 			expPostHist <= 1'b0;
 			en_expired_post_history_write_back <= 1'b0;
-
+			lrnOutSpikeReg_delay <= 2'b0;
 
 		
 		end else begin
@@ -446,16 +449,16 @@ module dataPath
 			if ((axonLrnMode_i == 1'b1) && (lrnUseBias_i == 1'b0)) begin
 				//SpnSim: if ((pending_out_spikes[i] == 1) && (valid_PreHist == true))
 				//two options: 1, PostSpkHist is 1 when a spike is generated. 2, add a new pipeline to store post spikes.
-				if ((valid_PostHist == 1'b1) && (valid_PreHist == 1'b1) ) begin
+				if ((lrnOutSpikeReg_delay[0] == 1'b1) && (valid_PreHist == 1'b1) ) begin
 					enLTP <= 1'b1;
 					expPreHist <= 1'b1;
 					update_weight_enable <= 1'b1;
 				//SpnSim: else if ((pending_out_spikes[i] == 1) && (valid_PreHist == false))
-				end else if ((valid_PostHist == 1'b1) && (valid_PreHist == 1'b0)) begin
+				end else if ((lrnOutSpikeReg_delay[0] == 1'b1) && (valid_PreHist == 1'b0)) begin
 					enLTD <= 1'b1;
 					update_weight_enable <= 1'b1;
 				//SpnSim: else if ((valid_PostHist == true) && (*in_spikes[i][j] == 1))
-				end else if ((valid_PostHist == 1'b1) && (valid_PreHist == 1'b1) ) begin
+				end else if ((valid_PostHist == 1'b1) && (lrn_inSpike_i == 1'b1) ) begin
 					enLTD <= 1'b1;
 					//expPreHist <= 1'b1;
 					update_weight_enable <= 1'b1;
@@ -474,6 +477,10 @@ module dataPath
 
 			if (shift_writeback_en_buffer_i_dealy2 == 1'b1)
 				weight_writeback_enable_buffer <= {weight_writeback_enable_buffer[2:0], update_weight_enable}; 
+
+			//delay generated spike by two clocks for LTP/LTD condition
+			lrnOutSpikeReg_delay[1] <= lrnOutSpikeReg;
+			lrnOutSpikeReg_delay[0] <= lrnOutSpikeReg_delay[1];
 			
 
 			delta_WtBias <= delta_WtBias_Th;

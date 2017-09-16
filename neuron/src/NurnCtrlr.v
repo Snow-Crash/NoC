@@ -535,8 +535,9 @@ module NurnCtrlr
 			sel_wrBackStat_B_o = WR_BACK_STAT_B_POST_HIST;
 		end else if (LrnBias_Pipln[0] == 1'b1) begin
 			sel_wrBackStat_B_o = WR_BACK_STAT_B_BIAS;
+		end else if (expired_post_history_write_back_delay == 1'b1) begin
+			sel_wrBackStat_B_o = WR_BACK_STAT_B_POST_HIST;
 		end
-
 	end
 
 endmodule

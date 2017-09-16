@@ -444,7 +444,7 @@ module dataPath
 			enLTD <= 1'b0;
 			expPreHist <= 1'b0;
 			update_weight_enable <= 1'b0;
-			//expPostHist <= 1'b0;
+			expPostHist <= 1'b0;
 			//bug: if condition mismatch with SpnSim
 			if ((axonLrnMode_i == 1'b1) && (lrnUseBias_i == 1'b0)) begin
 				//SpnSim: if ((pending_out_spikes[i] == 1) && (valid_PreHist == true))

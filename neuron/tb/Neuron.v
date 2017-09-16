@@ -367,8 +367,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		//write port G
 		.Addr_StatWr_G_i	( Addr_StatWr_G ),
 		.wrEn_StatWr_G_i	( write_enable_G ),
-		.data_StatWr_G_i 	( data_StatWr_G ),
-		.expired_post_history_write_back_i (expired_post_history_write_back)
+		.data_StatWr_G_i 	( data_StatWr_G )
 	);
 
 	assign write_enable_G = update_weight_enable & wrEn_StatWr_G;

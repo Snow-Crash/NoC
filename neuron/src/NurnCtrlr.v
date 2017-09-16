@@ -23,6 +23,7 @@
 //			is made by datapath. en_expired_post_history_write_back_i is the decision signal, it's sent to an AND gate with
 //			'expired_post_history_write_back_delay' to generate over_write_post_history. Only when both signals are high, expired post history is write to memory.
 //			expired_post_history_write_back_o is sent to datapath and status memory to control mux.
+//2017.9.16  Change Addr_StatWr_B_o, add a new condition for write back expired post history.
 
 `timescale 1ns/100ps
 
@@ -413,6 +414,8 @@ module NurnCtrlr
 			Addr_StatWr_B_o = {rclNurnAddr_buff,2'b10};
 		end else if (wrPostSpkHist == 1'b1) begin
 			Addr_StatWr_B_o = {rclNurnAddr_buff,2'b11};
+		end else if (expired_post_history_write_back_delay == 1'b1) begin
+			Addr_StatWr_B_o = {lrnWrBack_Nurn,2'b11};
 		end
 	end
 	assign Addr_Config_B_o = rclCntr_Nurn;

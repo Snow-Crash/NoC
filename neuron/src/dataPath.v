@@ -43,6 +43,7 @@
 //				5, expPostHist, a flag to indicate whether to expire post history.
 //				6, en_expired_post_history_write_back determines whether to write back expired post history.
 //			Accoring to timing diagram, looks right, need testbench to verify.
+//2017.9.16  Remove sel_wrBackStat_B_mux, controller can generate right select signal.
 
 //Todo:
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
@@ -165,7 +166,6 @@ module dataPath
 	reg [STDP_WIN_BIT_WIDTH-1:0] temp_LTD_win;
 	reg [STDP_WIN_BIT_WIDTH-1:0] expired_post_history;
 	reg [STDP_WIN_BIT_WIDTH-1:0] post_history_mux;
-	reg [1:0] sel_wrBackStat_B_mux;
 	reg en_expired_post_history_write_back;
 	
 
@@ -286,20 +286,11 @@ module dataPath
 		end
 	end
 
-	//sel_wrBackStat_B_mux
-	always @(*)
-		begin
-			if (expired_post_history_write_back_i == 1'b0)
-				sel_wrBackStat_B_mux = sel_wrBackStat_B_i;
-			else
-				sel_wrBackStat_B_mux = 2'b11;
-
-		end
 
 	//writeback
 	assign postSpike_pad = 0;
 	always@(*) begin
-		case(sel_wrBackStat_B_mux)
+		case(sel_wrBackStat_B_i)
 			WR_BACK_STAT_B_BIAS: begin 
 			 	data_StatWr_B_o = updtReg_WeightBias; 
 			end

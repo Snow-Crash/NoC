@@ -48,9 +48,13 @@
 
 `define SIM_MEM_INIT
 `define NULL 0
+`define DUMP_MEMORY
 
 module StatusMem
 #(
+	`ifdef DUMP_MEMORY
+		parameter STOP_STEP = 5,
+	`endif
 	parameter NUM_NURNS    = 256  ,
 	parameter NUM_AXONS    = 256  ,
 
@@ -77,6 +81,9 @@ module StatusMem
 	
 )
 (
+	`ifdef DUMP_MEMORY
+		input start_i,
+	`endif
 	input 			clk_i			,
 	input 			rst_n_i			,
 
@@ -339,5 +346,109 @@ module StatusMem
 	assign data_StatRd_C_o = memOutReg_C;
 	assign data_StatRd_E_o = memOutReg_E;
 	assign data_StatRd_F_o = memOut_F_fifo;
+
+
+//dump memory contents
+`ifdef DUMP_MEMORY
+
+	//counter
+	integer clock_counter;
+	integer step_counter;
+
+	initial
+		begin
+			clock_counter = 0;
+			step_counter = 0;
+		end
+
+	always @(posedge clk_i)
+		clock_counter = clock_counter + 1;
+	
+	always @(posedge clk_i)
+		if (start_i == 1'b1)
+			step_counter = step_counter + 1;
+
+	//file output
+	integer f1, f2, f3, f4, f5, f6, i;
+	initial
+		begin
+			f1 = $fopen("Bias.txt","w");
+			f2 = $fopen("MembPot.txt","w");
+			f3 = $fopen("Threshold.txt","w");
+			f4 = $fopen("PostHist.txt","w");
+			f5 = $fopen("PreHist.txt","w");
+			f6 = $fopen("Weights.txt","w");
+		end
+
+	always @(posedge clk_i)
+		begin
+			if (step_counter < STOP_STEP)
+				begin
+					if (start_i == 1'b1)
+						begin
+							//dump bias
+							$fwrite(f1, "step:%d,",step_counter);
+							for (i = 0; i < NUM_NURNS; i = i+1)
+								begin
+									$fwrite(f1, "%h:", i);			//address
+									$fwrite(f1, "%h,", Mem_1[i]);	//every word
+								end
+								$fwrite(f1, "\n");
+							//dump membpot
+							$fwrite(f2, "step:%d,",step_counter);
+							for (i = 0; i < NUM_NURNS; i = i + 1)
+								begin
+									$fwrite(f2, "%h:", i);			//address
+									$fwrite(f2, "%h,", Mem_2[i]);	//word
+								end
+							$fwrite(f2, "\n");
+							//Threshold
+							$fwrite(f3, "step:%d,",step_counter);
+							for (i = 0; i < NUM_NURNS; i = i+1)
+								begin
+									$fwrite(f3, "%h:",i);
+									$fwrite(f3, "%h,", Mem_3[i]);
+								end
+							$fwrite(f3, "\n");
+							//Post synaptic history
+							$fwrite(f4, "step:%d,",step_counter);
+							for (i = 0; i < NUM_NURNS; i = i+1)
+								begin
+									$fwrite(f4, "%h:",i);
+									$fwrite(f4, "%h,", Mem_4[i]);
+								end
+							$fwrite(f4, "\n");
+							//Pre synaptic history
+							$fwrite(f5, "step:%d,",step_counter);
+							for (i = 0; i < NUM_NURNS * NUM_AXONS; i = i+1)
+								begin
+									$fwrite(f5, "%h:",i);
+									$fwrite(f5, "%h,", Mem_5[i]);
+								end
+							$fwrite(f5, "\n");
+							//Weights
+							$fwrite(f6, "step:%d,",step_counter);
+							for (i = 0; i < NUM_NURNS * NUM_AXONS; i = i+1)
+								begin
+									$fwrite(f6, "%h:",i);
+									$fwrite(f6, "%h,", Mem_6[i]);
+								end
+							$fwrite(f6, "\n");
+						end
+				end
+			else
+				begin
+					$fclose(f1);
+					$fclose(f2);
+					$fclose(f3);
+					$fclose(f4);
+					$fclose(f5);
+					$fclose(f6);
+				end
+		end
+
+			
+
+`endif
 	
 endmodule

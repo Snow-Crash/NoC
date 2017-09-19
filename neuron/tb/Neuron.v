@@ -21,6 +21,7 @@
 
 `timescale 1ns/100ps
 `define tpd_clk 5
+`define DUMP_MEMORY
 
 module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
@@ -327,6 +328,9 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	)
 	STATUSMEM
 	(
+		`ifdef DUMP_MEMORY
+			.start_i(start),
+		`endif
 		.clk_i				( clk   ),
 		.rst_n_i			( rst_n ),
 

@@ -378,6 +378,32 @@ module StatusMem
 			f4 = $fopen("PostHist.txt","w");
 			f5 = $fopen("PreHist.txt","w");
 			f6 = $fopen("Weights.txt","w");
+			//write header
+			$fwrite(f1, "step,");
+			$fwrite(f2, "step,");
+			$fwrite(f3, "step,");
+			$fwrite(f4, "step,");
+			$fwrite(f5, "step,");
+			$fwrite(f6, "step,");
+			for (i = 0; i < NUM_NURNS; i = i+1)
+				begin
+					$fwrite(f1, "%h,", i);			//address
+					$fwrite(f2, "%h,", i);			//address
+					$fwrite(f3, "%h,", i);			//address
+					$fwrite(f4, "%h,", i);			//address
+				end
+
+			for (i = 0; i < NUM_NURNS * NUM_AXONS; i = i+1)
+				begin
+					$fwrite(f5, "%h,", i);			//address
+					$fwrite(f6, "%h,", i);			//address
+				end
+			$fwrite(f1, "\n");
+			$fwrite(f2, "\n");
+			$fwrite(f3, "\n");
+			$fwrite(f4, "\n");
+			$fwrite(f5, "\n");
+			$fwrite(f6, "\n");
 		end
 
 	always @(posedge clk_i)
@@ -387,50 +413,50 @@ module StatusMem
 					if (start_i == 1'b1)
 						begin
 							//dump bias
-							$fwrite(f1, "step:%d,",step_counter);
+							$fwrite(f1, "%0d,",step_counter);
 							for (i = 0; i < NUM_NURNS; i = i+1)
 								begin
-									$fwrite(f1, "%h:", i);			//address
+									//$fwrite(f1, "%h:", i);			//address
 									$fwrite(f1, "%h,", Mem_1[i]);	//every word
 								end
 								$fwrite(f1, "\n");
 							//dump membpot
-							$fwrite(f2, "step:%d,",step_counter);
+							$fwrite(f2, "%0d,",step_counter);
 							for (i = 0; i < NUM_NURNS; i = i + 1)
 								begin
-									$fwrite(f2, "%h:", i);			//address
+									//$fwrite(f2, "%h:", i);			//address
 									$fwrite(f2, "%h,", Mem_2[i]);	//word
 								end
 							$fwrite(f2, "\n");
 							//Threshold
-							$fwrite(f3, "step:%d,",step_counter);
+							$fwrite(f3, "%0d,",step_counter);
 							for (i = 0; i < NUM_NURNS; i = i+1)
 								begin
-									$fwrite(f3, "%h:",i);
+									//$fwrite(f3, "%h:",i);
 									$fwrite(f3, "%h,", Mem_3[i]);
 								end
 							$fwrite(f3, "\n");
 							//Post synaptic history
-							$fwrite(f4, "step:%d,",step_counter);
+							$fwrite(f4, "%0d,",step_counter);
 							for (i = 0; i < NUM_NURNS; i = i+1)
 								begin
-									$fwrite(f4, "%h:",i);
+									//$fwrite(f4, "%h:",i);
 									$fwrite(f4, "%h,", Mem_4[i]);
 								end
 							$fwrite(f4, "\n");
 							//Pre synaptic history
-							$fwrite(f5, "step:%d,",step_counter);
+							$fwrite(f5, "%0d,",step_counter);
 							for (i = 0; i < NUM_NURNS * NUM_AXONS; i = i+1)
 								begin
-									$fwrite(f5, "%h:",i);
+									//$fwrite(f5, "%h:",i);
 									$fwrite(f5, "%h,", Mem_5[i]);
 								end
 							$fwrite(f5, "\n");
 							//Weights
-							$fwrite(f6, "step:%d,",step_counter);
+							$fwrite(f6, "%0d,",step_counter);
 							for (i = 0; i < NUM_NURNS * NUM_AXONS; i = i+1)
 								begin
-									$fwrite(f6, "%h:",i);
+									//$fwrite(f6, "%h:",i);
 									$fwrite(f6, "%h,", Mem_6[i]);
 								end
 							$fwrite(f6, "\n");

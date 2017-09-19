@@ -35,6 +35,49 @@ always
 	end
 
 
+// initial
+// 	begin
+// 		clk  = 1'b0;
+// 		rst_n = 1'b0;
+// 		start = 1'b0;	
+		
+// 		#(`tpd_clk*2);
+// 		rst_n = 1'b1;
+
+// 		spike = 4'b1111;
+// 		#((`tpd_clk*2)*2);
+// 		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
+		
+// 		#((`tpd_clk*2)*100);//interval between two start signal
+
+// 		spike = 4'b0010;
+// 		#((`tpd_clk*2)*2);
+// 		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
+
+// 		#((`tpd_clk*2)*100);
+
+// 		spike = 4'b1100;
+//         #((`tpd_clk*2)*2);
+// 		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
+
+// 		#((`tpd_clk*2)*100);
+
+// 		spike = 4'b0100;
+//         #((`tpd_clk*2)*2);
+// 		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
+
+// 		#((`tpd_clk*2)*100);
+
+// 		spike = 4'b0101;
+//         #((`tpd_clk*2)*2);
+// 		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
+
+// 		#((`tpd_clk*2)*100);
+
+
+// 		$stop;
+// 	end
+
 initial
 	begin
 		clk  = 1'b0;
@@ -44,38 +87,32 @@ initial
 		#(`tpd_clk*2);
 		rst_n = 1'b1;
 
-		spike = 4'b1111;
 		#((`tpd_clk*2)*2);
-		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
-		
-		#((`tpd_clk*2)*100);//interval between two start signal
+		@(posedge clk); start = 1'b1;
+		@(posedge clk); start = 1'b0;
+	end
 
-		spike = 4'b0010;
-		#((`tpd_clk*2)*2);
-		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
-
+always @(posedge clk)
+	begin
 		#((`tpd_clk*2)*100);
-
-		spike = 4'b1100;
-        #((`tpd_clk*2)*2);
-		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
-
-		#((`tpd_clk*2)*100);
-
-		spike = 4'b0100;
-        #((`tpd_clk*2)*2);
-		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
-
-		#((`tpd_clk*2)*100);
-
-		spike = 4'b0101;
-        #((`tpd_clk*2)*2);
-		@(posedge clk); start = 1'b1; @(posedge clk); start = 1'b0;
-
-		#((`tpd_clk*2)*100);
+		@(posedge clk); start = 1'b1;
+		@(posedge clk); start = 1'b0;
+	end
 
 
-		$stop;
+//read testcase
+integer f1;
+integer nouse1;
+reg [NUM_AXONS - 1:0] packet;
+initial
+	begin
+		f1 = $fopen("D:/code/learn_test_work_dir/data1_1/packets.txt","r");
+	end
+
+
+always @(posedge start)
+	begin
+			nouse1 = $fscanf(f1, "%h\n", spike);
 	end
 
 

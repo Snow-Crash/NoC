@@ -49,6 +49,10 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	parameter X_ID = "1";
 	parameter Y_ID = "1";
 
+	`ifdef DUMP_MEMORY
+		parameter STOP_STEP = 5;
+	`endif
+
 	//parameter MEM_A_MIF_PATH = "D:/code/synth/data1_1/mem_A.mif";
 	//parameter MEM_B_MIF_PATH = "D:/code/synth/data1_1/mem_B.mif";
 	//parameter MEM_C_MIF_PATH = "D:/code/synth/data1_1/mem_C.mif";
@@ -176,6 +180,9 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
 	dataPath
 	#(
+		`ifdef DUMP_MEMORY
+		.STOP_STEP			(STOP_STEP),
+		`endif
 		.NUM_NURNS			( NUM_NURNS ),
 		.NUM_AXONS			( NUM_AXONS ),
 

@@ -39,6 +39,7 @@
 //2017.9.7  Add input expired_post_history_write_back_i, which comes from controller.
 //			It determines memory port b mux select signal. When it's 1, select post history.
 //2017.9.16 Revert changed made on 9.16. Changed controller, so controller can generate right address and select signal.
+//2017.9.16 Fixed a bug, the read address of mem_5 was wrong.
 
 //todo		fifo clear signal: it is not mandatory. if use async signal, and if it's cleared,
 //			output of fifo is red line. Need to test sync clear.
@@ -306,7 +307,7 @@ module StatusMem
 		if (rst_n_i == 1'b0)
 			memOutReg_C <= 0;
 		else if(rdEn_StatRd_C_i == 1'b1)
-			memOutReg_C <= Mem_5[Addr_A_Mem1_4];
+			memOutReg_C <= Mem_5[Addr_StatRd_C_i];
 	end
 	//-------------------------Mem_6
 	//						Mem_6 - Weights

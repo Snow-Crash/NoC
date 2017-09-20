@@ -1,5 +1,6 @@
 `timescale 1ns/100ps
 `define tpd_clk 10
+`define DUMP_MEMORY
 
 module stdp_test();
 
@@ -13,14 +14,19 @@ parameter X_ID = "1";
 parameter Y_ID = "1";
 parameter SYNTH_PATH = "D:/code/synth/data";
 parameter SIM_PATH =  "D:/code/learn_test_work_dir/data";
+parameter STOP_STEP = 5;
 
 reg clk, rst_n;
 wire outSpike;
 reg start;
 
-reg [NUM_AXONS - 1:0] spike;
+wire [NUM_AXONS - 1:0] spike;
 
-Neuron #(.NUM_NURNS(NUM_NURNS), 
+Neuron #(
+	`ifdef
+	.STOP_STEP(STOP_STEP),
+	`endif
+	.NUM_NURNS(NUM_NURNS), 
 	.NUM_AXONS(NUM_AXONS), 
 	.SIM_PATH(SIM_PATH), 
 	.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH), 
@@ -100,19 +106,22 @@ always @(posedge clk)
 	end
 
 
-//read testcase
+//read testcases
 integer f1;
 integer nouse1;
-reg [NUM_AXONS - 1:0] packet;
+wire [7:0] step_counter;
+reg [7 + NUM_AXONS:0] testcases;
+assign step_counter = testcases[7 + NUM_AXONS:NUM_AXONS];
+assign spike = testcases[NUM_AXONS-1:0];
 initial
 	begin
-		f1 = $fopen("D:/code/learn_test_work_dir/data1_1/packets.txt","r");
+		f1 = $fopen("D:/code/learn_test_work_dir/InputSpikes_HW_RAND_4.txt","r");
 	end
 
 
 always @(posedge start)
 	begin
-			nouse1 = $fscanf(f1, "%h\n", spike);
+			nouse1 = $fscanf(f1, "%b\n", testcases);
 	end
 
 

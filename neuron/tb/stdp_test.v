@@ -14,7 +14,7 @@ parameter X_ID = "1";
 parameter Y_ID = "1";
 parameter SYNTH_PATH = "D:/code/synth/data";
 parameter SIM_PATH =  "D:/code/learn_test_work_dir/data";
-parameter STOP_STEP = 5;
+parameter STOP_STEP = 10;
 
 reg clk, rst_n;
 wire outSpike;
@@ -23,7 +23,7 @@ reg start;
 wire [NUM_AXONS - 1:0] spike;
 
 Neuron #(
-	`ifdef
+	`ifdef DUMP_MEMORY
 	.STOP_STEP(STOP_STEP),
 	`endif
 	.NUM_NURNS(NUM_NURNS), 

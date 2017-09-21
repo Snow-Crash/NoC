@@ -180,9 +180,6 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
 	dataPath
 	#(
-		`ifdef DUMP_MEMORY
-		.STOP_STEP			(STOP_STEP),
-		`endif
 		.NUM_NURNS			( NUM_NURNS ),
 		.NUM_AXONS			( NUM_AXONS ),
 
@@ -311,6 +308,10 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
 	StatusMem
 	#(
+		`ifdef DUMP_MEMORY
+		.STOP_STEP(STOP_STEP),
+		`endif
+
 		.NUM_NURNS    		( NUM_NURNS ),
 		.NUM_AXONS    		( NUM_AXONS ),
 

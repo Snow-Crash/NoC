@@ -46,6 +46,9 @@
 //2017.9.16  Remove sel_wrBackStat_B_mux, controller can generate right select signal.
 //2017.9.16  Add a register to delay lrnoutspike(the spike generaetd at current tick) 2 clocks for LTP/LTD condition.
 //			 change condition of determining LTP/LTP
+//2017.9.21  Add a register, add_sub_flag and a mux. When ltp, wi = wi + delta_w, when ltd wi = wi - delta_w.
+//			quant_Dlta_Wt_Bias_reg holds delta_w, but it's always a positive value. This mux is controlled by
+//			add_sub_flag, so that positive or negative can be stored in quant_Dlta_Wt_Bias_reg.
 
 //Todo:
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
@@ -170,6 +173,8 @@ module dataPath
 	reg [STDP_WIN_BIT_WIDTH-1:0] post_history_mux;
 	reg en_expired_post_history_write_back;
 	reg [1:0] lrnOutSpikeReg_delay;
+	reg [2:0] add_sub_flag;
+
 	
 
 	//WIRE DECLARATION
@@ -441,7 +446,7 @@ module dataPath
 			expPostHist <= 1'b0;
 			en_expired_post_history_write_back <= 1'b0;
 			lrnOutSpikeReg_delay <= 2'b0;
-
+			add_sub_flag <= 3'b0;
 		
 		end else begin
 
@@ -458,16 +463,19 @@ module dataPath
 					enLTP <= 1'b1;
 					expPreHist <= 1'b1;
 					update_weight_enable <= 1'b1;
+					add_sub_flag[2] <= 1'b0;
 				//SpnSim: else if ((pending_out_spikes[i] == 1) && (valid_PreHist == false))
 				end else if ((lrnOutSpikeReg_delay[0] == 1'b1) && (valid_PreHist == 1'b0)) begin
 					enLTD <= 1'b1;
 					update_weight_enable <= 1'b1;
+					add_sub_flag[2] <= 1'b1;
 				//SpnSim: else if ((valid_PostHist == true) && (*in_spikes[i][j] == 1))
 				end else if ((valid_PostHist == 1'b1) && (lrn_inSpike_i == 1'b1) ) begin
 					enLTD <= 1'b1;
 					//expPreHist <= 1'b1;
 					update_weight_enable <= 1'b1;
 					expPostHist <= 1'b1;
+					add_sub_flag[2] <= 1'b1;
 				end
 			end else if (lrnUseBias_i == 1'b1) begin
 				if (valid_PostHist == 1'b1) begin
@@ -480,6 +488,9 @@ module dataPath
 			shift_writeback_en_buffer_i_dealy1 <= shift_writeback_en_buffer_i;
 			shift_writeback_en_buffer_i_dealy2 <= shift_writeback_en_buffer_i_dealy1;
 
+			add_sub_flag[1] <= add_sub_flag[2];
+			add_sub_flag[0] <= add_sub_flag[1];
+
 			if (shift_writeback_en_buffer_i_dealy2 == 1'b1)
 				weight_writeback_enable_buffer <= {weight_writeback_enable_buffer[2:0], update_weight_enable}; 
 
@@ -489,7 +500,10 @@ module dataPath
 			
 
 			delta_WtBias <= delta_WtBias_Th;
-			quant_Dlta_Wt_Bias_reg <= quant_Dlta_Wt_Bias;
+			if (add_sub_flag[0] == 1'b0)
+				quant_Dlta_Wt_Bias_reg <= quant_Dlta_Wt_Bias;
+			else
+				quant_Dlta_Wt_Bias_reg <= (~quant_Dlta_Wt_Bias) + 1;
 
 			if (expPostHist == 1'b1)
 				en_expired_post_history_write_back <= 1'b1;

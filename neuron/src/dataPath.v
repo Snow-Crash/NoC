@@ -344,6 +344,11 @@ module dataPath
 	//STDP tracking
 	assign valid_PostHist = (PostSpkHist <= LTD_Win_i) ? 1'b1 : 1'b0;
 	assign CorSpike = (preSpikeHist >= PostSpkHist) ? 1'b1 : 1'b0;//corelated spike
+
+	//mismatch
+	//in spnsim pre history updated first, and the new pre history compare with window
+	//When pre_history = window, in spnsim, new history is window + 1 and valid_pre is false
+	//Here when pre_history = window, valid_pre is true, expired history written into memory
 	always @ (*) begin
 		
 		if (lrn_inSpike_i == 1'b1) begin
@@ -351,7 +356,7 @@ module dataPath
 			valid_PreHist = 1'b1;
 		end else begin
 		// mismatch with SpnSim
-			if (data_StatRd_C_i > LTP_Win_i) begin
+			if (data_StatRd_C_i >= LTP_Win_i) begin
 				preSpikeHist = data_StatRd_C_i;
 				valid_PreHist = 1'b0;
 			end else begin //if (data_StatRd_C_i <= LTP_Win_i)

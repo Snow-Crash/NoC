@@ -49,6 +49,9 @@
 //2017.9.21  Add a register, add_sub_flag and a mux. When ltp, wi = wi + delta_w, when ltd wi = wi - delta_w.
 //			quant_Dlta_Wt_Bias_reg holds delta_w, but it's always a positive value. This mux is controlled by
 //			add_sub_flag, so that positive or negative can be stored in quant_Dlta_Wt_Bias_reg.
+//2017.9.25  Fixed pre history updating logic. Pre history updating condition was not exactly the same as spnsim. Fixed it.
+//			 Fixed a problem with PreSpikeHist_Ppln. Previously PreSpikeHist_Ppln[4] can't pass to PreSpikeHist_Ppln[3] when expPreHist == 1'b1;
+//			 It was incorrect. 
 
 //Todo:
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
@@ -361,12 +364,20 @@ module dataPath
 			valid_PreHist = 1'b1;
 		end else begin
 		// mismatch with SpnSim
-			if (data_StatRd_C_i >= LTP_Win_i) begin
+			if (data_StatRd_C_i > LTP_Win_i) begin
 				preSpikeHist = data_StatRd_C_i;
 				valid_PreHist = 1'b0;
 			end else begin //if (data_StatRd_C_i <= LTP_Win_i)
-				preSpikeHist = data_StatRd_C_i + 1;
-				valid_PreHist = 1'b1;
+				if (data_StatRd_C_i == LTP_Win_i)
+					begin
+						preSpikeHist = data_StatRd_C_i + 1;
+						valid_PreHist = 1'b0;
+					end
+				else
+					begin
+						preSpikeHist = data_StatRd_C_i + 1;
+						valid_PreHist = 1'b1;
+					end
 			end
 		end
 	end
@@ -454,7 +465,7 @@ module dataPath
 			enLTD <= 1'b0;
 			expPreHist <= 1'b0;
 			update_weight_enable <= 1'b0;
-			expPostHist <= 1'b0;
+			//expPostHist <= 1'b0;
 			//bug: if condition mismatch with SpnSim
 			if ((axonLrnMode_i == 1'b1) && (lrnUseBias_i == 1'b0)) begin
 				//SpnSim: if ((pending_out_spikes[i] == 1) && (valid_PreHist == true))
@@ -477,6 +488,8 @@ module dataPath
 					expPostHist <= 1'b1;
 					add_sub_flag[2] <= 1'b1;
 				end
+					else if (expired_post_history_write_back_i ==1'b1)
+					expPostHist <= 1'b0;
 			end else if (lrnUseBias_i == 1'b1) begin
 				if (valid_PostHist == 1'b1) begin
 					enLTP <= 1'b1;
@@ -505,10 +518,10 @@ module dataPath
 			else
 				quant_Dlta_Wt_Bias_reg <= (~quant_Dlta_Wt_Bias) + 1;
 
-			if (expPostHist == 1'b1)
-				en_expired_post_history_write_back <= 1'b1;
-			else
-				en_expired_post_history_write_back <= 1'b0;
+			//if (expPostHist == 1'b1)
+			//	en_expired_post_history_write_back <= 1'b1;
+			//else
+			//	en_expired_post_history_write_back <= 1'b0;
 
 			// if (expired_post_history_write_back_i == 1'b1)
 			// 	en_expired_post_history_write_back <= 1'b0;
@@ -531,6 +544,7 @@ module dataPath
 			if (expPreHist == 1'b1) 
 				begin
 					PreSpikeHist_Ppln[3] <= LTP_Win_i + 1;
+					PreSpikeHist_Ppln[4] <= preSpikeHist;
 					//PreSpikeHist_Ppln[4] <= ?????
 				end
 			else if (axonLrnMode_i == 1'b1) 
@@ -560,7 +574,7 @@ module dataPath
 		end
 	end
 
-assign en_expired_post_history_write_back_o =  en_expired_post_history_write_back;
+assign en_expired_post_history_write_back_o =  expPostHist & expired_post_history_write_back_i;
 assign update_weight_enable_o = weight_writeback_enable_buffer[3];
 
 	//MODULE INSTANTIATIONS

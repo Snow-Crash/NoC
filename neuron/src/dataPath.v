@@ -52,7 +52,8 @@
 //2017.9.25  Fixed pre history updating logic. Pre history updating condition was not exactly the same as spnsim. Fixed it.
 //			 Fixed a problem with PreSpikeHist_Ppln. Previously PreSpikeHist_Ppln[4] can't pass to PreSpikeHist_Ppln[3] when expPreHist == 1'b1;
 //			 It was incorrect. 
-
+//			 Fixed weight write back bug, remove shift_writeback_en_buffer_i_dealy1 and shift_writeback_en_buffer_i_dealy2. 
+//			 weight_writeback_enable_buffer doesn't have to be controlled. Just let it shift every clock.
 //Todo:
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
 //			Verify post spike history.
@@ -167,8 +168,8 @@ module dataPath
 	reg update_weight_enable;
 
 	reg [3:0] weight_writeback_enable_buffer;
-	reg shift_writeback_en_buffer_i_dealy1;
-	reg shift_writeback_en_buffer_i_dealy2;
+	//reg shift_writeback_en_buffer_i_dealy1;
+	//reg shift_writeback_en_buffer_i_dealy2;
 	reg expPostHist;
 
 	reg [STDP_WIN_BIT_WIDTH-1:0] temp_LTD_win;
@@ -441,8 +442,8 @@ module dataPath
 			quant_Dlta_Wt_Bias_reg <= 0;
 
 			weight_writeback_enable_buffer <= 0;
-			shift_writeback_en_buffer_i_dealy1 <= 1'b0;
-			shift_writeback_en_buffer_i_dealy2 <= 1'b0;
+			//shift_writeback_en_buffer_i_dealy1 <= 1'b0;
+			//shift_writeback_en_buffer_i_dealy2 <= 1'b0;
 			update_weight_enable <= 1'b0;
 
 			for(i = 0; i <= 4; i = i + 1)
@@ -498,13 +499,13 @@ module dataPath
 				end
 			end
 
-			shift_writeback_en_buffer_i_dealy1 <= shift_writeback_en_buffer_i;
-			shift_writeback_en_buffer_i_dealy2 <= shift_writeback_en_buffer_i_dealy1;
+			//shift_writeback_en_buffer_i_dealy1 <= shift_writeback_en_buffer_i;
+			//shift_writeback_en_buffer_i_dealy2 <= shift_writeback_en_buffer_i_dealy1;
 
 			add_sub_flag[1] <= add_sub_flag[2];
 			add_sub_flag[0] <= add_sub_flag[1];
 
-			if (shift_writeback_en_buffer_i_dealy2 == 1'b1)
+			//if (shift_writeback_en_buffer_i_dealy2 == 1'b1)
 				weight_writeback_enable_buffer <= {weight_writeback_enable_buffer[2:0], update_weight_enable}; 
 
 			//delay generated spike by two clocks for LTP/LTD condition

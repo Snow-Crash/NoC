@@ -24,6 +24,7 @@
 //			'expired_post_history_write_back_delay' to generate over_write_post_history. Only when both signals are high, expired post history is write to memory.
 //			expired_post_history_write_back_o is sent to datapath and status memory to control mux.
 //2017.9.16  Change Addr_StatWr_B_o, add a new condition for write back expired post history.
+//2017.9.27 remove shift_writeback_en_buffer_o. it's not needed
 
 `timescale 1ns/100ps
 
@@ -56,7 +57,7 @@ module NurnCtrlr
 	output 												cmpSTDP_o 		,
 	output 	reg [1:0] 									sel_rclAdd_B_o,
 	output 	reg [1:0] 									sel_wrBackStat_B_o,
-	output  reg											shift_writeback_en_buffer_o,
+	//output  reg											shift_writeback_en_buffer_o,
 	output  											expired_post_history_write_back_o,
 	input												en_expired_post_history_write_back_i,
 
@@ -282,7 +283,7 @@ module NurnCtrlr
 		init_WrBackAddr = 1'b0;
 		inc_wrBackAddr = 1'b0;
 		cmpSTDP_win = 1'b0;
-		shift_writeback_en_buffer_o = 1'b0;
+		//shift_writeback_en_buffer_o = 1'b0;
 		expired_post_history_write_back = 1'b0;
 
 		case (Lrn_CurrState)
@@ -313,7 +314,7 @@ module NurnCtrlr
 				enLrnWtPipln = 1'b1;
 				inc_wrBackAddr = 1'b1;
 				cmpSTDP_win = 1'b1;
-				shift_writeback_en_buffer_o = 1'b1;
+				//shift_writeback_en_buffer_o = 1'b1;
 				
 				if (lrnCntr_Axon_done == 1'b1) begin
 					Lrn_NextState = LRN_BIAS_S;

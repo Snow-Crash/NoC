@@ -54,6 +54,7 @@
 //			 It was incorrect. 
 //			 Fixed weight write back bug, remove shift_writeback_en_buffer_i_dealy1 and shift_writeback_en_buffer_i_dealy2. 
 //			 weight_writeback_enable_buffer doesn't have to be controlled. Just let it shift every clock.
+//2017.9.27  remove shift_writeback_en_buffer_i port, it's not needed
 //Todo:
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
 //			Verify post spike history.
@@ -124,7 +125,7 @@ module dataPath
 	input 													buffBias_i 		,
 	input 													lrnUseBias_i 	,
 	input 													cmpSTDP_i 		,
-	input													shift_writeback_en_buffer_i,
+	//input													shift_writeback_en_buffer_i,
 	input													expired_post_history_write_back_i,
 	
 	output													update_weight_enable_o,

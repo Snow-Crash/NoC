@@ -82,7 +82,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_StatWr_D, Addr_StatRd_E;
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_StatRd_F, Addr_StatWr_G;
 	wire [NURN_CNT_BIT_WIDTH+2-1:0] Addr_StatRd_A, Addr_StatWr_B;
-	wire shift_writeback_en_buffer;
+	//wire shift_writeback_en_buffer;
 	wire expired_post_history_write_back;
 
 	//config mem
@@ -138,7 +138,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.cmpSTDP_o 			(  ),
 		.sel_rclAdd_B_o 	( sel_rclAdd_B ),
 		.sel_wrBackStat_B_o ( sel_wrBackStat_B ),
-		.shift_writeback_en_buffer_o (shift_writeback_en_buffer),
+		//.shift_writeback_en_buffer_o (shift_writeback_en_buffer),
 		.expired_post_history_write_back_o(expired_post_history_write_back),
 
 		//config mem
@@ -245,7 +245,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.cmpSTDP_i 			(),
 
 		.update_weight_enable_o		(update_weight_enable),
-		.shift_writeback_en_buffer_i (shift_writeback_en_buffer),
+		//.shift_writeback_en_buffer_i (shift_writeback_en_buffer),
 		.expired_post_history_write_back_i(expired_post_history_write_back),
 		.en_expired_post_history_write_back_o (en_expired_post_history_write_back)
 

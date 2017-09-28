@@ -55,6 +55,11 @@
 //			 Fixed weight write back bug, remove shift_writeback_en_buffer_i_dealy1 and shift_writeback_en_buffer_i_dealy2. 
 //			 weight_writeback_enable_buffer doesn't have to be controlled. Just let it shift every clock.
 //2017.9.27  remove shift_writeback_en_buffer_i port, it's not needed
+//2017.9.28  Add bufBias_delay. bias computation pipeline get wrong bias. bufBias is updated too early. When recall FSM at acc membpot state,
+//			 buffBias_o is 1, and net clock bufBias is updated. However, at this time bias learning pipeline has not started yet.
+//			 When start to learn neuron 0 bias, neuron 1's bias is already sent into pipeline. 
+//			 bufBias_delay is used to delay bias for 2 clocks. so pipeline get correct bias from bufBias_delay.
+//			 checked whole pipeline, flag and control signal are correct. But the condition which determins LTP/LTD for bias is wrong.
 //Todo:
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
 //			Verify post spike history.
@@ -179,6 +184,8 @@ module dataPath
 	reg en_expired_post_history_write_back;
 	reg [1:0] lrnOutSpikeReg_delay;
 	reg [2:0] add_sub_flag;
+
+	reg [DSIZE-1:0] bufBias_delay[1:0];
 
 	
 
@@ -385,7 +392,7 @@ module dataPath
 	end
 
 	//eta_prime +/- weight data mux and priority encoder input
-	assign WtBias_in = (lrnUseBias_dly == 1'b0) ? data_StatRd_F_i : bufBias;
+	assign WtBias_in = (lrnUseBias_dly == 1'b0) ? data_StatRd_F_i : bufBias_delay[0];
 	assign negWtBias = (~WtBias_in) + 1;
 	assign negDelta_WtBias = (~delta_WtBias) + 1;
 	always @ (*) begin
@@ -460,6 +467,9 @@ module dataPath
 			en_expired_post_history_write_back <= 1'b0;
 			lrnOutSpikeReg_delay <= 2'b0;
 			add_sub_flag <= 3'b0;
+
+			bufBias_delay[0] <= 0;
+			bufBias_delay[1] <= 0;
 		
 		end else begin
 
@@ -559,10 +569,13 @@ module dataPath
 			PreSpikeHist_Ppln[1] <= PreSpikeHist_Ppln[2];
 			PreSpikeHist_Ppln[2] <= PreSpikeHist_Ppln[3];
 
+			bufBias_delay[1] <= bufBias;
+			bufBias_delay[0] <= bufBias_delay[1];
+
 
 			lrnUseBias_dly <= lrnUseBias_i;
 			if (lrnUseBias_dly == 1'b1) begin
-				WeightBias_Ppln[2] <= bufBias;
+				WeightBias_Ppln[2] <= bufBias_delay[0];
 			end else begin
 				WeightBias_Ppln[2] <= data_StatRd_F_i;
 			end

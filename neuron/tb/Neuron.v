@@ -39,7 +39,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	
 	parameter AER_BIT_WIDTH = 32;
 
-	parameter PRIORITY_ENC_OUT_BIT_WIDTH = 3;
+	parameter PRIORITY_ENC_OUT_BIT_WIDTH = 4;
 	
 	parameter SEED = 16'h0380;
 

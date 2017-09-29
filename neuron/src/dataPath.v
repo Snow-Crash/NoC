@@ -60,6 +60,8 @@
 //			 When start to learn neuron 0 bias, neuron 1's bias is already sent into pipeline. 
 //			 bufBias_delay is used to delay bias for 2 clocks. so pipeline get correct bias from bufBias_delay.
 //			 checked whole pipeline, flag and control signal are correct. But the condition which determins LTP/LTD for bias is wrong.
+//2017.9.29  Condition which determines LTD/LTP for bias learning was wrong. Changed condition. addition suctraction flag for bias pipeline is added.
+//			 Otherwise, pipeline cannot perform subtraction.
 //Todo:
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
 //			Verify post spike history.
@@ -503,10 +505,12 @@ module dataPath
 					else if (expired_post_history_write_back_i ==1'b1)
 					expPostHist <= 1'b0;
 			end else if (lrnUseBias_i == 1'b1) begin
-				if (valid_PostHist == 1'b1) begin
+				if (lrnOutSpikeReg_delay[0] == 1'b1) begin
 					enLTP <= 1'b1;
+					add_sub_flag[2] <= 1'b0;
 				end else begin
-					enLTD <= 1'b1;	
+					enLTD <= 1'b1;
+					add_sub_flag[2] <= 1'b1;
 				end
 			end
 

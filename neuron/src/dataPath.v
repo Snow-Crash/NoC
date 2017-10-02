@@ -62,6 +62,9 @@
 //			 checked whole pipeline, flag and control signal are correct. But the condition which determins LTP/LTD for bias is wrong.
 //2017.9.29  Condition which determines LTD/LTP for bias learning was wrong. Changed condition. addition suctraction flag for bias pipeline is added.
 //			 Otherwise, pipeline cannot perform subtraction.
+//2017.9.30  add expired_post_history_write_back_delay. it's used to reset expPostHist. Add method to reset expPostHist.
+//			 change en_expired_post_history_write_back_o. Tested with bias learning mode and weight learning at same time.
+//			 works correctly for fist 15 steps. Comparator cannot compare negative value correctly.
 //Todo:
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
 //			Verify post spike history.
@@ -188,6 +191,7 @@ module dataPath
 	reg [2:0] add_sub_flag;
 
 	reg [DSIZE-1:0] bufBias_delay[1:0];
+	reg expired_post_history_write_back_delay;
 
 	
 
@@ -219,7 +223,9 @@ module dataPath
 			rdLFSR_dly <= 2'b0;
 			PostSpkHist <= 0;
 			temp_LTD_win <= 1'b0;
+			expired_post_history_write_back_delay <= 1'b0;
 		end else begin
+			expired_post_history_write_back_delay <= expired_post_history_write_back_i;
 			if (rstAcc_i == 1'b1) begin
 				AccReg <= 0;
 			end else if (accEn_i) begin
@@ -502,8 +508,6 @@ module dataPath
 					expPostHist <= 1'b1;
 					add_sub_flag[2] <= 1'b1;
 				end
-					else if (expired_post_history_write_back_i ==1'b1)
-					expPostHist <= 1'b0;
 			end else if (lrnUseBias_i == 1'b1) begin
 				if (lrnOutSpikeReg_delay[0] == 1'b1) begin
 					enLTP <= 1'b1;
@@ -513,6 +517,10 @@ module dataPath
 					add_sub_flag[2] <= 1'b1;
 				end
 			end
+
+			if (expired_post_history_write_back_delay == 1'b1)
+				expPostHist <= 1'b0;
+			
 
 			//shift_writeback_en_buffer_i_dealy1 <= shift_writeback_en_buffer_i;
 			//shift_writeback_en_buffer_i_dealy2 <= shift_writeback_en_buffer_i_dealy1;
@@ -593,7 +601,7 @@ module dataPath
 		end
 	end
 
-assign en_expired_post_history_write_back_o =  expPostHist & expired_post_history_write_back_i;
+assign en_expired_post_history_write_back_o = expPostHist;
 assign update_weight_enable_o = weight_writeback_enable_buffer[3];
 
 	//MODULE INSTANTIATIONS

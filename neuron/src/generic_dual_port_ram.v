@@ -1,30 +1,52 @@
 // One read port and one write port. One port for read address and one port for write address.
 // Read address is registered. data_in, write_address are not registered.
+// https://opencores.org/ocsvn/common/common/trunk/generic_memories/rtl/verilog/
+// http://quartushelp.altera.com/15.0/mergedProjects/hdl/vlog/vlog_file_dir_ram_init.htm
 
+`timescale 1ns/100ps
+`define SIM_MEM_INIT
+`define QUARTUS_SYN_INIT
 
 module generic_dual_port_ram(
-	clk, rst, read_address, write_address,
+	clk, read_address, write_address,
 	read_enable, write_enable, data_in, data_out
 );
 
-	parameter address_width = 8;  					// number of bits in address-bus
-	parameter data_width = 16; 						// number of bits in data-bus
+	parameter ADDRESS_WIDTH = 8;  						// number of bits in address-bus
+	parameter DATA_WIDTH = 16; 							// number of bits in data-bus
+	parameter SIM_FILE_PATH = "D:/code/data";
+	parameter INIT_FILE_PATH = "";
 
-	input           clk;  							// read clock, rising edge trigger
-	input           rst;  							// read port reset, active high
+	input           clk;  								// read clock, rising edge trigger
+
 	// read port
-	input  [address_width - 1:0] read_address; 		// read address
-    input                       read_enable;    	// read enable
-    output [data_width - 1:0]   data_out;			//data output
+	input	[ADDRESS_WIDTH - 1:0]	read_address; 			// read address
+    input							read_enable;    		// read enable
+    output	[DATA_WIDTH - 1:0]		data_out;				//data output
 
 	// write port
-	input                       write_enable;       // Write enable
-	input [address_width - 1:0] write_address;      // write address
-	input [data_width-1 : 0]    data_in;            // data input
+	input                       write_enable;       	// Write enable
+	input [ADDRESS_WIDTH - 1:0] write_address;      	// write address
+	input [DATA_WIDTH-1 : 0]	data_in;            	// data input
 
+	reg [ADDRESS_WIDTH-1:0] read_address_register;      // register read address
 
-	reg [data_width-1:0] mem [(1<<address_width) -1:0] 
-	reg data_width-1:0] read_address_register;             // register read address
+//Initialize memory
+`ifdef SIM_MEM_INIT
+	reg [DATA_WIDTH-1:0] mem [(1<<ADDRESS_WIDTH) -1:0];
+	
+	reg [100*8:1] file_name;
+	initial begin
+		file_name = SIM_FILE_PATH;					$readmemh (file_name, mem);
+	end
+
+`else
+	`ifdef QUARTUS_SYN_INIT
+		(* ram_init_file = INIT_FILE_PATH *) reg [DATA_WIDTH-1:0] mem [(1<<ADDRESS_WIDTH) -1:0];
+	`else
+		reg [DATA_WIDTH-1:0] mem [(1<<ADDRESS_WIDTH) -1:0];
+	`endif
+`endif
 
 	// read operation
 	always @(posedge clk)
@@ -38,4 +60,5 @@ module generic_dual_port_ram(
 		if (write_enable)
 			mem[write_address] <= data_in;
 
-`else
+
+endmodule

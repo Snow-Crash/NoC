@@ -65,6 +65,7 @@
 //2017.9.30  add expired_post_history_write_back_delay. it's used to reset expPostHist. Add method to reset expPostHist.
 //			 change en_expired_post_history_write_back_o. Tested with bias learning mode and weight learning at same time.
 //			 works correctly for fist 15 steps. Comparator cannot compare negative value correctly.
+//2017.10.8  Add signd_comparator to compare threshold. change the condition of releasing spike.
 //Todo:
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
 //			Verify post spike history.
@@ -205,6 +206,7 @@ module dataPath
 	wire [PRIORITY_ENC_OUT_BIT_WIDTH-1:0] pEnc_out;
 	wire [DSIZE-1:0] updt_WeightBias, WtBias_in, accIn;
 	wire [DSIZE-STDP_WIN_BIT_WIDTH-1:0] postSpike_pad;
+	wire threshold_equal, threshold_greater;
 
 	integer i;
 
@@ -302,7 +304,8 @@ module dataPath
 	always@(*) begin
 		comp_out  =  1'b0 ;
 		if(cmp_th_i == 1'b1) begin
-			if(AccReg >= data_StatRd_A_i) begin//change to 2's complement comparator
+			//if(AccReg >= data_StatRd_A_i) begin
+			if( (threshold_equal || threshold_greater ) == 1'b1) begin//change to 2's complement comparator
 				comp_out  =  1'b1 ;
 			end
 		end
@@ -698,5 +701,9 @@ assign update_weight_enable_o = weight_writeback_enable_buffer[3];
 		.shift_out_o	( quant_Dlta_Wt_Bias )
 	);
 
+Signed_Comparator
+#(.DSIZE(DSIZE))
+Comparator
+(.A_din_i(AccReg), .B_din_i(data_StatRd_A_i), .equal(threshold_equal), .lower(), .greater(threshold_greater));
 
 endmodule

@@ -5,7 +5,7 @@
 
 `timescale 1ns/100ps
 `define SIM_MEM_INIT
-`define QUARTUS_SYN_INIT
+//`define QUARTUS_SYN_INIT
 
 module generic_dual_port_ram(
 	clk, read_address, write_address,
@@ -31,22 +31,21 @@ module generic_dual_port_ram(
 
 	reg [ADDRESS_WIDTH-1:0] read_address_register;      // register read address
 
-//Initialize memory
-`ifdef SIM_MEM_INIT
-	reg [DATA_WIDTH-1:0] mem [(1<<ADDRESS_WIDTH) -1:0];
-	
-	reg [100*8:1] file_name;
-	initial begin
-		file_name = SIM_FILE_PATH;					$readmemh (file_name, mem);
-	end
 
-`else
+
 	`ifdef QUARTUS_SYN_INIT
 		(* ram_init_file = INIT_FILE_PATH *) reg [DATA_WIDTH-1:0] mem [(1<<ADDRESS_WIDTH) -1:0];
 	`else
 		reg [DATA_WIDTH-1:0] mem [(1<<ADDRESS_WIDTH) -1:0];
 	`endif
-`endif
+
+	//Initialize memory
+	`ifdef SIM_MEM_INIT
+		reg [100*8:1] file_name;
+		initial begin
+			file_name = SIM_FILE_PATH;					$readmemh (file_name, mem);
+		end
+	`endif
 
 	// read operation
 	always @(posedge clk)

@@ -27,23 +27,22 @@ module ConfigMem_Asic_Onchip
 
 )
 (
-	input 			clk_i			,
-	input 			rst_n_i			,
+	input 												clk_i,
+	input 												rst_n_i	,
 
-	
-	// input write_LTP_LTD_Window,
-	// input write_LTP_LTD_LearnRate,
-	// input write_LearnMode_Bias,
-	// input write_NeuronType_RandonThreshold,
-	// input write_Mask_RestPotential,
-	// input write_AER,
-	// input write_FixedThreshold,
-	// input write_LearnMode_weight,
-	// input write_Number_Neuron,
-	// input write_Number_Axon,
+	input 												write_LTP_LTD_Window,
+	input 												write_LTP_LTD_LearnRate ,
+	input 												write_LearnMode_Bias,
+	input 												write_NeuronType_RandonThreshold ,
+	input 												write_Mask_RestPotential ,
+	input 												write_AER ,
+	input 												write_FixedThreshold ,
+	input 												write_LearnMode_weight ,
+	input 												write_Number_Neuron_Axon ,
+
 	input [DSIZE*2-1:0]									config_data_in,
 	input [CONFIG_PARAMETER_NUMBER-1:0] 				config_write_enable,
-	input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	config_write_address;
+	input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	config_write_address,
 
 	output [DSIZE-1:0] 									FixedThreshold_o,
 	output [NURN_CNT_BIT_WIDTH-1:0] 					Number_Neuron_o,
@@ -104,26 +103,6 @@ reg [LEARN_MODE_MEMORY_ADDRESS_WIDTH-1:0] LearnMode_Weight_AxonID_Mod_delay;
 //reg [4:0] LearnMOde_ReadCounter;
 
 
-//write enable signal
-wire write_LTP_LTD_Window;
-wire write_LTP_LTD_LearnRate;
-wire write_LearnMode_Bias;
-wire write_NeuronType_RandonThreshold;
-wire write_Mask_RestPotential;
-wire write_AER;
-wire write_FixedThreshold;
-wire write_LearnMode_weight;
-wire write_Number_Neuron_Axon;
-
-assign write_LTP_LTD_Window = config_write_enable[8];
-assign write_LTP_LTD_LearnRate = config_write_enable[7];
-assign write_LearnMode_Bias = config_write_enable[6];
-assign write_NeuronType_RandonThreshold = config_write_enable[5];
-assign write_Mask_RestPotential = config_write_enable[4];
-assign write_AER = config_write_enable[2];
-assign write_FixedThreshold = config_write_enable[2];
-assign write_LearnMode_weight = config_write_enable[1];
-assign write_Number_Neuron_Axon = config_write_enable[0];
 
 
  //rwo registers store number of neuron and number of axon

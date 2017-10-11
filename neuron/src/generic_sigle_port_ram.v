@@ -3,14 +3,14 @@
 `define SIM_MEM_INIT
 //`define QUARTUS_SYN_INIT
 
-module generic_single_port_ram (clk, addr, data_in, data_out, write_enable, read_enable);
+module generic_single_port_ram (clk, addr, data_in, data_out, write_enable);
 
     parameter DATA_WIDTH = 16;
     parameter ADDRESS_WIDTH = 8;
     parameter SIM_FILE_PATH = "D:/code/data";
 	parameter INIT_FILE_PATH = "";
 
-    input clk, write_enable, read_enable;
+    input clk, write_enable;
     input [DATA_WIDTH-1:0] data_in, data_out;
     input [ADDRESS_WIDTH-1:0] addr;
 
@@ -36,8 +36,7 @@ module generic_single_port_ram (clk, addr, data_in, data_out, write_enable, read
         begin
             if (write_enable)
                 mem[addr] <= data_in;
-            if (read_enable)
-                addr_reg <= addr;
+            addr_reg <= addr;
             
         end
 	assign data_out = mem[addr_reg];

@@ -22,6 +22,9 @@
 `timescale 1ns/100ps
 `define tpd_clk 5
 `define DUMP_MEMORY
+`define NEW_STATUS_MEMORY
+//`define NEW_CONFIG_MEMORY
+//`define SEPARATE_ADDRESS
 
 module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
@@ -105,7 +108,9 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
 	assign SpikePacket = SpikeAER;
 	//assign outSpike = outSpike_o;
-
+	wire [NURN_CNT_BIT_WIDTH-1:0] read_address_bias, read_address_posthistory, read_address_potential, read_address_threshold;
+	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]   read_address_weight, read_address_prehistory;
+	wire [DSIZE-1:0] data_StatRd_A2;
 	//--------------------------------------------------//
 
 
@@ -175,7 +180,39 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
 		.Addr_StatWr_G_o	( Addr_StatWr_G ),
 		.wrEn_StatWr_G_o	( wrEn_StatWr_G ),
-		.en_expired_post_history_write_back_i (en_expired_post_history_write_back)
+		.en_expired_post_history_write_back_i (en_expired_post_history_write_back),
+		.read_weight_fifo_o (read_weight_fifo),
+
+
+	`ifdef SEPARATE_ADDRESS
+		.read_address_bias_o				(read_address_bias),
+		.read_address_potential_o			(read_address_potential),
+		.read_address_threshold_o			(read_address_threshold),
+		.read_address_posthistory_o			(read_address_posthistory),
+		.read_address_prehistory_o			(read_address_prehistory),
+		.read_address_weight_o				(read_address_weight),
+
+		.write_address_bias_o				(write_address_bias),
+		.write_address_potential_o			(write_address_potential),
+		.write_address_threshold_o			(write_address_threshold),
+		.write_address_posthistory_o		(write_address_posthistory),
+		.write_address_prehistory_o			(write_address_prehistor),
+		.write_address_weight_o				(write_address_weight)
+	`endif
+
+		.read_enable_bias_o					(read_enable_bias),
+		.write_enable_bias_o				(write_enable_bias),
+		.read_enable_potential_o			(read_enable_potential),
+		.write_enable_potential_o			(write_enable_potential),
+		.read_enable_threshold_o			(read_enable_threshold),
+		.write_enable_threshold_o			(write_enable_threshold),
+		.read_enable_posthistory_o			(read_enable_posthistory),
+		.write_enable_posthistory_o			(write_enable_posthistory),
+		.read_enable_prehistory_o			(read_enable_prehistory),
+		.write_enable_prehistory_o			(write_enable_prehistory),
+		.read_enable_weight_learn_o			(read_enable_weight_learn),
+		.read_enable_weight_recall_o		(read_enable_weight_recall),
+		.write_enable_weight_o				(write_enable_weight)
 	);
 
 	dataPath
@@ -251,6 +288,74 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
 	);
 
+`ifdef NEW_CONFIG_MEMORY
+ConfigMem_Asic_Onchip
+#(
+	.NUM_NURNS(NUM_NURNS)  ,
+	.NUM_AXONS(NUM_AXONS) ,
+
+	.DSIZE(DSIZE) ,
+
+	.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
+	.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+
+	.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
+
+	.AER_BIT_WIDTH(AER_BIT_WIDTH),
+
+	.CONFIG_PARAMETER_NUMBER(9),
+
+	.LEARN_MODE_MEMORY_WIDTH(4),
+	
+
+	.X_ID(X_ID),
+	.Y_ID(Y_ID),
+	.SYNTH_PATH(SYNTH_PATH),
+	.SIM_PATH(SIM_PATH)	
+
+)
+ConfigMem_Asic
+(
+	.clk_i(clk)			,
+	.rst_n_i(rst_n)			,
+
+	.config_data_in(),
+
+	.config_write_enable(),
+
+	.FixedThreshold_o(),
+	.Number_Neuron_o(),
+	.Number_Axon_o(),
+
+	//read port A
+	.Addr_Config_A_i(),
+	.rdEn_Config_A_i(),
+
+	.LTP_Win_o(),
+	.LTD_Win_o(),
+	.LTP_LrnRt_o(),
+	.LTD_LrnRt_o(),
+	.biasLrnMode_o(),
+	
+	//read port B
+	.Addr_Config_B_i(),
+	.rdEn_Config_B_i(),
+
+	.NurnType_o(),
+	.RandTh_o(),
+	.Th_Mask_o(),
+	.RstPot_o(),
+	.SpikeAER_o(),
+
+	//read port C
+	.Addr_Config_C_i(Addr_Config_C),
+	.rdEn_Config_C_i(rdEn_Config_C),
+
+	.axonLrnMode_o()
+);
+
+
+`else
 
 
 	ConfigMem
@@ -305,7 +410,83 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
 		.axonLrnMode_o 		( axonLrnMode 	)
 	);
+`endif
 
+`ifdef NEW_STATUS_MEMORY
+	StatusMem_Asic_Onchip_SharePort
+	#(
+		`ifdef DUMP_MEMORY
+			.STOP_STEP(STOP_STEP),
+		`endif
+		.NUM_NURNS(NUM_NURNS),
+		.NUM_AXONS(NUM_AXONS),
+
+		.DSIZE(DSIZE),
+
+		.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
+		.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+
+		.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
+
+		
+		.X_ID(X_ID),
+		.Y_ID(Y_ID),
+		.SIM_PATH(SIM_PATH),
+		.SYNTH_PATH(SYNTH_PATH)
+	)
+	StatusMem_Asic
+	(
+
+		.start_i(start),
+		.clk_i(clk),
+		.rst_n_i(rst_n),
+
+		//read port A
+		.Addr_StatRd_A_i								(Addr_StatRd_A),
+		.read_enable_bias_i								(read_enable_bias),
+		.read_enable_potential_i						(read_enable_potential),
+		.read_enable_threshold_i						(read_enable_threshold),
+		.read_enable_posthistory_i						(read_enable_posthistory),
+
+		.write_enable_bias_i 							(write_enable_bias),
+		.write_enable_potential_i						(write_enable_potential),
+		.write_enable_threshold_i						(write_enable_threshold),
+		.write_enable_posthistory_i						(write_enable_posthistory),
+
+		.data_StatRd_A_o								(data_StatRd_A),
+
+		//write port B
+		.Addr_StatWr_B_i(Addr_StatWr_B),
+		.data_StatWr_B_i(data_StatWr_B),
+		
+		//read port C
+		.Addr_StatRd_C_i(Addr_StatRd_C),
+		.rdEn_StatRd_C_i(rdEn_StatRd_C),
+		.data_StatRd_C_o(data_StatRd_C),
+
+		//write port D
+		.Addr_StatWr_D_i(Addr_StatWr_D),
+		.wrEn_StatWr_D_i(wrEn_StatWr_D),
+		.data_StatWr_D_i(data_StatWr_D),
+		
+		//read port E
+		.Addr_StatRd_E_i(Addr_StatRd_E),
+		.rdEn_StatRd_E_i(rdEn_StatRd_E),
+
+		.data_StatRd_E_o(data_StatRd_E),
+		
+		//read port F
+		.Addr_StatRd_F_i(Addr_StatRd_F),
+		.rdEn_StatRd_F_i(read_weight_fifo),
+
+		.data_StatRd_F_o(data_StatRd_F),
+
+		//write port G
+		.Addr_StatWr_G_i(Addr_StatWr_G),
+		.wrEn_StatWr_G_i(write_enable_G),
+		.data_StatWr_G_i(data_StatWr_G)
+	);
+`else
 	StatusMem
 	#(
 		`ifdef DUMP_MEMORY
@@ -381,6 +562,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.wrEn_StatWr_G_i	( write_enable_G ),
 		.data_StatWr_G_i 	( data_StatWr_G )
 	);
+`endif
 
 	assign write_enable_G = update_weight_enable & wrEn_StatWr_G;
 
@@ -410,5 +592,87 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.spike_in			( inSpike)	//input from interface
 	);
 
+
+
+// StatusMem_Asic_Onchip
+// #(
+// 	`ifdef DUMP_MEMORY
+// 		.STOP_STEP(STOP_STEP),
+// 	`endif
+// 	.NUM_NURNS(NUM_NURNS),
+// 	.NUM_AXONS(NUM_AXONS),
+
+// 	.DSIZE(DSIZE),
+
+// 	.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
+// 	.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+
+// 	.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
+
+	
+// 	.X_ID(X_ID),
+// 	.Y_ID(Y_ID),
+// 	.SIM_PATH(SIM_PATH),
+// 	.SYNTH_PATH(SYNTH_PATH)
+// )
+// StatusMem_Asic
+// (
+// 	`ifdef DUMP_MEMORY
+// 		.start_i(start_i),
+// 	`endif
+// 	.clk_i(clk),
+// 	.rst_n_i(rst_n),
+
+//     //Mem Bias
+//     .read_address_bias_i					(read_address_bias),
+//     .write_address_bias_i					(write_address_bias),
+//     .read_enable_bias_i						(read_enable_bias),
+//     .write_enable_bias_i					(write_enable_bias),
+
+//     //Mem Potential
+//     .read_address_potential_i				(read_address_potential),
+//     .write_address_potential_i				(write_address_potential),
+//     .read_enable_potential_i				(read_enable_potential),
+//     .write_enable_potential_i				(write_enable_potential),
+
+//     .read_address_threshold_i				(read_address_threshold),
+//     .write_address_threshold_i				(write_address_threshold),
+//     .read_enable_threshold_i				(read_enable_threshold),
+//     .write_enable_threshold_i				(write_enable_threshold),
+
+//     .read_address_posthistory_i				(read_address_posthistory),
+//     .write_address_posthistory_i			(write_address_posthistory),
+//     .read_enable_posthistory_i				(read_enable_posthistory),
+//     .write_enable_posthistory_i				(write_enable_posthistory),
+
+//     .read_address_prehistory_i				(read_address_prehistory),
+//     .write_address_prehistory_i				(write_address_prehistory),
+//     .read_enable_prehistory_i				(read_enable_prehistory),
+//     .write_enable_prehistory_i				(write_enable_prehistory),
+
+//     .read_address_weight_i					(read_address_weight),
+//     .write_address_weight_i					(write_address_weight),
+//     .read_enable_weight_recall_i			(read_enable_weight_recall),
+//     .write_enable_weight_i					(write_enable_weight),
+// 	.read_enable_weight_learn_i				(read_enable_weight_learn),
+
+// 	.data_in_bias_i							(data_StatWr_B),
+// 	.data_in_potential_i					(data_StatWr_B),
+// 	.data_in_threshold_i					(data_StatWr_B),
+// 	.data_in_posthistory_i					(data_StatWr_B),
+// 	.data_in_prehistory_i					(data_StatWr_D),
+// 	.data_in_weight_i						(data_StatWr_G),
+
+// 	.data_out_bias_o						(),
+// 	.data_out_potential_o					(),
+// 	.data_out_threshold_o					(),
+// 	.data_out_posthistory_o					(),
+// 	.data_out_prehistory_o					(),
+// 	.data_out_weight_o						(),
+
+// 	.sel_A									(Addr_StatRd_A[1:0]),
+// 	.data_StatRd_A_o						(data_StatRd_A2)
+
+// );
 
 endmodule

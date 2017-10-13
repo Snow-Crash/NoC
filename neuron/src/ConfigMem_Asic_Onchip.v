@@ -1,5 +1,10 @@
 //2017.10.10 config memory. Tested address convert for learn mode weight memory, correct.
 //
+`define USE_MODULE
+`define SIM_MEM_INIT
+`define NULL 0
+//`define USE_MODULE
+
 module ConfigMem_Asic_Onchip
 #(
 	parameter NUM_NURNS    = 256  ,
@@ -16,7 +21,7 @@ module ConfigMem_Asic_Onchip
 
 	parameter CONFIG_PARAMETER_NUMBER = 9,
 
-	parameter LEARN_MODE_MEMORY_WIDTH = 4,
+	parameter LEARN_MODE_MEMORY_WIDTH = 2,
 	
 
 	parameter X_ID = "1",
@@ -67,6 +72,7 @@ module ConfigMem_Asic_Onchip
 );
 
 localparam LEARN_MODE_MEMORY_ADDRESS_WIDTH = $clog2(NUM_NURNS * NUM_AXONS / LEARN_MODE_MEMORY_WIDTH);
+localparam LEARN_MODE_MEMORY_ADDRESS_OFFSET_WIDTH = $clog2(NUM_NURNS / LEARN_MODE_MEMORY_WIDTH);
 localparam NENRON_ID_SHIFT_BITS = $clog2(NUM_AXONS / LEARN_MODE_MEMORY_WIDTH);
 
 //write signal for config mode
@@ -90,12 +96,12 @@ wire [LEARN_MODE_MEMORY_WIDTH-1:0] learn_mode;
 wire [AXON_CNT_BIT_WIDTH-1:0] LearnMode_Weight_AxonID;
 wire [NURN_CNT_BIT_WIDTH-1:0] LearnMode_Weight_NeuronID;
 wire [LEARN_MODE_MEMORY_ADDRESS_WIDTH-1:0] LearnMode_Weight_AxonID_Mod;
-wire [LEARN_MODE_MEMORY_ADDRESS_WIDTH - 1:0] LearnMode_Weight_BaseAddress;
+wire [LEARN_MODE_MEMORY_ADDRESS_WIDTH - 1:0] LearnMode_Weight_BaseAddress, LearnMode_Weight_BaseAddress2;
 wire learn_mode_o;
 wire [LEARN_MODE_MEMORY_ADDRESS_WIDTH - 1:0] LearnMode_Weight_Address;
 reg increase_offset;
 reg read_LearnMode_Weight;
-reg [NURN_CNT_BIT_WIDTH-1:0] LearnMode_Weight_Offset;
+reg [LEARN_MODE_MEMORY_ADDRESS_OFFSET_WIDTH-1:0] LearnMode_Weight_Offset;
 reg [LEARN_MODE_MEMORY_ADDRESS_WIDTH-1:0] LearnMode_Weight_AxonID_Mod_delay;
 
 reg [STDP_WIN_BIT_WIDTH*2-1:0] LTP_LTD_Window_reg;
@@ -116,6 +122,409 @@ assign  write_AER = config_write_enable[3];
 assign  write_FixedThreshold = config_write_enable[2];
 assign  write_LearnMode_weight = config_write_enable[1];
 assign  write_Number_Neuron_Axon = config_write_enable[0];
+
+`ifdef USE_MODULE
+	reg [NURN_CNT_BIT_WIDTH-1:0]	LTP_LTD_Window_addr_reg;
+	reg [NURN_CNT_BIT_WIDTH-1:0]	LTP_LTD_LearnRate_addr_reg;
+	reg [NURN_CNT_BIT_WIDTH-1:0]	LearnMode_Bias_addr_reg;
+	reg [NURN_CNT_BIT_WIDTH-1:0]	NeuronType_RandomThreshold_addr_reg;
+	reg [NURN_CNT_BIT_WIDTH-1:0]	Mask_RestPotential_addr_reg;
+	reg [NURN_CNT_BIT_WIDTH-1:0]	AER_addr_reg;
+	reg [NURN_CNT_BIT_WIDTH-1:0]	FixedThreshold_addr_reg;
+	reg [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]	LearnMode_Weight_addr_reg;
+	reg [LEARN_MODE_MEMORY_ADDRESS_WIDTH-1:0]	LearnMode_Weight_addr_reg2;
+`endif
+
+
+
+ //rwo registers store number of neuron and number of axon
+always @(posedge clk_i or negedge rst_n_i)
+	begin
+	  	if (rst_n_i == 1'b0)
+		  	begin
+				Number_Neuron_Axon <= 0;
+			end
+		else
+			begin
+				if(write_Number_Neuron_Axon == 1'b1)
+					begin
+						Number_Neuron_Axon <= config_data_in[NURN_CNT_BIT_WIDTH-1:0];
+					end			
+			end
+	end
+assign Number_Neuron_o = Number_Neuron_Axon[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:AXON_CNT_BIT_WIDTH];
+assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
+
+
+
+
+`ifdef QUARTUS_SYN_INIT
+	(* ram_init_file = INIT_FILE_PATH *) reg [STDP_WIN_BIT_WIDTH*2-1:0] LTP_LTD_Window 		[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	(* ram_init_file = INIT_FILE_PATH *) reg [DSIZE*2-1:0] LTP_LTD_LearnRate 				[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	(* ram_init_file = INIT_FILE_PATH *) reg LearnMode_Bias 								[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	(* ram_init_file = INIT_FILE_PATH *) reg [1:0] NeuronType_RandomThreshold 				[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	(* ram_init_file = INIT_FILE_PATH *) reg [DSIZE*2-1:0] Mask_RestPotential 				[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	(* ram_init_file = INIT_FILE_PATH *) reg [AER_BIT_WIDTH-1:0] AER 						[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	(* ram_init_file = INIT_FILE_PATH *) reg [DSIZE-1:0] FixedThreshold 					[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	(* ram_init_file = INIT_FILE_PATH *) reg LearnMode_Weight 								[(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1:0];
+`else
+	reg [STDP_WIN_BIT_WIDTH*2-1:0] 		LTP_LTD_Window 						[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	reg [DSIZE*2-1:0] 					LTP_LTD_LearnRate 					[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	reg 								LearnMode_Bias 						[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	reg [1:0] 							NeuronType_RandomThreshold 			[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	reg [DSIZE*2-1:0] 					Mask_RestPotential 					[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	reg [AER_BIT_WIDTH-1:0] 			AER 								[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	reg [DSIZE-1:0] 					FixedThreshold 						[(1<<NURN_CNT_BIT_WIDTH) -1:0];
+	reg 								LearnMode_Weight 					[(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1:0];
+	reg [LEARN_MODE_MEMORY_WIDTH-1:0]	LearnMode_Weight2 					[(1<<LEARN_MODE_MEMORY_ADDRESS_WIDTH)-1:0];
+`endif
+
+`ifdef SIM_MEM_INIT
+		integer file1, file2, file3, file4, file5, idx, file6;
+		reg [100*8:1] file_name;
+		reg [STDP_WIN_BIT_WIDTH-1:0] data_S1, data_S2;
+		reg [DSIZE-1:0] data_D1, data_D2, data_D3;
+		reg data_B1, data_B2;
+		reg [AER_BIT_WIDTH-1:0] data_A1;
+		reg [LEARN_MODE_MEMORY_WIDTH-1:0] data_learn_mode;
+		integer idx2;
+			
+		initial begin
+
+			// initialize mem_A
+			file_name = {SIM_PATH, DIR_ID, "/LTP_Win.txt"}; 		file1 = $fopen(file_name, "r+");
+			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			file_name = {SIM_PATH, DIR_ID, "/LTD_Win.txt"}; 		file2 = $fopen(file_name, "r+");
+			if (file2 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			file_name = {SIM_PATH, DIR_ID, "/LTP_LrnRt.txt"}; 	file3 = $fopen(file_name, "r+");
+			if (file3 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			file_name = {SIM_PATH, DIR_ID, "/LTD_LrnRt.txt"}; 	file4 = $fopen(file_name, "r+");
+			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			file_name = {SIM_PATH, DIR_ID, "/LrnModeBias.txt"}; 	file5 = $fopen(file_name, "r+");
+			if (file5 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+
+			for(idx = 0 ; idx <= (NUM_NURNS - 1) ; idx = idx + 1)
+			begin
+				$fscanf (file1, "%h\n", data_S1);
+				$fscanf (file2, "%h\n", data_S2);
+				$fscanf (file3, "%h\n", data_D1);
+				$fscanf (file4, "%h\n", data_D2);
+				$fscanf (file5, "%h\n", data_B1);
+				LTP_LTD_Window[idx] = {data_S1, data_S2};
+				LTP_LTD_LearnRate[idx] = {data_D1,data_D2};
+				LearnMode_Bias[idx] = data_B1;
+			end
+		
+			$fclose(file1);
+			$fclose(file2);
+			$fclose(file3);
+			$fclose(file4);
+			$fclose(file5);
+			//-----------------------------
+
+			// initialize mem_B
+			file_name = {SIM_PATH, DIR_ID, "/NurnType.txt"}; 	file1 = $fopen(file_name, "r+");
+			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			file_name = {SIM_PATH, DIR_ID, "/RandTh.txt"}; 		file2 = $fopen(file_name, "r+");
+			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			file_name = {SIM_PATH, DIR_ID, "/Th_Mask.txt"}; 		file3 = $fopen(file_name, "r+");
+			if (file2 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			file_name = {SIM_PATH, DIR_ID, "/RstPot.txt"};	 	file4 = $fopen(file_name, "r+");
+			if (file3 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			file_name = {SIM_PATH, DIR_ID, "/SpikeAER.txt"};	 	file5 = $fopen(file_name, "r+");
+			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			file_name = {SIM_PATH, DIR_ID, "/FixedTh.txt"};	 	file6 = $fopen(file_name, "r+");
+			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+
+			for(idx = 0 ; idx <= (NUM_NURNS - 1) ; idx = idx + 1)
+			begin
+				$fscanf (file1, "%h\n", data_B1);
+				$fscanf (file2, "%h\n", data_B2);
+				$fscanf (file3, "%h\n", data_D1);
+				$fscanf (file4, "%h\n", data_D2);
+				$fscanf (file5, "%h\n", data_A1);
+				$fscanf (file6, "%h\n", data_D3);
+				NeuronType_RandomThreshold[idx] = {data_B1, data_B2};
+				Mask_RestPotential[idx] = {data_D1, data_D2};
+				AER[idx] = data_A1;
+				FixedThreshold[idx] = data_D3;
+			end
+		
+			$fclose(file1);
+			$fclose(file2);
+			$fclose(file3);
+			$fclose(file4);
+			$fclose(file5);
+			$fclose(file6);
+			//-----------------------------
+			
+			// initialize mem_C
+			file_name = {SIM_PATH, DIR_ID, "/LrnModeWght.txt"};
+			$readmemh (file_name,LearnMode_Weight);
+			//$readmemh (file_name, LearnMode_Weight2);
+			//initialize memc2
+			file_name = {SIM_PATH, DIR_ID, "/LrnModeWght.txt"}; 	file1 = $fopen(file_name, "r+");
+
+			for (idx = 0; idx <=((1<<LEARN_MODE_MEMORY_ADDRESS_WIDTH) - 1); idx = idx + 1)
+				begin
+					for(idx2 = 0; idx2 < LEARN_MODE_MEMORY_WIDTH; idx2 = idx2 + 1)
+						begin
+							$fscanf (file1, "%h\n", data_learn_mode[idx2]);
+						end
+					LearnMode_Weight2[idx] = data_learn_mode;
+				end
+			$fclose(file1);
+			//-----------------------------
+				
+		end
+`endif
+
+`ifdef USE_MODULE
+
+	//window
+	always @ (posedge clk_i)
+		begin
+			if (write_LTP_LTD_Window)
+				LTP_LTD_Window[Addr_Config_A_i] <= config_data_in[DSIZE*2-1:DSIZE*2-STDP_WIN_BIT_WIDTH*2];
+			LTP_LTD_Window_addr_reg <= Addr_Config_A_i;  
+		end
+	assign LTP_LTD_Window_wire = LTP_LTD_LearnRate[LTP_LTD_Window_addr_reg];
+
+	//LTP LTD learn rate
+	always @ (posedge clk_i)
+		begin
+			if (write_LTP_LTD_LearnRate)
+				LTP_LTD_LearnRate[Addr_Config_A_i] <= config_data_in;
+			LTP_LTD_LearnRate_addr_reg <= Addr_Config_A_i;  
+		end
+	assign LTP_LTD_LearnRate_wire = LTP_LTD_LearnRate[LTP_LTD_LearnRate_addr_reg];
+
+	//bias learn mode
+	always @ (posedge clk_i)
+		begin
+			if (write_LearnMode_Bias)
+				LearnMode_Bias[Addr_Config_A_i] <= config_data_in[DSIZE*2-1];
+			LearnMode_Bias_addr_reg <= Addr_Config_A_i;  
+		end
+	assign LearnMode_Bias_wire = LTP_LTD_LearnRate[LearnMode_Bias_addr_reg];
+
+	//neuron type and random threshold mode
+	always @ (posedge clk_i)
+		begin
+			if (write_NeuronType_RandonThreshold)
+				NeuronType_RandomThreshold[Addr_Config_B_i] <= config_data_in[DSIZE*2-1:DSIZE*2-2];
+			NeuronType_RandomThreshold_addr_reg <= Addr_Config_B_i;  
+		end
+	assign NeuronType_RandomThreshold_wire = LTP_LTD_LearnRate[NeuronType_RandomThreshold_addr_reg];
+
+	//Mask and potential
+	always @ (posedge clk_i)
+		begin
+			if (write_Mask_RestPotential)
+				Mask_RestPotential[Addr_Config_B_i] <= config_data_in;
+			Mask_RestPotential_addr_reg <= Addr_Config_B_i;  
+		end
+	assign Mask_RestPotential_wire = LTP_LTD_LearnRate[Mask_RestPotential_addr_reg];
+
+	//AER
+	always @ (posedge clk_i)
+		begin
+			if (write_AER)
+				AER[Addr_Config_B_i] <= config_data_in;
+			AER_addr_reg <= Addr_Config_B_i;  
+		end
+	assign AER_wire = AER[AER_addr_reg];
+
+	//fixed threshold
+	always @ (posedge clk_i)
+		begin
+			if (write_FixedThreshold)
+				FixedThreshold[Addr_Config_B_i] <= config_data_in[DSIZE*2-1:DSIZE];
+			FixedThreshold_addr_reg <= Addr_Config_B_i;  
+		end
+	assign FixedThreshold_wire = FixedThreshold[FixedThreshold_addr_reg];
+
+	//weight leanrning mode
+	always @ (posedge clk_i)
+		begin
+			if (write_LearnMode_weight)
+				LearnMode_Weight[Addr_Config_B_i] <= config_data_in[DSIZE-1];
+			LearnMode_Weight_addr_reg <= Addr_Config_C_i;  
+		end
+	assign axonLrnMode_o = LearnMode_Weight[LearnMode_Weight_addr_reg];
+
+	//weight leanrning mode
+	always @ (posedge clk_i)
+		begin
+			if (write_LearnMode_weight)
+				LearnMode_Weight2[Addr_Config_B_i] <= config_data_in[DSIZE-1];
+			LearnMode_Weight_addr_reg2 <= LearnMode_Weight_Address;  
+		end
+	assign learn_mode = LearnMode_Weight2[LearnMode_Weight_addr_reg2];
+
+ `else
+	//LTP window and LTD window
+	generic_single_port_ram
+		#(
+			.DATA_WIDTH							(STDP_WIN_BIT_WIDTH*2),
+			.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
+			.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
+			.INIT_FILE_PATH						(SYNTH_PATH)
+		)
+		LTP_LTD_Window
+		(
+			.clk								(clk), 
+			.addr								(Addr_Config_A_i),
+			.data_in							(config_data_in[DSIZE*2-1:DSIZE-STDP_WIN_BIT_WIDTH*2]),
+			.data_out							(LTP_LTD_Window_wire), 
+			.write_enable						(write_LTP_LTD_Window)
+			//.read_enable						(rdEn_Config_A_i)
+		);
+
+	//LTD and LTD learn rate
+	generic_single_port_ram
+		#(
+			.DATA_WIDTH							(DSIZE*2),
+			.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
+			.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
+			.INIT_FILE_PATH						(SYNTH_PATH)
+		)
+	LTP_LTD_LearnRate
+		(
+			.clk								(clk_i),
+			.addr								(Addr_Config_A_i),
+			.data_in							(config_data_in),
+			.data_out							(LTP_LTD_LearnRate_wire),
+			.write_enable						(write_LTP_LTD_LearnRate)
+			//.read_enable						(rdEn_Config_A_i)
+		);
+
+	//Bias learn mode
+	generic_single_port_ram
+		#(
+			.DATA_WIDTH							(1),
+			.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
+			.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
+			.INIT_FILE_PATH						(SYNTH_PATH)
+		)
+	LearnMode_Bias
+		(
+			.clk								(clk_i), 
+			.addr								(Addr_Config_A_i),
+			.data_in							(config_data_in[DSIZE*2-1]),
+			.data_out							(LearnMode_Bias_wire), 
+			.write_enable						(write_LearnMode_Bias)
+			//.read_enable						(rdEn_Config_A_i)
+		);
+
+	//Neuron type and random threshold
+	generic_single_port_ram
+		#(
+			.DATA_WIDTH							(2),
+			.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
+			.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/NeuronType_Threshold.txt"}),
+			.INIT_FILE_PATH						(SYNTH_PATH)
+		)
+	NeuronType_RandomThreshold
+		(
+			.clk								(clk_i), 
+			.addr								(Addr_Config_B_i),
+			.data_in							(config_data_in[DSIZE*2-1:DSIZE*2-2]),
+			.data_out							(NeuronType_RandomThreshold_wire), 
+			.write_enable						(write_NeuronType_RandonThreshold)
+			//.read_enable							(rdEn_Config_B_i)
+		);
+
+	//Threshold Mask and rest potential
+	generic_single_port_ram
+		#(
+			.DATA_WIDTH							(DSIZE*2),
+			.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
+			.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
+			.INIT_FILE_PATH						(SYNTH_PATH)
+		)
+	Mask_RestPotential
+		(
+			.clk								(clk_i), 
+			.addr								(Addr_Config_B_i),
+			.data_in							(config_data_in),
+			.data_out							(Mask_RestPotential_wire), 
+			.write_enable						(write_Mask_RestPotential)
+			//.read_enable						(rdEn_Config_B_i)
+		);
+
+	//AER
+	generic_single_port_ram
+		#(
+			.DATA_WIDTH							(AER_BIT_WIDTH),
+			.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
+			.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
+			.INIT_FILE_PATH						(SYNTH_PATH)
+		)
+	AER
+		(
+			.clk								(clk_i), 
+			.addr								(Addr_Config_B_i),
+			.data_in							(config_data_in),
+			.data_out							(AER_wire), 
+			.write_enable						(write_AER)
+			//.read_enable						(rdEn_Config_B_i)
+		);
+
+	//Fixed threshold
+	generic_single_port_ram
+		#(
+			.DATA_WIDTH							(DSIZE),
+			.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
+			.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
+			.INIT_FILE_PATH						(SYNTH_PATH)
+		)
+	FixedThreshold
+		(
+			.clk								(clk_i), 
+			.addr								(Addr_Config_B_i),
+			.data_in							(config_data_in[DSIZE*2-1:DSIZE]),
+			.data_out							(FixedThreshold_wire), 
+			.write_enable						(write_FixedThreshold)
+			//.read_enable						(rdEn_Config_B_i)
+		);
+
+	//Learn mode weight
+	generic_single_port_ram
+		#(
+			.DATA_WIDTH							(1),
+			.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH + AXON_CNT_BIT_WIDTH),
+			.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LrnModeWght.txt"}),
+			.INIT_FILE_PATH						(SYNTH_PATH)
+		)
+	LearnMode_Weight
+		(
+			.clk								(clk_i), 
+			.addr								(Addr_Config_C_i),
+			.data_in							(config_data_in[DSIZE*2-1]),
+			.data_out							(axonLrnMode_o), 
+			.write_enable						(write_LearnMode_weight)
+			//.read_enable						(rdEn_Config_C_i)
+		);
+
+	//Learn mode weight
+	generic_single_port_ram
+		#(
+			.DATA_WIDTH							(LEARN_MODE_MEMORY_WIDTH),
+			.ADDRESS_WIDTH						(LEARN_MODE_MEMORY_ADDRESS_WIDTH),
+			.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LrnModeWght2.txt"}),
+			.INIT_FILE_PATH						(SYNTH_PATH)
+		)
+	LearnMode_Weight2
+		(
+			.clk								(clk_i), 
+			.addr								(LearnMode_Weight_Address),
+			.data_in							(config_data_in[0]),
+			.data_out							(learn_mode), 
+			.write_enable						(0'b0)
+			//.read_enable						(read_LearnMode_Weight)
+		);
+`endif
 
 
 //registers to store memory output
@@ -161,191 +570,6 @@ assign RandTh_o = NeuronType_RandomThreshold_reg[0];
 assign Th_Mask_o = Mask_RestPotential_reg[DSIZE*2-1:DSIZE];
 assign RstPot_o = Mask_RestPotential_reg[DSIZE-1:0];
 assign SpikeAER_o = AER_reg;
-
- //rwo registers store number of neuron and number of axon
-always @(posedge clk_i or negedge rst_n_i)
-	begin
-	  	if (rst_n_i == 1'b0)
-		  	begin
-				Number_Neuron_Axon <= 0;
-			end
-		else
-			begin
-				if(write_Number_Neuron_Axon == 1'b1)
-					begin
-						Number_Neuron_Axon <= config_data_in[NURN_CNT_BIT_WIDTH-1:0];
-					end			
-			end
-	end
-assign Number_Neuron_o = Number_Neuron_Axon[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:AXON_CNT_BIT_WIDTH];
-assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
-
-
-//LTP window and LTD window
-generic_single_port_ram
-	#(
-		.DATA_WIDTH							(STDP_WIN_BIT_WIDTH*2),
-		.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
-		.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
-		.INIT_FILE_PATH						(SYNTH_PATH)
-	)
-	LTP_LTD_Window
-	(
-		.clk								(clk), 
-		.addr								(Addr_Config_A_i),
-		.data_in							(config_data_in[STDP_WIN_BIT_WIDTH*2-1:0]),
-		.data_out							(LTP_LTD_Window_wire), 
-		.write_enable						(write_LTP_LTD_Window)
-		//.read_enable						(rdEn_Config_A_i)
-	);
-
-
-
-//LTD and LTD learn rate
-generic_single_port_ram
-	#(
-		.DATA_WIDTH							(DSIZE*2),
-		.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
-		.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
-		.INIT_FILE_PATH						(SYNTH_PATH)
-	)
-LTP_LTD_LearnRate
-	(
-		.clk								(clk_i),
-		.addr								(Addr_Config_A_i),
-		.data_in							(config_data_in),
-		.data_out							(LTP_LTD_LearnRate_wire),
-		.write_enable						(write_LTP_LTD_LearnRate)
-		//.read_enable						(rdEn_Config_A_i)
-	);
-
-
-
-//Bias learn mode
-generic_single_port_ram
-	#(
-		.DATA_WIDTH							(1),
-		.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
-		.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
-		.INIT_FILE_PATH						(SYNTH_PATH)
-	)
-LearnMode_Bias
-	(
-		.clk								(clk_i), 
-		.addr								(Addr_Config_A_i),
-		.data_in							(config_data_in[0]),
-		.data_out							(LearnMode_Bias_wire), 
-		.write_enable						(write_LearnMode_Bias)
-		//.read_enable						(rdEn_Config_A_i)
-	);
-
-//Neuron type and random threshold
-generic_single_port_ram
-	#(
-		.DATA_WIDTH							(2),
-		.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
-		.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/NeuronType_Threshold.txt"}),
-		.INIT_FILE_PATH						(SYNTH_PATH)
-	)
-NeuronType_RandomThreshold
-	(
-		.clk									(clk_i), 
-		.addr									(Addr_Config_B_i),
-		.data_in								(config_data_in[1:0]),
-		.data_out								(NeuronType_RandomThreshold_wire), 
-		.write_enable							(write_NeuronType_RandonThreshold)
-		//.read_enable							(rdEn_Config_B_i)
-	);
-
-//Threshold Mask and rest potential
-generic_single_port_ram
-	#(
-		.DATA_WIDTH							(DSIZE*2),
-		.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
-		.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
-		.INIT_FILE_PATH						(SYNTH_PATH)
-	)
-Mask_RestPotential
-	(
-		.clk								(clk_i), 
-		.addr								(Addr_Config_B_i),
-		.data_in							(config_data_in[DSIZE*2-1:0]),
-		.data_out							(Mask_RestPotential_wire), 
-		.write_enable						(write_Mask_RestPotential)
-		//.read_enable						(rdEn_Config_B_i)
-	);
-
-//AER
-generic_single_port_ram
-	#(
-		.DATA_WIDTH							(AER_BIT_WIDTH),
-		.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
-		.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
-		.INIT_FILE_PATH						(SYNTH_PATH)
-	)
-AER
-	(
-		.clk								(clk_i), 
-		.addr								(Addr_Config_B_i),
-		.data_in							(config_data_in),
-		.data_out							(AER_wire), 
-		.write_enable						(write_AER)
-		//.read_enable						(rdEn_Config_B_i)
-	);
-
-//Fixed threshold
-generic_single_port_ram
-	#(
-		.DATA_WIDTH							(DSIZE),
-		.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH),
-		.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LTP_Win.txt"}),
-		.INIT_FILE_PATH						(SYNTH_PATH)
-	)
-FixedThreshold
-	(
-		.clk								(clk_i), 
-		.addr								(Addr_Config_B_i),
-		.data_in							(config_data_in[DSIZE-1:0]),
-		.data_out							(FixedThreshold_wire), 
-		.write_enable						(write_FixedThreshold)
-		//.read_enable						(rdEn_Config_B_i)
-	);
-
-//Learn mode weight
-generic_single_port_ram
-	#(
-		.DATA_WIDTH							(1),
-		.ADDRESS_WIDTH						(NURN_CNT_BIT_WIDTH + AXON_CNT_BIT_WIDTH),
-		.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LrnModeWght.txt"}),
-		.INIT_FILE_PATH						(SYNTH_PATH)
-	)
-LearnMode_Weight
-	(
-		.clk								(clk_i), 
-		.addr								(Addr_Config_C_i),
-		.data_in							(config_data_in[0]),
-		.data_out							(axonLrnMode_o), 
-		.write_enable						(write_LearnMode_weight)
-		//.read_enable						(rdEn_Config_C_i)
-	);
-
-//Learn mode weight
-generic_single_port_ram
-	#(
-		.DATA_WIDTH							(LEARN_MODE_MEMORY_WIDTH),
-		.ADDRESS_WIDTH						(LEARN_MODE_MEMORY_ADDRESS_WIDTH),
-		.SIM_FILE_PATH						({SIM_PATH, DIR_ID, "/LrnModeWght2.txt"}),
-		.INIT_FILE_PATH						(SYNTH_PATH)
-	)
-LearnMode_Weight2
-	(
-		.clk								(clk_i), 
-		.addr								(LearnMode_Weight_Address),
-		.data_in							(config_data_in[0]),
-		.data_out							(learn_mode), 
-		.write_enable						(0'b0)
-		//.read_enable						(read_LearnMode_Weight)
-	);
 
 
 //Address convert

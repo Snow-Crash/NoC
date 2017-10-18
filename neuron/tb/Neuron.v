@@ -84,7 +84,8 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_Config_C, Addr_StatRd_C;
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_StatWr_D, Addr_StatRd_E;
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_StatRd_F, Addr_StatWr_G;
-	wire [NURN_CNT_BIT_WIDTH+2-1:0] Addr_StatRd_A, Addr_StatWr_B;
+	wire [NURN_CNT_BIT_WIDTH+2-1:0] Addr_StatRd_A;
+	wire [NURN_CNT_BIT_WIDTH-1:0] Addr_StatWr_B;
 	//wire shift_writeback_en_buffer;
 	wire expired_post_history_write_back;
 

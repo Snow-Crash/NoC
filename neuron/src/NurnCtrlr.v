@@ -26,6 +26,7 @@
 //2017.9.16  Change Addr_StatWr_B_o, add a new condition for write back expired post history.
 //2017.9.27 remove shift_writeback_en_buffer_o. it's not needed
 //2017.10.17 add a new port, enLrnWtPipln_o, comes from enLrnWtPipln_dly. sent to datapath to prevent expPostHist incorectly being high.
+//2017.10.18 remove lower 2 bits of Addr_StatWr_B_o, which are used to control mux in status memory. There is no such mux now, so remove them;
 
 `timescale 1ns/100ps
 //`define SEPARATE_ADDRESS
@@ -81,7 +82,7 @@ module NurnCtrlr
 	output reg [NURN_CNT_BIT_WIDTH+2-1:0] 				Addr_StatRd_A_o,
 	output reg											rdEn_StatRd_A_o	,
 
-	output reg [NURN_CNT_BIT_WIDTH+2-1:0] 				Addr_StatWr_B_o,
+	output reg [NURN_CNT_BIT_WIDTH-1:0] 				Addr_StatWr_B_o,
 	output 												wrEn_StatWr_B_o	,
 
 	output [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	Addr_StatRd_C_o,
@@ -441,17 +442,17 @@ module NurnCtrlr
 		end
 
 		//status write port B
-		Addr_StatWr_B_o = {rclNurnAddr_buff,2'b00};
+		Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b00};
 		if (LrnBias_Pipln[0] == 1'b1) begin
-			Addr_StatWr_B_o = {lrnWrBack_Nurn,2'b00};
+			Addr_StatWr_B_o = lrnWrBack_Nurn;//,2'b00};
 		end else if (wr_MembPot_dly[0] == 1'b1) begin
-			Addr_StatWr_B_o = {rclNurnAddr_buff,2'b01};
+			Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b01};
 		end else if (wrEn_th_dly[0] == 1'b1) begin
-			Addr_StatWr_B_o = {rclNurnAddr_buff,2'b10};
+			Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b10};
 		end else if (wrPostSpkHist == 1'b1) begin
-			Addr_StatWr_B_o = {rclNurnAddr_buff,2'b11};
+			Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b11};
 		end else if (expired_post_history_write_back_delay == 1'b1) begin
-			Addr_StatWr_B_o = {lrnWrBack_Nurn,2'b11};
+			Addr_StatWr_B_o = lrnWrBack_Nurn;//,2'b11};
 		end
 	end
 	assign Addr_Config_B_o = rclCntr_Nurn;

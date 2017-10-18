@@ -1,4 +1,7 @@
 //memory 1 - 4 read write address are same, separare read signal and write signal
+
+//2017.10.18 change width of Addr_StatWr_B_i. and remove wire addr_B.
+
 `define SIM_MEM_INIT
 //`define QUARTUS_SYN_INIT
 `define NULL 0
@@ -49,7 +52,7 @@ module StatusMem_Asic_Onchip_SharePort
 	output reg [DSIZE-1:0]								data_StatRd_A_o,
 
 	//write port B
-	input [NURN_CNT_BIT_WIDTH+2-1:0] 					Addr_StatWr_B_i,
+	input [NURN_CNT_BIT_WIDTH-1:0] 						Addr_StatWr_B_i,
 	input [DSIZE-1:0]									data_StatWr_B_i,
 	
 	//read port C
@@ -132,14 +135,14 @@ module StatusMem_Asic_Onchip_SharePort
 	wire [DSIZE-1:0] data_StatRd_E, data_StatRd_F;
 	reg fifo_write_enable;
 
-    assign addr_b = Addr_StatWr_B_i[NURN_CNT_BIT_WIDTH+2-1:2];
+    assign addr_b = Addr_StatWr_B_i;
     //memory bias
 	always @(posedge clk_i)
         begin
 	        if (read_enable_bias_i == 1'b1)
 	            read_address_register_bias <= Addr_StatRd_A_i[NURN_CNT_BIT_WIDTH+2-1:2];
 		    if (write_enable_bias_i == 1'b1)
-			    Mem_Bias[addr_b] <= data_StatWr_B_i;
+			    Mem_Bias[Addr_StatWr_B_i] <= data_StatWr_B_i;
         end
     assign data_out_bias_o = Mem_Bias[read_address_register_bias];
 
@@ -148,7 +151,7 @@ module StatusMem_Asic_Onchip_SharePort
 	        if (read_enable_potential_i == 1'b1)
 	            read_address_register_potential <= Addr_StatRd_A_i[NURN_CNT_BIT_WIDTH+2-1:2];
 		    if (write_enable_potential_i == 1'b1)
-			    Mem_Potential[addr_b] <= data_StatWr_B_i;
+			    Mem_Potential[Addr_StatWr_B_i] <= data_StatWr_B_i;
         end
     assign data_out_potential_o = Mem_Potential[read_address_register_potential];
 
@@ -157,7 +160,7 @@ module StatusMem_Asic_Onchip_SharePort
 	        if (read_enable_threshold_i == 1'b1)
 	            read_address_register_threshold <= Addr_StatRd_A_i[NURN_CNT_BIT_WIDTH+2-1:2];
 		    if (write_enable_threshold_i == 1'b1)
-			    Mem_Threshold[addr_b] <= data_StatWr_B_i;
+			    Mem_Threshold[Addr_StatWr_B_i] <= data_StatWr_B_i;
         end
     assign data_out_threshold_o = Mem_Threshold[read_address_register_threshold];
 
@@ -166,7 +169,7 @@ module StatusMem_Asic_Onchip_SharePort
 	        if (read_enable_posthistory_i == 1'b1)
 	            read_address_register_posthistory <= Addr_StatRd_A_i[NURN_CNT_BIT_WIDTH+2-1:2];
 		    if (write_enable_posthistory_i == 1'b1)
-			    Mem_PostHistory[addr_b] <= data_StatWr_B_i;
+			    Mem_PostHistory[Addr_StatWr_B_i] <= data_StatWr_B_i;
         end
     assign data_out_posthistory_o = Mem_PostHistory[read_address_register_posthistory];
 

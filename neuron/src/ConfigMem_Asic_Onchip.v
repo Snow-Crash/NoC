@@ -74,7 +74,18 @@ module ConfigMem_Asic_Onchip
 	input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	Addr_Config_C_i,
 	input 												rdEn_Config_C_i,
 
-	output												axonLrnMode_o
+	output												axonLrnMode_o,
+
+	//config mode
+    input config_LTP_LTD_Window_i,
+    input config_LTP_LTD_LearnRate_i,
+    input config_LearnMode_Bias_i,
+    input config_NeuronType_RandomThreshold_i,
+    input config_Mask_RestPotential_i,
+    input config_AER_i,
+    input config_FixedThreshold_i,
+    input config_LearnMode_Weight_i,
+    input config_Number_Neuron_Axon_i
 );
 
 localparam LEARN_MODE_MEMORY_ADDRESS_WIDTH = $clog2(NUM_NURNS * NUM_AXONS / LEARN_MODE_MEMORY_WIDTH);
@@ -290,7 +301,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 	//window
 	always @ (posedge clk_i)
 		begin
-			if (write_LTP_LTD_Window)
+			if (config_LTP_LTD_Window_i)
 				LTP_LTD_Window[Addr_Config_A_i] <= config_data_in[DSIZE*2-1:DSIZE*2-STDP_WIN_BIT_WIDTH*2];
 			LTP_LTD_Window_addr_reg <= Addr_Config_A_i;  
 		end
@@ -299,7 +310,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 	//LTP LTD learn rate
 	always @ (posedge clk_i)
 		begin
-			if (write_LTP_LTD_LearnRate)
+			if (config_LTP_LTD_LearnRate_i)
 				LTP_LTD_LearnRate[Addr_Config_A_i] <= config_data_in;
 			LTP_LTD_LearnRate_addr_reg <= Addr_Config_A_i;  
 		end
@@ -308,7 +319,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 	//bias learn mode
 	always @ (posedge clk_i)
 		begin
-			if (write_LearnMode_Bias)
+			if (config_LearnMode_Bias_i)
 				LearnMode_Bias[Addr_Config_A_i] <= config_data_in[DSIZE*2-1];
 			LearnMode_Bias_addr_reg <= Addr_Config_A_i;  
 		end
@@ -317,7 +328,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 	//neuron type and random threshold mode
 	always @ (posedge clk_i)
 		begin
-			if (write_NeuronType_RandonThreshold)
+			if (config_NeuronType_RandomThreshold_i)
 				NeuronType_RandomThreshold[Addr_Config_B_i] <= config_data_in[DSIZE*2-1:DSIZE*2-2];
 			NeuronType_RandomThreshold_addr_reg <= Addr_Config_B_i;  
 		end
@@ -326,7 +337,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 	//Mask and potential
 	always @ (posedge clk_i)
 		begin
-			if (write_Mask_RestPotential)
+			if (config_Mask_RestPotential_i)
 				Mask_RestPotential[Addr_Config_B_i] <= config_data_in;
 			Mask_RestPotential_addr_reg <= Addr_Config_B_i;  
 		end
@@ -335,7 +346,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 	//AER
 	always @ (posedge clk_i)
 		begin
-			if (write_AER)
+			if (config_AER_i)
 				AER[Addr_Config_B_i] <= config_data_in;
 			AER_addr_reg <= Addr_Config_B_i;  
 		end
@@ -344,7 +355,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 	//fixed threshold
 	always @ (posedge clk_i)
 		begin
-			if (write_FixedThreshold)
+			if (config_FixedThreshold_i)
 				FixedThreshold[Addr_Config_B_i] <= config_data_in[DSIZE*2-1:DSIZE];
 			FixedThreshold_addr_reg <= Addr_Config_B_i;  
 		end
@@ -353,7 +364,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 	//weight leanrning mode
 	always @ (posedge clk_i)
 		begin
-			if (write_LearnMode_weight)
+			if (config_LearnMode_Weight_i)
 				LearnMode_Weight[Addr_Config_B_i] <= config_data_in[DSIZE-1];
 			LearnMode_Weight_addr_reg <= Addr_Config_C_i;  
 		end
@@ -362,7 +373,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 	//weight leanrning mode
 	always @ (posedge clk_i)
 		begin
-			if (write_LearnMode_weight)
+			if (config_LearnMode_Weight_i)
 				LearnMode_Weight2[Addr_Config_B_i] <= config_data_in[DSIZE-1];
 			LearnMode_Weight_addr_reg2 <= LearnMode_Weight_Address;  
 		end

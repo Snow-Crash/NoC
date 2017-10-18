@@ -145,6 +145,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.sel_wrBackStat_B_o ( sel_wrBackStat_B ),
 		//.shift_writeback_en_buffer_o (shift_writeback_en_buffer),
 		.expired_post_history_write_back_o(expired_post_history_write_back),
+		.enLrnWtPipln_o		(enLrnWtPipln),
 
 		//config mem
 		.biasLrnMode_i  	( biasLrnMode   ),
@@ -280,6 +281,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.buffBias_i 		( buffBias ),
 		.lrnUseBias_i 		( lrnUseBias ),
 		.cmpSTDP_i 			(),
+		.enLrnWtPipln_i		(enLrnWtPipln),
 
 		.update_weight_enable_o		(update_weight_enable),
 		//.shift_writeback_en_buffer_i (shift_writeback_en_buffer),

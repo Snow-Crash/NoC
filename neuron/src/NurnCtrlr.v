@@ -25,6 +25,7 @@
 //			expired_post_history_write_back_o is sent to datapath and status memory to control mux.
 //2017.9.16  Change Addr_StatWr_B_o, add a new condition for write back expired post history.
 //2017.9.27 remove shift_writeback_en_buffer_o. it's not needed
+//2017.10.17 add a new port, enLrnWtPipln_o, comes from enLrnWtPipln_dly. sent to datapath to prevent expPostHist incorectly being high.
 
 `timescale 1ns/100ps
 //`define SEPARATE_ADDRESS
@@ -61,6 +62,7 @@ module NurnCtrlr
 	//output  reg											shift_writeback_en_buffer_o,
 	output  											expired_post_history_write_back_o,
 	input												en_expired_post_history_write_back_i,
+	output												enLrnWtPipln_o,
 
 	//config mem
 	input 												biasLrnMode_i 	,
@@ -542,6 +544,7 @@ module NurnCtrlr
 	assign rdEn_StatRd_C_o = enLrnWtPipln;//read PreSpikeHistory
 	assign rdEn_Config_C_o = enLrnWtPipln;//read LrnModeWght
 	assign PStgEn_rdWt = axonLrnMode_i & enLrnWtPipln_dly;
+	assign enLrnWtPipln_o = enLrnWtPipln_dly;
 	//read weight
 	assign read_weight_fifo_o = enLrnWtPipln_dly;
 	assign rdEn_StatRd_F_o = PStgEn_rdWt;

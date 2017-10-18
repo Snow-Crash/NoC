@@ -66,6 +66,9 @@
 //			 change en_expired_post_history_write_back_o. Tested with bias learning mode and weight learning at same time.
 //			 works correctly for fist 15 steps. Comparator cannot compare negative value correctly.
 //2017.10.8  Add signd_comparator to compare threshold. change the condition of releasing spike.
+//2017.10.17 Find a bug, expPostHist sometimes is high incorrectly because the LTP/LTP condition pipeline always works even if learning is
+//			 not started. There is no mechanism to set expPostHist to 0 when learning is working. 
+//			 Add a new signal from controller, which is high when learning weight. So expPostHist is always 0 when not lerning weight.
 //Todo:
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
 //			Verify post spike history.
@@ -138,6 +141,7 @@ module dataPath
 	input 													cmpSTDP_i 		,
 	//input													shift_writeback_en_buffer_i,
 	input													expired_post_history_write_back_i,
+	input													enLrnWtPipln_i,
 	
 	output													update_weight_enable_o,
 	output													en_expired_post_history_write_back_o
@@ -508,7 +512,7 @@ module dataPath
 					enLTD <= 1'b1;
 					//expPreHist <= 1'b1;
 					update_weight_enable <= 1'b1;
-					expPostHist <= 1'b1;
+					expPostHist <= 1'b1 & enLrnWtPipln_i;
 					add_sub_flag[2] <= 1'b1;
 				end
 			end else if (lrnUseBias_i == 1'b1) begin

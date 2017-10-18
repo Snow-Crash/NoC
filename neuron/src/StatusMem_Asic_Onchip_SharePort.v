@@ -125,7 +125,7 @@ module StatusMem_Asic_Onchip_SharePort
     reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]                        read_address_register_prehistory;
     reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]                        read_address_register_weight_E, read_address_register_weight_F;
 
-    wire [DSIZE-2:0] data_out_bias_o, data_out_potential_o, data_out_threshold_o, data_out_weight_o;
+    wire [DSIZE-1:0] data_out_bias_o, data_out_potential_o, data_out_threshold_o, data_out_weight_o;
     wire [STDP_WIN_BIT_WIDTH-1:0] data_out_posthistory_o;
     wire [NURN_CNT_BIT_WIDTH-1:0] addr_b;
     reg [1:0] sel_A_reg;
@@ -200,8 +200,13 @@ module StatusMem_Asic_Onchip_SharePort
 
 
 //test
-always @(posedge clk_i)
-	sel_A_reg <= Addr_StatRd_A_i[1:0];
+always @(posedge clk_i or negedge rst_n_i)
+	begin
+		if (rst_n_i == 1'b0)
+			sel_A_reg <= 1'b0;
+		else
+			sel_A_reg <= Addr_StatRd_A_i[1:0];
+	end
 
 always @(*)
 	begin

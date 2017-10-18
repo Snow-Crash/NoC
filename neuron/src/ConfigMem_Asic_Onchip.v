@@ -1,5 +1,11 @@
 //2017.10.10 config memory. Tested address convert for learn mode weight memory, correct.
-//
+//2017.10.18 Previously memories have read enable signal. However standard single port memory doesn't have this signal.
+//			 The output changes as long as the address changes. But in previous design output only changes when read enable signal is 1
+//			 when read enable is 0, even if address changes, output doesn't change. So add registers to buffer output data, read enable
+//			 signal is used as register load signal. The address changes before read enable signal is high, so timing is the same as previous.
+
+//todo:		 need to check if it's possible to remove output register.
+
 `define USE_MODULE
 `define SIM_MEM_INIT
 `define NULL 0
@@ -570,7 +576,19 @@ assign RandTh_o = NeuronType_RandomThreshold_reg[0];
 assign Th_Mask_o = Mask_RestPotential_reg[DSIZE*2-1:DSIZE];
 assign RstPot_o = Mask_RestPotential_reg[DSIZE-1:0];
 assign SpikeAER_o = AER_reg;
+assign FixedThreshold_o = FixedThreshold_reg;
 
+// assign LTP_Win_o = LTP_LTD_Window_wire[STDP_WIN_BIT_WIDTH*2-1 : STDP_WIN_BIT_WIDTH];
+// assign LTD_Win_o = LTP_LTD_Window_wire[STDP_WIN_BIT_WIDTH - 1:0];
+// assign LTP_LrnRt_o = LTP_LTD_LearnRate_wire[DSIZE*2-1:DSIZE];
+// assign LTD_LrnRt_o = LTP_LTD_LearnRate_wire[DSIZE-1:0];
+// assign biasLrnMode_o = LearnMode_Bias_wire;
+// assign NurnType_o = NeuronType_RandomThreshold_wire[1];
+// assign RandTh_o = NeuronType_RandomThreshold_wire[0];
+// assign Th_Mask_o = Mask_RestPotential_wire[DSIZE*2-1:DSIZE];
+// assign RstPot_o = Mask_RestPotential_wire[DSIZE-1:0];
+// assign SpikeAER_o = AER_wire;
+// assign FixedThreshold_o = FixedThreshold_wire;
 
 //Address convert
 assign LearnMode_Weight_NeuronID = Addr_Config_C_i[NURN_CNT_BIT_WIDTH + AXON_CNT_BIT_WIDTH-1:AXON_CNT_BIT_WIDTH];

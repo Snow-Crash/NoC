@@ -209,12 +209,12 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.read_enable_threshold_o			(read_enable_threshold),
 		.write_enable_threshold_o			(write_enable_threshold),
 		.read_enable_posthistory_o			(read_enable_posthistory),
-		.write_enable_posthistory_o			(write_enable_posthistory),
-		.read_enable_prehistory_o			(read_enable_prehistory),
-		.write_enable_prehistory_o			(write_enable_prehistory),
-		.read_enable_weight_learn_o			(read_enable_weight_learn),
-		.read_enable_weight_recall_o		(read_enable_weight_recall),
-		.write_enable_weight_o				(write_enable_weight)
+		.write_enable_posthistory_o			(write_enable_posthistory)
+		//.read_enable_prehistory_o			(read_enable_prehistory),
+		//.write_enable_prehistory_o		(write_enable_prehistory),
+		//.read_enable_weight_learn_o		(read_enable_weight_learn),
+		//.read_enable_weight_recall_o		(read_enable_weight_recall),
+		//.write_enable_weight_o			(write_enable_weight)
 	);
 
 	dataPath

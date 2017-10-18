@@ -125,12 +125,12 @@ module NurnCtrlr
 	output reg 											read_enable_threshold_o,
 	output												write_enable_threshold_o,
 	output reg 											read_enable_posthistory_o,
-	output												write_enable_posthistory_o,
-	output reg 											read_enable_prehistory_o,
-	output												write_enable_prehistory_o,
-	output reg 											read_enable_weight_learn_o,
-	output reg											read_enable_weight_recall_o,
-	output												write_enable_weight_o
+	output												write_enable_posthistory_o
+	//output reg 										read_enable_prehistory_o,
+	//output											write_enable_prehistory_o,
+	//output reg 										read_enable_weight_learn_o,
+	//output reg										read_enable_weight_recall_o,
+	//output											write_enable_weight_o
 
 );
 
@@ -585,8 +585,8 @@ module NurnCtrlr
 	assign write_enable_potential_o = wr_MembPot_dly[0];
 	assign write_enable_threshold_o = wrEn_th_dly[0];
 	assign write_enable_posthistory_o = wrPostSpkHist || over_write_post_history;
-	assign write_enable_prehistory_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
-	assign write_enable_weight_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
+	//assign write_enable_prehistory_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
+	//assign write_enable_weight_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
 
 `ifdef SEPARATE_ADDRESS
 	always @(*)
@@ -628,9 +628,9 @@ module NurnCtrlr
 			read_enable_threshold_o = 1'b0;
 			read_enable_posthistory_o = 1'b0;
 
-			read_enable_prehistory_o = enLrnWtPipln;
-			read_enable_weight_recall_o = rdEn_StatRd_E_o;
-			read_enable_weight_learn_o = PStgEn_rdWt;
+			//read_enable_prehistory_o = enLrnWtPipln;
+			//read_enable_weight_recall_o = rdEn_StatRd_E_o;
+			//read_enable_weight_learn_o = PStgEn_rdWt;
 
 		`ifdef SEPARATE_ADDRESS
 			read_address_bias_o = rclCntr_Nurn;

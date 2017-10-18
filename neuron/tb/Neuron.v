@@ -23,7 +23,7 @@
 `define tpd_clk 5
 `define DUMP_MEMORY
 `define NEW_STATUS_MEMORY
-//`define NEW_CONFIG_MEMORY
+`define NEW_CONFIG_MEMORY
 //`define SEPARATE_ADDRESS
 
 module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
@@ -307,7 +307,7 @@ ConfigMem_Asic_Onchip
 
 	.CONFIG_PARAMETER_NUMBER(9),
 
-	.LEARN_MODE_MEMORY_WIDTH(4),
+	.LEARN_MODE_MEMORY_WIDTH(2),
 	
 
 	.X_ID(X_ID),
@@ -325,35 +325,35 @@ ConfigMem_Asic
 
 	.config_write_enable(),
 
-	.FixedThreshold_o(),
+	.FixedThreshold_o(FixedThreshold),
 	.Number_Neuron_o(),
 	.Number_Axon_o(),
 
 	//read port A
-	.Addr_Config_A_i(),
-	.rdEn_Config_A_i(),
+	.Addr_Config_A_i(Addr_Config_A),
+	.rdEn_Config_A_i(rdEn_Config_A),
 
-	.LTP_Win_o(),
-	.LTD_Win_o(),
-	.LTP_LrnRt_o(),
-	.LTD_LrnRt_o(),
-	.biasLrnMode_o(),
+	.LTP_Win_o(LTP_Win ),
+	.LTD_Win_o(LTD_Win ),
+	.LTP_LrnRt_o(LTP_LrnRt ),
+	.LTD_LrnRt_o(LTD_LrnRt ),
+	.biasLrnMode_o(biasLrnMode ),
 	
 	//read port B
-	.Addr_Config_B_i(),
-	.rdEn_Config_B_i(),
+	.Addr_Config_B_i(Addr_Config_B ),
+	.rdEn_Config_B_i(rdEn_Config_B),
 
-	.NurnType_o(),
-	.RandTh_o(),
-	.Th_Mask_o(),
-	.RstPot_o(),
-	.SpikeAER_o(),
+	.NurnType_o(NurnType ),
+	.RandTh_o(RandTh),
+	.Th_Mask_o(Th_Mask ),
+	.RstPot_o( RstPot),
+	.SpikeAER_o(SpikeAER ),
 
 	//read port C
-	.Addr_Config_C_i(Addr_Config_C),
-	.rdEn_Config_C_i(rdEn_Config_C),
+	.Addr_Config_C_i( Addr_Config_C),
+	.rdEn_Config_C_i(rdEn_Config_C ),
 
-	.axonLrnMode_o()
+	.axonLrnMode_o(axonLrnMode )
 );
 
 

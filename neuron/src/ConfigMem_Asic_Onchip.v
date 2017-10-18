@@ -288,7 +288,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 				LTP_LTD_Window[Addr_Config_A_i] <= config_data_in[DSIZE*2-1:DSIZE*2-STDP_WIN_BIT_WIDTH*2];
 			LTP_LTD_Window_addr_reg <= Addr_Config_A_i;  
 		end
-	assign LTP_LTD_Window_wire = LTP_LTD_LearnRate[LTP_LTD_Window_addr_reg];
+	assign LTP_LTD_Window_wire = LTP_LTD_Window[LTP_LTD_Window_addr_reg];
 
 	//LTP LTD learn rate
 	always @ (posedge clk_i)
@@ -306,7 +306,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 				LearnMode_Bias[Addr_Config_A_i] <= config_data_in[DSIZE*2-1];
 			LearnMode_Bias_addr_reg <= Addr_Config_A_i;  
 		end
-	assign LearnMode_Bias_wire = LTP_LTD_LearnRate[LearnMode_Bias_addr_reg];
+	assign LearnMode_Bias_wire = LearnMode_Bias[LearnMode_Bias_addr_reg];
 
 	//neuron type and random threshold mode
 	always @ (posedge clk_i)
@@ -315,7 +315,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 				NeuronType_RandomThreshold[Addr_Config_B_i] <= config_data_in[DSIZE*2-1:DSIZE*2-2];
 			NeuronType_RandomThreshold_addr_reg <= Addr_Config_B_i;  
 		end
-	assign NeuronType_RandomThreshold_wire = LTP_LTD_LearnRate[NeuronType_RandomThreshold_addr_reg];
+	assign NeuronType_RandomThreshold_wire = NeuronType_RandomThreshold[NeuronType_RandomThreshold_addr_reg];
 
 	//Mask and potential
 	always @ (posedge clk_i)
@@ -324,7 +324,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 				Mask_RestPotential[Addr_Config_B_i] <= config_data_in;
 			Mask_RestPotential_addr_reg <= Addr_Config_B_i;  
 		end
-	assign Mask_RestPotential_wire = LTP_LTD_LearnRate[Mask_RestPotential_addr_reg];
+	assign Mask_RestPotential_wire = Mask_RestPotential[Mask_RestPotential_addr_reg];
 
 	//AER
 	always @ (posedge clk_i)

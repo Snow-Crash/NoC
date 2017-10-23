@@ -114,6 +114,8 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	wire [DSIZE-1:0] data_StatRd_A2;
 	//--------------------------------------------------//
 
+	wire [NURN_CNT_BIT_WIDTH-1:0] access_address_config_A, access_address_config_B;
+	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] access_address_config_C;
 
 	//MODULE INSTANTIATIONS
 	NurnCtrlr 
@@ -677,5 +679,69 @@ ConfigMem_Asic
 // 	.data_StatRd_A_o						(data_StatRd_A2)
 
 // );
+
+// memory_controller
+// #(
+// 	.NURN_CNT_BIT_WIDTH								(8),
+// 	.AXON_CNT_BIT_WIDTH								(8),
+// 	.DSIZE											(DSIZE),
+// 	.PARAMETER_SELECT_BIT							(4), 
+// 	.CONFIG_PARAMETER_NUMBER						(9),
+// 	.STATUS_PARAMETER_NUMBER						(6)
+// )
+// Memory_Controller
+// (   
+// 	.clk_i											(clk),
+// 	.reset_n_i										(rst_n),
+
+// 	//NI
+// 	.en_config										(en_config),
+// 	.packet_in										(packet_in), 
+// 	.NI_empty										(NI_empty), 
+// 	.read_NI										(read_NI), 
+	
+// 	//From controller
+// 	.read_address_config_A_i						(Addr_Config_A),
+// 	.read_address_config_B_i						(Addr_Config_B),
+// 	.read_address_config_C_i						(Addr_Config_C),
+
+// 	//To config memory
+// 	.access_address_config_A_o						(access_address_config_A),
+// 	.access_address_config_B_o						(access_address_config_B),
+// 	.access_address_config_C_o						(access_address_config_C),
+
+// 	.config_LTP_LTD_Window_o						(config_LTP_LTD_Window),
+// 	.config_LTP_LTD_LearnRate_o						(config_LTP_LTD_LearnRate),
+// 	.config_LearnMode_Bias_o						(config_LearnMode_Bias),
+// 	.config_NeuronType_RandomThreshold_o			(config_NeuronType_RandomThreshold),
+// 	.config_Mask_RestPotential_o					(config_Mask_RestPotential),
+// 	.config_AER_o									(config_AER),
+// 	.config_FixedThreshold_o						(config_FixedThreshold),
+// 	.config_LearnMode_Weight_o						(config_LearnMode_Weight),
+// 	.config_Number_Neuron_Axon_o					(config_Number_Neuron_Axon),
+
+// 	//status memory write enable signal (from controller)
+// 	.write_enable_Bias_controller_i					(write_enable_bias),
+// 	.write_enable_Potential_controller_i			(write_enable_Potential),
+// 	.write_enable_Threshold_controller_i			(write_enable_Threshold),
+// 	.write_enable_Posthistory_controller_i			(write_enable_Posthistory),
+// 	.write_enable_Prehistory_controller_i			(wrEn_StatWr_D),
+// 	.write_enable_Weight_controller_i				(write_enable_G),
+// 	//status memory write enable (to status memory)
+// 	.write_enable_Bias_o							(write_enable_Bias_toMem),
+// 	.write_enable_Potential_o						(write_enable_Potential_toMem),
+// 	.write_enable_Threshold_o						(write_enable_Threshold_toMem),
+// 	.write_enable_Posthistory_o						(write_enable_Posthistory_toMem),
+// 	.write_enable_Prehistory_o						(write_enable_Prehistory_toMem),
+// 	.write_enable_Weight_o							(write_enable_Weight_toMem),
+// 	//status memory write address (from controller)
+// 	.Addr_StatWr_B_controller_i						(Addr_StatWr_B),
+// 	.Addr_StatWr_D_controller_i						(Addr_StatWr_D),
+// 	.Addr_StatWr_G_controller_i						(Addr_StatWr_G),
+// 	//status memory write address (to status memory)
+// 	.Addr_StatWr_B_o								(Addr_StatWr_B_toMem),
+// 	.Addr_StatWr_D_o								(Addr_StatWr_D_toMem),
+// 	.Addr_StatWr_G_o								(Addr_StatWr_G_toMem)
+//     );
 
 endmodule

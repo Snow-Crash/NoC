@@ -16,6 +16,8 @@ destination_full_vector);
 parameter packet_size = 32;
 parameter address_size = 16;
 parameter flit_size = 4;
+parameter X_COORDINATE = 1;
+parameter Y_COORDINATE = 1;
 
 input clk, reset, fifo_empty, stall;
 input [4:0] destination_full_vector;
@@ -41,9 +43,22 @@ wire [4:0] request_vector_wire;
 wire clear_request_reg_wire;
 reg destination_full;
 
-address_compute address_compute_unit(.address_in(current_address),
- .next_address(next_address),
- .destination_port(destination_port_wire), .request_vector(request_vector_wire));
+// address_compute address_compute_unit(.address_in(current_address),
+//  .next_address(next_address),
+//  .destination_port(destination_port_wire), .request_vector(request_vector_wire));
+
+ routing_logic
+ #(
+     .X_COORDINATE              (X_COORDINATE),
+     .Y_COORDINATE              (Y_COORDINATE)
+ )
+ routing
+ (
+    .address_in                 (current_address),
+    .next_address               (next_address),
+    .destination_port           (destination_port_wire), 
+    .request_vector             (request_vector_wire)
+ )
 
 port_controller port_controller_unit(.clk(clk), .reset(reset), 
 .stall(stall), .current_address_ready(current_address_ready), 

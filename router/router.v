@@ -22,6 +22,8 @@ write_req_local,write_req_north, write_req_south, write_req_east, write_req_west
 
 parameter packet_size = 32;
 parameter flit_size = 4;
+parameter X_COORDINATE = 1;
+parameter Y_COORDINATE = 1;
 
 input clk, clk_north, clk_south, clk_east, clk_west, clk_local;
 input reset;
@@ -53,27 +55,42 @@ wire [4:0] destination_full_vector;
 								//west east south north local
 assign destination_full_vector = {west_neighbor_full, east_neighbor_full, south_neighbor_full, north_neighbor_full, local_neuron_full};
 
-port local_port(.clk(clk), .reset(reset), .fifo_empty(local_buf_empty),
+port 
+#(.X_COORDINATE(X_COORDINATE),
+.Y_COORDINATE(Y_COORDINATE))
+local_port(.clk(clk), .reset(reset), .fifo_empty(local_buf_empty),
  .stall(local_stall), .flit_in(local_flit_in), .destination_port(local_destination),  
 .current_address_ready(local_address_ready), .read_fifo(local_read_buf), .flit_out(local_flit_out),
 .request_vector(local_port_req), .destination_full_vector(destination_full_vector));
 
-port north_port (.clk(clk), .reset(reset), .fifo_empty(north_buf_empty),
+port 
+#(.X_COORDINATE(X_COORDINATE),
+.Y_COORDINATE(Y_COORDINATE))
+north_port (.clk(clk), .reset(reset), .fifo_empty(north_buf_empty),
  .stall(north_stall), .flit_in(north_flit_in), .destination_port(north_destination),  
 .current_address_ready(north_address_ready), .read_fifo(north_read_buf), .flit_out(north_flit_out),
 .request_vector(north_port_req), .destination_full_vector(destination_full_vector));
 
-port south_port (.clk(clk), .reset(reset), .fifo_empty(south_buf_empty),
+port 
+#(.X_COORDINATE(X_COORDINATE),
+.Y_COORDINATE(Y_COORDINATE))
+south_port (.clk(clk), .reset(reset), .fifo_empty(south_buf_empty),
  .stall(south_stall), .flit_in(south_flit_in), .destination_port(south_destination),  
 .current_address_ready(south_address_ready), .read_fifo(south_read_buf), .flit_out(south_flit_out),
 .request_vector(south_port_req), .destination_full_vector(destination_full_vector));
 
-port east_port (.clk(clk), .reset(reset), .fifo_empty(east_buf_empty),
+port 
+#(.X_COORDINATE(X_COORDINATE),
+.Y_COORDINATE(Y_COORDINATE))
+east_port (.clk(clk), .reset(reset), .fifo_empty(east_buf_empty),
  .stall(east_stall), .flit_in(east_flit_in), .destination_port(east_destination),  
 .current_address_ready(east_address_ready), .read_fifo(east_read_buf), .flit_out(east_flit_out),
 .request_vector(east_port_req), .destination_full_vector(destination_full_vector));
 
-port west_port (.clk(clk), .reset(reset), .fifo_empty(west_buf_empty),
+port 
+#(.X_COORDINATE(X_COORDINATE),
+.Y_COORDINATE(Y_COORDINATE))
+west_port (.clk(clk), .reset(reset), .fifo_empty(west_buf_empty),
  .stall(west_stall), .flit_in(west_flit_in), .destination_port(west_destination),  
 .current_address_ready(west_address_ready), .read_fifo(west_read_buf), .flit_out(west_flit_out),
 .request_vector(west_port_req), .destination_full_vector(destination_full_vector));

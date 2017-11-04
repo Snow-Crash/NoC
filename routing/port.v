@@ -58,7 +58,7 @@ reg destination_full;
     .next_address               (next_address),
     .destination_port           (destination_port_wire), 
     .request_vector             (request_vector_wire)
- )
+ );
 
 port_controller port_controller_unit(.clk(clk), .reset(reset), 
 .stall(stall), .current_address_ready(current_address_ready), 

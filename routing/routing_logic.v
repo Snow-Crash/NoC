@@ -16,7 +16,7 @@ localparam west = 3'd5;
 output reg [2:0] destination_port;
 input [address_length - 1:0] address_in;
 output reg [4:0] request_vector; //high to low: west east south north local
-output next_address;
+output [address_length - 1:0] next_address;
 
 
 wire [x_address_length - 1:0] x_address;
@@ -26,7 +26,7 @@ assign y_address = address_in[address_length - 1:address_length - y_address_leng
 assign next_address = address_in;
 
 
-always (*)
+always @(*)
     begin
         request_vector = 5'b00000;//2.22 avoid latch
         destination_port = 3'd0;//4.2 avoid latch

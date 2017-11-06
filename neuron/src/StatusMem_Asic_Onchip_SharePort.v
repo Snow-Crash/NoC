@@ -286,14 +286,21 @@ weight_fifo
 
 	//file output
 	integer f1, f2, f3, f4, f5, f6, i;
+	reg [100*8:1] dump_file_name;
 	initial
 		begin
-			f1 = $fopen("Bias.txt","w");
-			f2 = $fopen("MembPot.txt","w");
-			f3 = $fopen("Threshold.txt","w");
-			f4 = $fopen("PostHist.txt","w");
-			f5 = $fopen("PreHist.txt","w");
-			f6 = $fopen("Weights.txt","w");
+			dump_file_name = {SIM_PATH, DIR_ID, "/dump_Bias.txt"}
+			f1 = $fopen(dump_file_name,"w");
+			dump_file_name = {SIM_PATH, DIR_ID, "/dump_MembPot.txt"}
+			f2 = $fopen(dump_file_name,"w");
+			dump_file_name = {SIM_PATH, DIR_ID, "/dump_Threshold.txt"}
+			f3 = $fopen(dump_file_name,"w");
+			dump_file_name = {SIM_PATH, DIR_ID, "/dump_PostHist.txt"}
+			f4 = $fopen(dump_file_name,"w");
+			dump_file_name = {SIM_PATH, DIR_ID, "/dump_PreHist.txt"}
+			f5 = $fopen(dump_file_name,"w");
+			dump_file_name = {SIM_PATH, DIR_ID, "/dump_Weights.txt"}
+			f6 = $fopen(dump_file_name,"w");
 			//write header
 			$fwrite(f1, "step,");
 			$fwrite(f2, "step,");

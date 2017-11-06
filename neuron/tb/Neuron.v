@@ -25,6 +25,7 @@
 `define NEW_STATUS_MEMORY
 `define NEW_CONFIG_MEMORY
 //`define SEPARATE_ADDRESS
+`define RECORD_SPIKE
 
 module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
@@ -236,7 +237,12 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		
 		.PRIORITY_ENC_OUT_BIT_WIDTH (PRIORITY_ENC_OUT_BIT_WIDTH),
 
-		.SEED 				( SEED )
+		.SEED 				( SEED ),
+
+		.X_ID(X_ID),
+		.Y_ID(Y_ID),
+		.SIM_PATH(SIM_PATH),
+		.STOP_STEP(STOP_STEP)
 	)
 	DATAPATH
 	(
@@ -285,6 +291,10 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.lrnUseBias_i 		( lrnUseBias ),
 		.cmpSTDP_i 			(),
 		.enLrnWtPipln_i		(enLrnWtPipln),
+
+		`ifdef RECORD_SPIKE
+		.start_i			(start),
+		`endif
 
 		.update_weight_enable_o		(update_weight_enable),
 		//.shift_writeback_en_buffer_i (shift_writeback_en_buffer),

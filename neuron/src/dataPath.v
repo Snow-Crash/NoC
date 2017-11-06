@@ -74,6 +74,7 @@
 //			Verify post spike history.
 
 `timescale 1ns/100ps
+`define RECORD_SPIKE
 
 module dataPath
 #(
@@ -92,7 +93,13 @@ module dataPath
 
 	parameter PRIORITY_ENC_OUT_BIT_WIDTH = 3,
 
-	parameter SEED = 0
+	parameter SEED = 0,
+
+	parameter X_ID = "1",
+	parameter Y_ID = "1",
+	parameter DIR_ID = {X_ID, "_", Y_ID},
+	parameter SIM_PATH = "D:/code/data",
+	parameter STOP_STEP = 5
 )
 (
 	input 													clk_i			,
@@ -142,6 +149,10 @@ module dataPath
 	//input													shift_writeback_en_buffer_i,
 	input													expired_post_history_write_back_i,
 	input													enLrnWtPipln_i,
+
+	`ifdef RECORD_SPIKE
+	input													start_i,
+	`endif
 	
 	output													update_weight_enable_o,
 	output													en_expired_post_history_write_back_o
@@ -709,5 +720,58 @@ Signed_Comparator
 #(.DSIZE(DSIZE))
 Comparator
 (.A_din_i(AccReg), .B_din_i(data_StatRd_A_i), .equal(threshold_equal), .lower(), .greater(threshold_greater));
+
+
+`ifdef RECORD_SPIKE
+
+integer step_counter;
+
+always @(posedge clk_i)
+	if(start_i == 1'b1)
+		step_counter = step_counter + 1;
+
+initial
+	begin
+		step_counter = 0;
+	end
+
+integer f, k;
+reg [100*8:1] file_name;
+
+initial
+	begin
+	file_name = {SIM_PATH, DIR_ID, "/spike.txt"};
+		f = $fopen(file_name, "w");
+
+		//write header
+		$fwrite(f, "step,");
+
+		for (k = 0; k < NUM_NURNS; k = k + 1)
+			begin
+				$fwrite(f, "%0d,", k);			//neuron id
+			end	
+		//$fwrite(f, "\n");
+	end
+
+//record spikes
+always @(posedge clk_i)
+	begin
+		if(step_counter < STOP_STEP)
+			begin
+				if (start_i == 1'b1)
+					begin
+						$fwrite(f, "\n");
+						$fwrite(f, "%0d,",step_counter);
+					end
+
+				if(cmp_th_i == 1'b1)
+					$fwrite(f, "%b,", comp_out);
+			end
+		else
+			$fclose(f);
+	end
+
+`endif
+
 
 endmodule

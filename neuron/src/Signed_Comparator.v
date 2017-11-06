@@ -1,3 +1,5 @@
+`include "neuron_define.v"
+
 module Signed_Comparator (A_din_i, B_din_i, equal, lower, greater);
 
 parameter DSIZE = 16;

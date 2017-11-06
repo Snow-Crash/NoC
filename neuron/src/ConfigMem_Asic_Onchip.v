@@ -6,10 +6,11 @@
 
 //todo:		 need to check if it's possible to remove output register.
 
-`define USE_MODULE
-`define SIM_MEM_INIT
-`define NULL 0
-//`define USE_MODULE
+`include "neuron_define.v"
+// `define USE_MODULE
+// `define SIM_MEM_INIT
+// `define NULL 0
+// //`define USE_MODULE
 
 module ConfigMem_Asic_Onchip
 #(

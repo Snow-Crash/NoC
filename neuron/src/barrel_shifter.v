@@ -1,3 +1,5 @@
+`include "neuron_define.v"
+
 module barrel_shifter#(parameter DSIZE     = 16,
 					   parameter SHIFTSIZE = 4)
 (shift_in, rightshift_i, shift_by_i, shift_out_o);

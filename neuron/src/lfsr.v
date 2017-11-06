@@ -15,6 +15,7 @@
 // -ver x.x : date : author
 //    details
 //------------------------------------------------------------------------
+`include "neuron_define.v"
 
 module Lfsr 
 #(

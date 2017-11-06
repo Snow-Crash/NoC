@@ -73,8 +73,9 @@
 //2017.9.7  enLTD and enLTP conditions need to be checked, may need change.
 //			Verify post spike history.
 
-`timescale 1ns/100ps
-`define RECORD_SPIKE
+`include "neuron_define.v"
+// `timescale 1ns/100ps
+// `define RECORD_SPIKE
 
 module dataPath
 #(

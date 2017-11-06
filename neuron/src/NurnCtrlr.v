@@ -28,7 +28,8 @@
 //2017.10.17 add a new port, enLrnWtPipln_o, comes from enLrnWtPipln_dly. sent to datapath to prevent expPostHist incorectly being high.
 //2017.10.18 remove lower 2 bits of Addr_StatWr_B_o, which are used to control mux in status memory. There is no such mux now, so remove them;
 
-`timescale 1ns/100ps
+`include "neuron_define.v"
+// `timescale 1ns/100ps
 //`define SEPARATE_ADDRESS
 
 module NurnCtrlr

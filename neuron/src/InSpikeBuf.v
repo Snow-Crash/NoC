@@ -17,10 +17,11 @@
 //			change RclSpikeBuf and LrnSpikeBuf type from memory to register.
 //			doesn't afftect timing, tested and get right result
 
-`timescale 1ns/100ps
+`include "neuron_define.v"
+// `timescale 1ns/100ps
 
 //`define SIM_MEM_INIT
-`define READ_SPIKE_BUF
+// `define READ_SPIKE_BUF
 
 module InSpikeBuf
 #(

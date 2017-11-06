@@ -11,7 +11,8 @@
 //		details
 //------------------------------------------------------------------------
 
-`timescale 1ns/100ps
+`include "neuron_define.v"
+// `timescale 1ns/100ps
 
 module Adder_2sComp
 #(

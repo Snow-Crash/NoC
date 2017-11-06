@@ -19,13 +19,14 @@
 //			it's earlier than weight memory write enable signal. need to fix it by adding a new pipeline. 
 //2017.9.7  Add two wire, expired_post_history_write_back and en_expired_post_history_write_back. And make connections.
 
-`timescale 1ns/100ps
-`define tpd_clk 5
-`define DUMP_MEMORY
-`define NEW_STATUS_MEMORY
-`define NEW_CONFIG_MEMORY
-//`define SEPARATE_ADDRESS
-`define RECORD_SPIKE
+`include "../src/neuron_define.v"
+// `timescale 1ns/100ps
+// `define tpd_clk 5
+// `define DUMP_MEMORY
+// `define NEW_STATUS_MEMORY
+// `define NEW_CONFIG_MEMORY
+// //`define SEPARATE_ADDRESS
+// `define RECORD_SPIKE
 
 module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 

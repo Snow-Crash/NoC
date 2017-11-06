@@ -2,10 +2,11 @@
 
 //2017.10.18 change width of Addr_StatWr_B_i. and remove wire addr_B.
 
-`define SIM_MEM_INIT
-//`define QUARTUS_SYN_INIT
-`define NULL 0
-`define DUMP_MEMORY
+`include "neuron_define.v"
+// `define SIM_MEM_INIT
+// //`define QUARTUS_SYN_INIT
+// `define NULL 0
+// `define DUMP_MEMORY
 
 
 module StatusMem_Asic_Onchip_SharePort

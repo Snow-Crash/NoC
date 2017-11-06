@@ -10,8 +10,8 @@
 // -ver x.x : date : auth
 //		details
 //------------------------------------------------------------------------
-
-`timescale 1ns/100ps
+`include "neuron_define.v"
+// `timescale 1ns/100ps
 
 module PriorityEncoder
 #(

@@ -1,6 +1,8 @@
 //memory 1 - 4 read write address are same, separare read signal and write signal
-
 //2017.10.18 change width of Addr_StatWr_B_i. and remove wire addr_B.
+//2017.11.7  fix two registers wrong width. Weight's fifo depth should be larger than 256, beacuse when second neuron
+//			 starts recall and write to fifo, this time fifo is full, first doesn't start learning, so fifo is not read 
+//			 at this time. So double the fifo depth. It't not a good solution.
 
 `include "neuron_define.v"
 // `define SIM_MEM_INIT
@@ -126,8 +128,8 @@ module StatusMem_Asic_Onchip_SharePort
     reg [NURN_CNT_BIT_WIDTH-1:0]                        read_address_register_potential;
     reg [NURN_CNT_BIT_WIDTH-1:0]                        read_address_register_threshold;
     reg [NURN_CNT_BIT_WIDTH-1:0]                        read_address_register_posthistory;
-    reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]                        read_address_register_prehistory;
-    reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]                        read_address_register_weight_E, read_address_register_weight_F;
+    reg [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]                        read_address_register_prehistory;
+    reg [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]                        read_address_register_weight_E, read_address_register_weight_F;
 
     wire [DSIZE-1:0] data_out_bias_o, data_out_potential_o, data_out_threshold_o, data_out_weight_o;
     wire [STDP_WIN_BIT_WIDTH-1:0] data_out_posthistory_o;
@@ -243,7 +245,7 @@ always @(posedge clk_i or negedge rst_n_i)
 generic_fifo_sc_b
 #(
 	.dw(DSIZE),
-	.aw(8)
+	.aw(9)
 )
 weight_fifo
 (

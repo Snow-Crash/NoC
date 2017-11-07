@@ -91,20 +91,20 @@ module StatusMem_Asic_Onchip_SharePort
 	//--------------------------------------------------//
 	
     `ifdef QUARTUS_SYN_INIT
-		(* ram_init_file = BIAS_MIF_PATH *)             reg [DSIZE-1:0] 			 Mem_Bias           [0:NUM_NURNS-1];
-		(* ram_init_file = MEMBPOT_MIF_PATH *)          reg [DSIZE-1:0] 			 Mem_Potential      [0:NUM_NURNS-1];
-		(* ram_init_file = TH_MIF_PATH *)               reg [DSIZE-1:0] 			 Mem_Threshold      [0:NUM_NURNS-1];
-		(* ram_init_file = POSTSPIKEHISTORY_MIF_PATH *) reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PostHistory    [0:NUM_NURNS-1];
-		(* ram_init_file = PRESPIKEHISTORY_MIF_PATH *)  reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PreHistory     [0:NUM_NURNS*NUM_AXONS-1];
-		(* ram_init_file = WEIGHTS_MIF_PATH *)          reg [DSIZE-1:0] 			 Mem_Weight         [0:NUM_NURNS*NUM_AXONS-1];
+		(* ram_init_file = BIAS_MIF_PATH *)             reg [DSIZE-1:0] 			 Mem_Bias           [0:(1<<NURN_CNT_BIT_WIDTH) -1];
+		(* ram_init_file = MEMBPOT_MIF_PATH *)          reg [DSIZE-1:0] 			 Mem_Potential      [0:(1<<NURN_CNT_BIT_WIDTH) -1];
+		(* ram_init_file = TH_MIF_PATH *)               reg [DSIZE-1:0] 			 Mem_Threshold      [0:(1<<NURN_CNT_BIT_WIDTH) -1];
+		(* ram_init_file = POSTSPIKEHISTORY_MIF_PATH *) reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PostHistory    [0:(1<<NURN_CNT_BIT_WIDTH) -1];
+		(* ram_init_file = PRESPIKEHISTORY_MIF_PATH *)  reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PreHistory     [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
+		(* ram_init_file = WEIGHTS_MIF_PATH *)          reg [DSIZE-1:0] 			 Mem_Weight         [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
     `else
-        reg [DSIZE-1:0] 			 Mem_Bias           [0:NUM_NURNS-1];
-        reg [DSIZE-1:0] 			 Mem_Potential      [0:NUM_NURNS-1];
-        reg [DSIZE-1:0] 			 Mem_Threshold      [0:NUM_NURNS-1];
-        reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PostHistory    [0:NUM_NURNS-1];
-        reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PreHistory     [0:NUM_NURNS*NUM_AXONS-1];
-        reg [DSIZE-1:0] 			 Mem_Weight         [0:NUM_NURNS*NUM_AXONS-1];
-        reg [DSIZE-1:0] 			 Mem_Weight2         [0:NUM_NURNS*NUM_AXONS-1];
+        reg [DSIZE-1:0] 			 Mem_Bias           [0:(1<<NURN_CNT_BIT_WIDTH) -1];
+        reg [DSIZE-1:0] 			 Mem_Potential      [0:(1<<NURN_CNT_BIT_WIDTH) -1];
+        reg [DSIZE-1:0] 			 Mem_Threshold      [0:(1<<NURN_CNT_BIT_WIDTH) -1];
+        reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PostHistory    [0:(1<<NURN_CNT_BIT_WIDTH) -1];
+        reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PreHistory     [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
+        reg [DSIZE-1:0] 			 Mem_Weight         [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
+        reg [DSIZE-1:0] 			 Mem_Weight2        [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
 	`endif
 
     //initial memory
@@ -309,7 +309,7 @@ weight_fifo
 			$fwrite(f4, "step,");
 			$fwrite(f5, "step,");
 			$fwrite(f6, "step,");
-			for (i = 0; i < NUM_NURNS; i = i+1)
+			for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
 				begin
 					$fwrite(f1, "%h,", i);			//address
 					$fwrite(f2, "%h,", i);			//address
@@ -317,7 +317,7 @@ weight_fifo
 					$fwrite(f4, "%h,", i);			//address
 				end
 
-			for (i = 0; i < NUM_NURNS * NUM_AXONS; i = i+1)
+			for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
 				begin
 					$fwrite(f5, "%h,", i);			//address
 					$fwrite(f6, "%h,", i);			//address
@@ -338,7 +338,7 @@ weight_fifo
 						begin
 							//dump bias
 							$fwrite(f1, "%0d,",step_counter);
-							for (i = 0; i < NUM_NURNS; i = i+1)
+							for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
 								begin
 									//$fwrite(f1, "%h:", i);			//address
 									$fwrite(f1, "%h,", Mem_Bias[i]);	//every word
@@ -346,7 +346,7 @@ weight_fifo
 								$fwrite(f1, "\n");
 							//dump membpot
 							$fwrite(f2, "%0d,",step_counter);
-							for (i = 0; i < NUM_NURNS; i = i + 1)
+							for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i + 1)
 								begin
 									//$fwrite(f2, "%h:", i);			//address
 									$fwrite(f2, "%h,", Mem_Potential[i]);	//word
@@ -354,7 +354,7 @@ weight_fifo
 							$fwrite(f2, "\n");
 							//Threshold
 							$fwrite(f3, "%0d,",step_counter);
-							for (i = 0; i < NUM_NURNS; i = i+1)
+							for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
 								begin
 									//$fwrite(f3, "%h:",i);
 									$fwrite(f3, "%h,", Mem_Threshold[i]);
@@ -362,7 +362,7 @@ weight_fifo
 							$fwrite(f3, "\n");
 							//Post synaptic history
 							$fwrite(f4, "%0d,",step_counter);
-							for (i = 0; i < NUM_NURNS; i = i+1)
+							for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
 								begin
 									//$fwrite(f4, "%h:",i);
 									$fwrite(f4, "%h,", Mem_PostHistory[i]);
@@ -370,7 +370,7 @@ weight_fifo
 							$fwrite(f4, "\n");
 							//Pre synaptic history
 							$fwrite(f5, "%0d,",step_counter);
-							for (i = 0; i < NUM_NURNS * NUM_AXONS; i = i+1)
+							for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
 								begin
 									//$fwrite(f5, "%h:",i);
 									$fwrite(f5, "%h,", Mem_PreHistory[i]);
@@ -378,7 +378,7 @@ weight_fifo
 							$fwrite(f5, "\n");
 							//Weights
 							$fwrite(f6, "%0d,",step_counter);
-							for (i = 0; i < NUM_NURNS * NUM_AXONS; i = i+1)
+							for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
 								begin
 									//$fwrite(f6, "%h:",i);
 									$fwrite(f6, "%h,", Mem_Weight[i]);

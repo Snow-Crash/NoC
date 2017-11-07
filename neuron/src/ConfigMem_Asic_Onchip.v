@@ -221,7 +221,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 			file_name = {SIM_PATH, DIR_ID, "/LrnModeBias.txt"}; 	file5 = $fopen(file_name, "r+");
 			if (file5 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
 
-			for(idx = 0 ; idx <= (NUM_NURNS - 1) ; idx = idx + 1)
+			for(idx = 0 ; idx <= ((1<<NURN_CNT_BIT_WIDTH) - 1) ; idx = idx + 1)
 			begin
 				$fscanf (file1, "%h\n", data_S1);
 				$fscanf (file2, "%h\n", data_S2);
@@ -254,7 +254,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 			file_name = {SIM_PATH, DIR_ID, "/FixedTh.txt"};	 	file6 = $fopen(file_name, "r+");
 			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
 
-			for(idx = 0 ; idx <= (NUM_NURNS - 1) ; idx = idx + 1)
+			for(idx = 0 ; idx <= ((1<<NURN_CNT_BIT_WIDTH) - 1) ; idx = idx + 1)
 			begin
 				$fscanf (file1, "%h\n", data_B1);
 				$fscanf (file2, "%h\n", data_B2);

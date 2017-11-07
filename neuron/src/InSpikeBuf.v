@@ -43,7 +43,7 @@ module InSpikeBuf
 	input 			saveRclSpikes_i ,
 	input [AXON_CNT_BIT_WIDTH-1:0] LrnAxonAddr_i,
 	input 			rdEn_LrnInSpike_i,
-	input [NUM_AXONS - 1 : 0]		spike_in,
+	input [(1<<AXON_CNT_BIT_WIDTH) -1 : 0]		spike_in,
 
 	output reg		Rcl_InSpike_o   ,
 	output reg		Lrn_InSpike_o /* synthesis noprune */
@@ -51,8 +51,8 @@ module InSpikeBuf
 
 	//REGISTER DECLARATION
 	//--------------------------------------------------//
-	reg  [0:NUM_AXONS-1] RclSpikeBuf;
-	reg  [0:NUM_AXONS-1] LrnSpikeBuf;
+	reg  [0:(1<<AXON_CNT_BIT_WIDTH) -1] RclSpikeBuf;
+	reg  [0:(1<<AXON_CNT_BIT_WIDTH) -1] LrnSpikeBuf;
 
 	integer i;
 // synthesis translate_off

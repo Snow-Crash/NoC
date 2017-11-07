@@ -339,53 +339,70 @@ weight_fifo
 					if (start_i == 1'b1)
 						begin
 							//dump bias
-							$fwrite(f1, "%0d,",step_counter);
-							for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
-								begin
-									//$fwrite(f1, "%h:", i);			//address
-									$fwrite(f1, "%h,", Mem_Bias[i]);	//every word
-								end
-								$fwrite(f1, "\n");
+							`ifdef DUMP_BIAS
+								$fwrite(f1, "%0d,",step_counter);
+								for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
+									begin
+										//$fwrite(f1, "%h:", i);			//address
+										$fwrite(f1, "%h,", Mem_Bias[i]);	//every word
+									end
+									$fwrite(f1, "\n");
+							`endif
+
 							//dump membpot
-							$fwrite(f2, "%0d,",step_counter);
-							for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i + 1)
-								begin
-									//$fwrite(f2, "%h:", i);			//address
-									$fwrite(f2, "%h,", Mem_Potential[i]);	//word
-								end
-							$fwrite(f2, "\n");
+							`ifdef DUMP_POTENTIAL
+								$fwrite(f2, "%0d,",step_counter);
+								for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i + 1)
+									begin
+										//$fwrite(f2, "%h:", i);			//address
+										$fwrite(f2, "%h,", Mem_Potential[i]);	//word
+									end
+									$fwrite(f2, "\n");
+							`endif
+
 							//Threshold
-							$fwrite(f3, "%0d,",step_counter);
-							for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
-								begin
-									//$fwrite(f3, "%h:",i);
-									$fwrite(f3, "%h,", Mem_Threshold[i]);
-								end
-							$fwrite(f3, "\n");
+							`ifdef DUMP_THRESHOLD
+								$fwrite(f3, "%0d,",step_counter);
+								for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
+									begin
+										//$fwrite(f3, "%h:",i);
+										$fwrite(f3, "%h,", Mem_Threshold[i]);
+									end
+								$fwrite(f3, "\n");
+							`endif
+							
 							//Post synaptic history
-							$fwrite(f4, "%0d,",step_counter);
-							for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
-								begin
-									//$fwrite(f4, "%h:",i);
-									$fwrite(f4, "%h,", Mem_PostHistory[i]);
-								end
-							$fwrite(f4, "\n");
+							`ifdef DUMP_POSTHISTORY
+								$fwrite(f4, "%0d,",step_counter);
+								for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
+									begin
+										//$fwrite(f4, "%h:",i);
+										$fwrite(f4, "%h,", Mem_PostHistory[i]);
+									end
+								$fwrite(f4, "\n");
+							`endif
+
 							//Pre synaptic history
-							$fwrite(f5, "%0d,",step_counter);
-							for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
-								begin
-									//$fwrite(f5, "%h:",i);
-									$fwrite(f5, "%h,", Mem_PreHistory[i]);
-								end
-							$fwrite(f5, "\n");
+							`ifdef DUMP_PREHISTORY
+								$fwrite(f5, "%0d,",step_counter);
+								for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
+									begin
+										//$fwrite(f5, "%h:",i);
+										$fwrite(f5, "%h,", Mem_PreHistory[i]);
+									end
+								$fwrite(f5, "\n");
+							`endif
+
 							//Weights
-							$fwrite(f6, "%0d,",step_counter);
-							for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
-								begin
-									//$fwrite(f6, "%h:",i);
-									$fwrite(f6, "%h,", Mem_Weight[i]);
-								end
-							$fwrite(f6, "\n");
+							`ifdef DUMP_WEIGHT
+								$fwrite(f6, "%0d,",step_counter);
+								for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
+									begin
+										//$fwrite(f6, "%h:",i);
+										$fwrite(f6, "%h,", Mem_Weight[i]);
+									end
+								$fwrite(f6, "\n");
+							`endif
 						end
 				end
 			else

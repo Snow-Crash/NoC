@@ -151,7 +151,7 @@ module dataPath
 	input													expired_post_history_write_back_i,
 	input													enLrnWtPipln_i,
 
-	`ifdef RECORD_SPIKE
+	`ifdef DUMP_OUTPUT_SPIKE
 	input													start_i,
 	`endif
 	
@@ -723,7 +723,7 @@ Comparator
 (.A_din_i(AccReg), .B_din_i(data_StatRd_A_i), .equal(threshold_equal), .lower(), .greater(threshold_greater));
 
 
-`ifdef RECORD_SPIKE
+`ifdef DUMP_OUTPUT_SPIKE
 
 integer step_counter;
 
@@ -741,7 +741,7 @@ reg [100*8:1] file_name;
 
 initial
 	begin
-	file_name = {SIM_PATH, DIR_ID, "/dump_spike.txt"};
+	file_name = {SIM_PATH, DIR_ID, "/dump_output_spike.txt"};
 		f = $fopen(file_name, "w");
 
 		//write header

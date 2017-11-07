@@ -293,7 +293,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.cmpSTDP_i 			(),
 		.enLrnWtPipln_i		(enLrnWtPipln),
 
-		`ifdef RECORD_SPIKE
+		`ifdef DUMP_OUTPUT_SPIKE
 		.start_i			(start),
 		`endif
 

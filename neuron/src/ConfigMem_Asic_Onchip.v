@@ -211,15 +211,15 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 
 			// initialize mem_A
 			file_name = {SIM_PATH, DIR_ID, "/LTP_Win.txt"}; 		file1 = $fopen(file_name, "r+");
-			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			if (file1 == `NULL) begin  $stop; end
 			file_name = {SIM_PATH, DIR_ID, "/LTD_Win.txt"}; 		file2 = $fopen(file_name, "r+");
-			if (file2 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			if (file2 == `NULL) begin  $stop; end
 			file_name = {SIM_PATH, DIR_ID, "/LTP_LrnRt.txt"}; 	file3 = $fopen(file_name, "r+");
-			if (file3 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			if (file3 == `NULL) begin  $stop; end
 			file_name = {SIM_PATH, DIR_ID, "/LTD_LrnRt.txt"}; 	file4 = $fopen(file_name, "r+");
-			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			if (file4 == `NULL) begin  $stop; end
 			file_name = {SIM_PATH, DIR_ID, "/LrnModeBias.txt"}; 	file5 = $fopen(file_name, "r+");
-			if (file5 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			if (file5 == `NULL) begin  $stop; end
 
 			for(idx = 0 ; idx <= ((1<<NURN_CNT_BIT_WIDTH) - 1) ; idx = idx + 1)
 			begin
@@ -242,17 +242,17 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 
 			// initialize mem_B
 			file_name = {SIM_PATH, DIR_ID, "/NurnType.txt"}; 	file1 = $fopen(file_name, "r+");
-			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			if (file1 == `NULL) begin  $stop; end
 			file_name = {SIM_PATH, DIR_ID, "/RandTh.txt"}; 		file2 = $fopen(file_name, "r+");
-			if (file1 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			if (file1 == `NULL) begin  end
 			file_name = {SIM_PATH, DIR_ID, "/Th_Mask.txt"}; 		file3 = $fopen(file_name, "r+");
-			if (file2 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			if (file2 == `NULL) begin  $stop; end
 			file_name = {SIM_PATH, DIR_ID, "/RstPot.txt"};	 	file4 = $fopen(file_name, "r+");
-			if (file3 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			if (file3 == `NULL) begin  $stop; end
 			file_name = {SIM_PATH, DIR_ID, "/SpikeAER.txt"};	 	file5 = $fopen(file_name, "r+");
-			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			if (file4 == `NULL) begin  $stop; end
 			file_name = {SIM_PATH, DIR_ID, "/FixedTh.txt"};	 	file6 = $fopen(file_name, "r+");
-			if (file4 == `NULL) begin $error("ERROR: File open : %s", file_name); $stop; end
+			if (file4 == `NULL) begin  $stop; end
 
 			for(idx = 0 ; idx <= ((1<<NURN_CNT_BIT_WIDTH) - 1) ; idx = idx + 1)
 			begin

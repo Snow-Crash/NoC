@@ -59,7 +59,7 @@ module InSpikeBuf
 // synthesis translate_off
 	//simulation memory data initialization
 	//--------------------------------------------------//
-	`ifdef SIM_MEM_INIT
+	`ifdef SIM_SPIKE_BUF_INIT
 		//reg [100*8:1] file_name;
 		integer         file_ptr              ; 
 

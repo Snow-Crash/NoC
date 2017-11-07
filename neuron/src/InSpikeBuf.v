@@ -16,6 +16,7 @@
 //			get right spike data when start = 1;
 //			change RclSpikeBuf and LrnSpikeBuf type from memory to register.
 //			doesn't afftect timing, tested and get right result
+//2017.11.7 RclSpikeBuf and LrnSpikeBuf declaration cause error. They get reversed data from interface, fix it.
 
 `include "neuron_define.v"
 // `timescale 1ns/100ps
@@ -51,8 +52,8 @@ module InSpikeBuf
 
 	//REGISTER DECLARATION
 	//--------------------------------------------------//
-	reg  [0:(1<<AXON_CNT_BIT_WIDTH) -1] RclSpikeBuf;
-	reg  [0:(1<<AXON_CNT_BIT_WIDTH) -1] LrnSpikeBuf;
+	reg  [(1<<AXON_CNT_BIT_WIDTH) -1:0] RclSpikeBuf;
+	reg  [(1<<AXON_CNT_BIT_WIDTH) -1:0] LrnSpikeBuf;
 
 	integer i;
 // synthesis translate_off

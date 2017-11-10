@@ -20,16 +20,22 @@ parameter x_address_length = 8;
 parameter y_address_length = 8;
 parameter NUM_AXONS = 2;
 parameter AXON_CNT_BIT_WIDTH = 1;
+parameter X_ID = "1";
+parameter Y_ID = "1";
+parameter DIR_ID = {X_ID, "_", Y_ID};
+parameter SIM_PATH = "D:/code/data";
+parameter SYNTH_PATH = "D:/code/synth/data";
+parameter STOP_STEP = 5;
 
 input router_clk, neuron_clk, rst_n, start, router_reset, write_en;
 input [flit_size - 1:0] data_in;
-output [NUM_AXONS - 1:0] spike;
+output [(1<<AXON_CNT_BIT_WIDTH) -1:0] spike;
 //output read_req;
 output neuron_full;
 
 wire [packet_size - 1:0] data_out;
 
-reg [NUM_AXONS - 1:0] spike_reg;
+reg [(1<<AXON_CNT_BIT_WIDTH) -1:0] spike_reg;
 reg clear_spike_reg;
 
 wire [AXON_CNT_BIT_WIDTH - 1:0] axon_address;
@@ -83,6 +89,46 @@ always @(posedge neuron_clk)
     begin
         clear_spike_reg <= start;
     end
+
+
+`ifdef DUMP_PACKET
+
+integer step_counter;
+integer f1, i;
+reg [100*8:1] dump_file_name;
+
+initial
+    begin
+        step_counter = 0;
+        dump_file_name = {SIM_PATH, DIR_ID, "/dump_packet.csv"};
+		f1 = $fopen(dump_file_name,"w");
+    end
+
+always @(posedge neuron_clk)
+    begin
+        if (start == 1'b1)
+            step_counter = step_counter + 1;
+    end
+
+always @(posedge neuron_clk)
+    begin
+        if(step_counter < STOP_STEP)
+            begin
+                if (start == 1'b1)
+                    begin
+                        if(step_counter == 1)
+                            $fwrite(f1, "%0d,", step_counter);
+                        else
+                            $fwrite(f1, "\n%0d,", step_counter);
+                    end
+                if(write_spike == 1'b1)
+                    $fwrite(f1, "%h,", packet);
+            end
+        else
+            $fclose(f1);
+    end
+
+`endif
 
 
 endmodule

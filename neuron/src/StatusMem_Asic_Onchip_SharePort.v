@@ -104,9 +104,10 @@ module StatusMem_Asic_Onchip_SharePort
         reg [DSIZE-1:0] 			 Mem_Potential      [0:(1<<NURN_CNT_BIT_WIDTH) -1];
         reg [DSIZE-1:0] 			 Mem_Threshold      [0:(1<<NURN_CNT_BIT_WIDTH) -1];
         reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PostHistory    [0:(1<<NURN_CNT_BIT_WIDTH) -1];
-        reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PreHistory     [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
-        reg [DSIZE-1:0] 			 Mem_Weight         [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
         reg [DSIZE-1:0] 			 Mem_Weight2        [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
+        
+		reg /*sparse*/ [STDP_WIN_BIT_WIDTH-1:0] Mem_PreHistory     [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
+        reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight         [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
 	`endif
 
     //initial memory

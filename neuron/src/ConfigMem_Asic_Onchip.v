@@ -193,7 +193,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 	reg [DSIZE*2-1:0] 					Mask_RestPotential 					[(1<<NURN_CNT_BIT_WIDTH) -1:0];
 	reg [AER_BIT_WIDTH-1:0] 			AER 								[(1<<NURN_CNT_BIT_WIDTH) -1:0];
 	reg [DSIZE-1:0] 					FixedThreshold 						[(1<<NURN_CNT_BIT_WIDTH) -1:0];
-	reg 								LearnMode_Weight 					[(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1:0];
+	reg /*sparse*/ 						LearnMode_Weight 					[(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1:0];
 	reg [LEARN_MODE_MEMORY_WIDTH-1:0]	LearnMode_Weight2 					[(1<<LEARN_MODE_MEMORY_ADDRESS_WIDTH)-1:0];
 `endif
 

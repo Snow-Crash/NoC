@@ -96,6 +96,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	wire [DSIZE-1:0] LTP_LrnRt, LTD_LrnRt, Th_Mask;
 	wire [DSIZE-1:0] RstPot;
 	wire [AER_BIT_WIDTH-1:0] SpikeAER;
+	wire [DSIZE-1:0] FixedThreshold;
 
 	//status mem
 	wire [DSIZE-1:0] data_StatRd_A, data_StatRd_E, data_StatRd_F;
@@ -260,6 +261,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.axonLrnMode_i 		( axonLrnMode 	),
 		.LTP_LrnRt_i		( LTP_LrnRt 	),
 		.LTD_LrnRt_i		( LTD_LrnRt 	),
+		.FixedThreshold_i	(FixedThreshold),
 
 		//status memory
 		.data_StatRd_A_i 	( data_StatRd_A ),

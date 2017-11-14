@@ -20,7 +20,7 @@
 module Lfsr 
 #(
 	parameter DSIZE = 16 ,
-	parameter SEED  = 2
+	parameter SEED  = 896
 ) 
 (
 	input           		clk_i 		, 

@@ -93,13 +93,12 @@ always @(posedge neuron_clk)
 
 `ifdef DUMP_PACKET
 
-integer step_counter;
+integer step_counter = 0;
 integer f1, i;
 reg [100*8:1] dump_file_name;
 
 initial
     begin
-        step_counter = 0;
         dump_file_name = {SIM_PATH, DIR_ID, "/dump_packet.csv"};
 		f1 = $fopen(dump_file_name,"w");
     end
@@ -117,12 +116,12 @@ always @(posedge neuron_clk)
                 if (start == 1'b1)
                     begin
                         if(step_counter == 1)
-                            $fwrite(f1, "%0d,", step_counter);
+                            $fwrite(f1, "step-%0d,", step_counter);
                         else
-                            $fwrite(f1, "\n%0d,", step_counter);
+                            $fwrite(f1, "\nstep-%0d,", step_counter);
                     end
                 if(write_spike == 1'b1)
-                    $fwrite(f1, "%h,", packet);
+                    $fwrite(f1, "%h-%h-%h-%h,", packet[31:24], packet[23:16], packet[15:8], packet[7:0]);
             end
         else
             $fclose(f1);

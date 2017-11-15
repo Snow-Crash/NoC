@@ -732,16 +732,11 @@ Comparator
 
 `ifdef DUMP_OUTPUT_SPIKE
 
-integer step_counter;
+integer step_counter = 0;
 
 always @(posedge clk_i)
 	if(start_i == 1'b1)
 		step_counter = step_counter + 1;
-
-initial
-	begin
-		step_counter = 0;
-	end
 
 integer f, k;
 reg [100*8:1] file_name;
@@ -752,7 +747,7 @@ initial
 		f = $fopen(file_name, "w");
 
 		//write header
-		$fwrite(f, "step,");
+		$fwrite(f, "neuron_id,");
 
 		for (k = 0; k < NUM_NURNS; k = k + 1)
 			begin
@@ -769,7 +764,7 @@ always @(posedge clk_i)
 				if (start_i == 1'b1)
 					begin
 						$fwrite(f, "\n");
-						$fwrite(f, "%0d,",step_counter);
+						$fwrite(f, "step-%0d,",step_counter);
 					end
 
 				if(cmp_th_i == 1'b1)

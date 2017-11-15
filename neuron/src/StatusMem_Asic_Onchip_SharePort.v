@@ -270,29 +270,31 @@ weight_fifo
 
 //dump memory contents
 `ifdef DUMP_MEMORY
-
+	
+	reg [100*8:1] logical_axon_connectivity_file_name;
+	reg /*sparse*/ logical_axon_connectivity		[0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
+	
+	
 	//counter
-	integer clock_counter;
-	integer step_counter;
+	integer clock_counter = 0;
+	integer step_counter = 0;
 
-	initial
+	always @(posedge clk_i)
 		begin
-			clock_counter = 0;
-			step_counter = 0;
+			clock_counter = clock_counter + 1;
+			
+			if (start_i == 1'b1)
+				step_counter = step_counter + 1;
 		end
 
-	always @(posedge clk_i)
-		clock_counter = clock_counter + 1;
-	
-	always @(posedge clk_i)
-		if (start_i == 1'b1)
-			step_counter = step_counter + 1;
-
 	//file output
-	integer f1, f2, f3, f4, f5, f6, i;
+	integer f1, f2, f3, f4, f5, f6, i, j, base_address, axon_id, neuron_id;
 	reg [100*8:1] dump_file_name;
 	initial
 		begin
+			logical_axon_connectivity_file_name = {SIM_PATH, DIR_ID, "/logical_axon_connectivity.txt"};	
+			$readmemh (logical_axon_connectivity_file_name, logical_axon_connectivity);
+
 			dump_file_name = {SIM_PATH, DIR_ID, "/dump_Bias.txt"};
 			f1 = $fopen(dump_file_name,"w");
 			dump_file_name = {SIM_PATH, DIR_ID, "/dump_MembPot.txt"};
@@ -306,12 +308,12 @@ weight_fifo
 			dump_file_name = {SIM_PATH, DIR_ID, "/dump_Weights.txt"};
 			f6 = $fopen(dump_file_name,"w");
 			//write header
-			$fwrite(f1, "step,");
-			$fwrite(f2, "step,");
-			$fwrite(f3, "step,");
-			$fwrite(f4, "step,");
-			$fwrite(f5, "step,");
-			$fwrite(f6, "step,");
+			$fwrite(f1, "address,");
+			$fwrite(f2, "address,");
+			$fwrite(f3, "address,");
+			$fwrite(f4, "address,");
+			$fwrite(f5, "address,");
+			$fwrite(f6, "address,");
 			for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
 				begin
 					$fwrite(f1, "%h,", i);			//address
@@ -319,12 +321,45 @@ weight_fifo
 					$fwrite(f3, "%h,", i);			//address
 					$fwrite(f4, "%h,", i);			//address
 				end
+			
+			$fwrite(f1, "\n");			$fwrite(f2, "\n");
+			$fwrite(f3, "\n");			$fwrite(f4, "\n");
+			
+			$fwrite(f1, "neuron_id,");
+			$fwrite(f2, "neuron_id,");
+			$fwrite(f3, "neuron_id,");
+			$fwrite(f4, "neuron_id,");
+			for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
+				begin
+					$fwrite(f1, "%0d,", i);			//address
+					$fwrite(f2, "%0d,", i);			//address
+					$fwrite(f3, "%0d,", i);			//address
+					$fwrite(f4, "%0d,", i);			//address
+				end
 
 			for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
 				begin
-					$fwrite(f5, "%h,", i);			//address
-					$fwrite(f6, "%h,", i);			//address
+					if (logical_axon_connectivity[i] == 1'b1)
+						begin
+							$fwrite(f5, "%h,", i);			//address
+							$fwrite(f6, "%h,", i);			//address
+						end
 				end
+			
+			//write neuron id and axon id for prehist and weight
+			$fwrite(f5, "\n"); $fwrite(f5, "lable,");
+			$fwrite(f6, "\n"); $fwrite(f6, "lable,");
+			for(i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
+				begin
+					if(logical_axon_connectivity[i] == 1'b1)
+						begin
+							axon_id = i[AXON_CNT_BIT_WIDTH-1:0];
+							neuron_id = i[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:AXON_CNT_BIT_WIDTH];
+							$fwrite(f5, "%0d-%0d,", neuron_id, axon_id);
+							$fwrite(f6, "%0d-%0d,", neuron_id, axon_id);
+						end
+				end
+
 			$fwrite(f1, "\n");
 			$fwrite(f2, "\n");
 			$fwrite(f3, "\n");
@@ -341,7 +376,7 @@ weight_fifo
 						begin
 							//dump bias
 							`ifdef DUMP_BIAS
-								$fwrite(f1, "%0d,",step_counter);
+								$fwrite(f1, "step-%0d,",step_counter);
 								for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
 									begin
 										//$fwrite(f1, "%h:", i);			//address
@@ -352,7 +387,7 @@ weight_fifo
 
 							//dump membpot
 							`ifdef DUMP_POTENTIAL
-								$fwrite(f2, "%0d,",step_counter);
+								$fwrite(f2, "step-%0d,",step_counter);
 								for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i + 1)
 									begin
 										//$fwrite(f2, "%h:", i);			//address
@@ -363,7 +398,7 @@ weight_fifo
 
 							//Threshold
 							`ifdef DUMP_THRESHOLD
-								$fwrite(f3, "%0d,",step_counter);
+								$fwrite(f3, "step-%0d,",step_counter);
 								for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
 									begin
 										//$fwrite(f3, "%h:",i);
@@ -374,34 +409,74 @@ weight_fifo
 							
 							//Post synaptic history
 							`ifdef DUMP_POSTHISTORY
-								$fwrite(f4, "%0d,",step_counter);
+								$fwrite(f4, "step-%0d,",step_counter);
 								for (i = 0; i < (1<<NURN_CNT_BIT_WIDTH); i = i+1)
 									begin
 										//$fwrite(f4, "%h:",i);
-										$fwrite(f4, "%h,", Mem_PostHistory[i]);
+										$fwrite(f4, "%0d,", Mem_PostHistory[i]);
 									end
 								$fwrite(f4, "\n");
 							`endif
 
 							//Pre synaptic history
 							`ifdef DUMP_PREHISTORY
-								$fwrite(f5, "%0d,",step_counter);
-								for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
+								$fwrite(f5, "step-%0d,",step_counter);
+								//dump all memory, output very large file
+								// for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
+								// 	begin
+								// 		//$fwrite(f5, "%h:",i);
+								// 		$fwrite(f5, "%h,", Mem_PreHistory[i]);
+								// 	end
+								// $fwrite(f5, "\n");
+
+								//only dump valid memory, small file, too many loop times
+								// for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i + 1)
+								// 	begin
+								// 		if(logical_axon_connectivity[i]==1'b1)
+								// 			$fwrite(f5, "%0d,", Mem_PreHistory[i]);
+								// 	end
+								// $fwrite(f5, "\n");
+
+								// only dump valid memory, small file, less loop times
+								for (i = 0; i < NUM_NURNS; i = i + 1)
 									begin
-										//$fwrite(f5, "%h:",i);
-										$fwrite(f5, "%h,", Mem_PreHistory[i]);
+										base_address = i << AXON_CNT_BIT_WIDTH;
+										for(j = 0; j < NUM_AXONS; j = j + 1)
+											if(logical_axon_connectivity[base_address + j] == 1'b1)
+												$fwrite(f6, "%0d,", Mem_PreHistory[base_address + j]);
 									end
+								
 								$fwrite(f5, "\n");
+
 							`endif
 
 							//Weights
 							`ifdef DUMP_WEIGHT
-								$fwrite(f6, "%0d,",step_counter);
-								for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
+								$fwrite(f6, "step-%0d,",step_counter);
+								//dump all memory, output very large file
+								// for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i+1)
+								// 	begin
+								// 		//$fwrite(f6, "%h:",i);
+								// 		$fwrite(f6, "%h,", Mem_Weight[i]);
+								// 	end
+								// $fwrite(f6, "\n");
+								
+								//only dump valid memory, small file, too many loop times
+								// for (i = 0; i < (1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH)); i = i + 1)
+								// 	begin
+								// 		if(logical_axon_connectivity[i] == 1'b1)
+								// 			$fwrite(f6, "%h,", Mem_Weight[i]);
+								// 	end
+
+								// only dump valid memory, small file, less loop times
+								for (i = 0; i < NUM_NURNS; i = i + 1)
 									begin
-										//$fwrite(f6, "%h:",i);
-										$fwrite(f6, "%h,", Mem_Weight[i]);
+										base_address = i << AXON_CNT_BIT_WIDTH;
+										for(j = 0; j < NUM_AXONS; j = j + 1)
+											if(logical_axon_connectivity[base_address + j] == 1'b1)
+												$fwrite(f6, "%h,", Mem_Weight[base_address + j]);
 									end
+								
 								$fwrite(f6, "\n");
 							`endif
 						end

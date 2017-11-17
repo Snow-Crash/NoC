@@ -91,39 +91,36 @@ always @(posedge neuron_clk)
     end
 
 
-`ifdef DUMP_PACKET
+`ifdef DUMP_RECEIVED_PACKET
 
 integer step_counter = 0;
-integer f1, i;
+integer router_clk_counter = 0;
+integer neuron_clk_counter = 0;
+integer f1;
 reg [100*8:1] dump_file_name;
 
 initial
     begin
         dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_received_packet.csv"};
 		f1 = $fopen(dump_file_name,"w");
+        $fwrite(f1, "step, neuron_clk, router_clk,received_packet,\n");
     end
+
+always @(posedge router_clk)
+        router_clk_counter = router_clk_counter + 1;
 
 always @(posedge neuron_clk)
     begin
+
         if (start == 1'b1)
             step_counter = step_counter + 1;
-    end
+        
+        neuron_clk_counter = neuron_clk_counter + 1;
 
-always @(posedge neuron_clk)
-    begin
-        if(step_counter < STOP_STEP)
-            begin
-                if (start == 1'b1)
-                    begin
-                        if(step_counter == 1)
-                            $fwrite(f1, "step-%0d,", step_counter);
-                        else
-                            $fwrite(f1, "\nstep-%0d,", step_counter);
-                    end
-                if(write_spike == 1'b1)
-                    $fwrite(f1, "%h-%h-%h-%h,", packet[31:24], packet[23:16], packet[15:8], packet[7:0]);
-            end
-        else
+        if(write_spike == 1'b1)
+             $fwrite(f1, "%0d,%0d,%0d,%h,\n",step_counter, neuron_clk_counter, router_clk_counter, packet);
+        
+        if (step_counter == STOP_STEP)
             $fclose(f1);
     end
 

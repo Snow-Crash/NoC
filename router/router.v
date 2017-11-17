@@ -10,9 +10,11 @@
 //			local port and west port both request for east port, the request vector which inputed
 //			to east arbiter is 5'b00000, instead of 5'b10001. Althought two ports send request signal,
 //			arbiter doesn't receive request, the two ports will be stalled.
-`define DUMP_STALL
+
 `define DEBUG_ROUTER
-`define DUMP_DROP
+`define DUMP_STALL_EVENT
+`define DUMP_DROPPED_PACKET
+`define DUMP_NEURON_OUTPUT_PACKET
 
 module router (clk, clk_local, clk_north, clk_south, clk_east, clk_west,
 reset, local_in, north_in, south_in, east_in, west_in, 
@@ -211,10 +213,15 @@ switch_matrix crossbar(.input0(local_flit_out), .input1(north_flit_out), .input2
 
 integer router_clk_counter = 0;
 integer step_counter = 0;
+integer neuron_clk_counter = 0;
 
 always @(posedge clk_local)
-	if (start == 1'b1)
-		step_counter = step_counter + 1;
+	begin
+		if (start == 1'b1)
+			step_counter = step_counter + 1;
+		
+		neuron_clk_counter = neuron_clk_counter + 1;
+	end
 
 always @(posedge clk)
 	router_clk_counter = router_clk_counter + 1;
@@ -222,7 +229,7 @@ always @(posedge clk)
 `endif
 
 
-`ifdef DUMP_STALL
+`ifdef DUMP_STALL_EVENT
 
 reg [100*8:1] dump_file_name1;
 integer f1;
@@ -247,7 +254,7 @@ assign write_file = local_stall_event || north_stall_event || south_stall_event 
 initial
 	begin
 	  	
-		dump_file_name1 = {SIM_PATH, "data", DIR_ID, "/dump_Stall.csv"};	
+		dump_file_name1 = {SIM_PATH, "data", DIR_ID, "/dump_stall_event.csv"};	
 		f1 = $fopen(dump_file_name1,"w");
 		$fwrite(f1, "step,north, south, east, west, local,\n");
 	end
@@ -263,22 +270,22 @@ always @(posedge clk)
 
 `endif
 
-`ifdef DUMP_DROP
+`ifdef DUMP_DROPPED_PACKET
 
 reg [100*8:1] dump_file_name2;
 integer f2;
 
 initial
 	begin
-		dump_file_name2 = {SIM_PATH, "data", DIR_ID, "/dump_Drop.csv"};	
+		dump_file_name2 = {SIM_PATH, "data", DIR_ID, "/dump_dropped_packet.csv"};	
 		f2 = $fopen(dump_file_name2,"w");
-		$fwrite(f2, "step,router_clk,packet,\n");
+		$fwrite(f2, "step,neuron_clk,router_clk,packet,\n");
 	end
 always @(posedge clk_local)
 	begin
 		if ((local_full == 1'b1) && (write_en_local == 1'b1))
 			begin
-				$fwrite(f2, "%0d,%0d,%h,\n",step_counter, router_clk_counter, local_in);
+				$fwrite(f2, "%0d,%0d,%d,%h,\n",step_counter, neuron_clk_counter, router_clk_counter, local_in);
 			end
 
 		if (step_counter == STOP_STEP)
@@ -286,6 +293,30 @@ always @(posedge clk_local)
 	end
 `endif
 
+
+`ifdef DUMP_NEURON_OUTPUT_PACKET
+integer f3;
+reg [100*8:1] dump_file_name3;
+
+initial
+    begin
+        dump_file_name3 = {SIM_PATH, "data", DIR_ID, "/dump_neuron_output_packet.csv"};
+		f3 = $fopen(dump_file_name3,"w");
+		$fwrite(f3, "step,neuron_clk,router_clk,packet,\n");
+    end
+
+always @(posedge clk_local)
+	begin
+
+		if (write_en_local == 1'b1)
+			 $fwrite(f3, "%0d,%0d,%0d,%h,\n", step_counter, neuron_clk_counter, router_clk_counter, local_in);
+
+		if (step_counter == STOP_STEP)
+			$fclose(f3);
+
+	end
+
+`endif
 
 
 endmodule

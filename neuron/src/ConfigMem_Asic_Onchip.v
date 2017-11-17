@@ -210,15 +210,15 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 		initial begin
 
 			// initialize mem_A
-			file_name = {SIM_PATH, DIR_ID, "/LTP_Win.txt"}; 		file1 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/LTP_Win.txt"}; 		file1 = $fopen(file_name, "r+");
 			if (file1 == `NULL) begin  $stop; end
-			file_name = {SIM_PATH, DIR_ID, "/LTD_Win.txt"}; 		file2 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/LTD_Win.txt"}; 		file2 = $fopen(file_name, "r+");
 			if (file2 == `NULL) begin  $stop; end
-			file_name = {SIM_PATH, DIR_ID, "/LTP_LrnRt.txt"}; 	file3 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/LTP_LrnRt.txt"}; 	file3 = $fopen(file_name, "r+");
 			if (file3 == `NULL) begin  $stop; end
-			file_name = {SIM_PATH, DIR_ID, "/LTD_LrnRt.txt"}; 	file4 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/LTD_LrnRt.txt"}; 	file4 = $fopen(file_name, "r+");
 			if (file4 == `NULL) begin  $stop; end
-			file_name = {SIM_PATH, DIR_ID, "/LrnModeBias.txt"}; 	file5 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/LrnModeBias.txt"}; 	file5 = $fopen(file_name, "r+");
 			if (file5 == `NULL) begin  $stop; end
 
 			for(idx = 0 ; idx <= ((1<<NURN_CNT_BIT_WIDTH) - 1) ; idx = idx + 1)
@@ -241,17 +241,17 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 			//-----------------------------
 
 			// initialize mem_B
-			file_name = {SIM_PATH, DIR_ID, "/NurnType.txt"}; 	file1 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/NurnType.txt"}; 	file1 = $fopen(file_name, "r+");
 			if (file1 == `NULL) begin  $stop; end
-			file_name = {SIM_PATH, DIR_ID, "/RandTh.txt"}; 		file2 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/RandTh.txt"}; 		file2 = $fopen(file_name, "r+");
 			if (file1 == `NULL) begin  end
-			file_name = {SIM_PATH, DIR_ID, "/Th_Mask.txt"}; 		file3 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/Th_Mask.txt"}; 		file3 = $fopen(file_name, "r+");
 			if (file2 == `NULL) begin  $stop; end
-			file_name = {SIM_PATH, DIR_ID, "/RstPot.txt"};	 	file4 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/RstPot.txt"};	 	file4 = $fopen(file_name, "r+");
 			if (file3 == `NULL) begin  $stop; end
-			file_name = {SIM_PATH, DIR_ID, "/SpikeAER.txt"};	 	file5 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/SpikeAER.txt"};	 	file5 = $fopen(file_name, "r+");
 			if (file4 == `NULL) begin  $stop; end
-			file_name = {SIM_PATH, DIR_ID, "/FixedTh.txt"};	 	file6 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/FixedTh.txt"};	 	file6 = $fopen(file_name, "r+");
 			if (file4 == `NULL) begin  $stop; end
 
 			for(idx = 0 ; idx <= ((1<<NURN_CNT_BIT_WIDTH) - 1) ; idx = idx + 1)
@@ -277,11 +277,11 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 			//-----------------------------
 			
 			// initialize mem_C
-			file_name = {SIM_PATH, DIR_ID, "/LrnModeWght.txt"};
+			file_name = {SIM_PATH, "data", DIR_ID, "/LrnModeWght.txt"};
 			$readmemh (file_name,LearnMode_Weight);
 			//$readmemh (file_name, LearnMode_Weight2);
 			//initialize memc2
-			file_name = {SIM_PATH, DIR_ID, "/LrnModeWght.txt"}; 	file1 = $fopen(file_name, "r+");
+			file_name = {SIM_PATH, "data", DIR_ID, "/LrnModeWght.txt"}; 	file1 = $fopen(file_name, "r+");
 
 			for (idx = 0; idx <=((1<<LEARN_MODE_MEMORY_ADDRESS_WIDTH) - 1); idx = idx + 1)
 				begin

@@ -99,7 +99,7 @@ reg [100*8:1] dump_file_name;
 
 initial
     begin
-        dump_file_name = {SIM_PATH, DIR_ID, "/dump_packet.csv"};
+        dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_received_packet.csv"};
 		f1 = $fopen(dump_file_name,"w");
     end
 

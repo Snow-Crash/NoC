@@ -104,23 +104,23 @@ module StatusMem_Asic_Onchip_SharePort
         reg [DSIZE-1:0] 			 Mem_Potential      [0:(1<<NURN_CNT_BIT_WIDTH) -1];
         reg [DSIZE-1:0] 			 Mem_Threshold      [0:(1<<NURN_CNT_BIT_WIDTH) -1];
         reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PostHistory    [0:(1<<NURN_CNT_BIT_WIDTH) -1];
-        reg [DSIZE-1:0] 			 Mem_Weight2        [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
         
 		reg /*sparse*/ [STDP_WIN_BIT_WIDTH-1:0] Mem_PreHistory     [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
         reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight         [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
+        //reg [DSIZE-1:0] 			 	Mem_Weight2        [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
 	`endif
 
     //initial memory
 	`ifdef SIM_MEM_INIT
 		reg [100*8:1] file_name;
 		initial begin
-			file_name = {SIM_PATH, DIR_ID, "/Bias.txt"};				$readmemh (file_name,Mem_Bias);
-			file_name = {SIM_PATH, DIR_ID, "/MembPot.txt"};			    $readmemh (file_name,Mem_Potential);
-			file_name = {SIM_PATH, DIR_ID, "/Th.txt"};				    $readmemh (file_name,Mem_Threshold);
-			file_name = {SIM_PATH, DIR_ID, "/PostSpikeHistory.txt"};	$readmemh (file_name,Mem_PostHistory);
-			file_name = {SIM_PATH, DIR_ID, "/PreSpikeHistory.txt"}; 	$readmemh (file_name,Mem_PreHistory);
-			file_name = {SIM_PATH, DIR_ID, "/Weights.txt"};			    $readmemh (file_name,Mem_Weight);
-            file_name = {SIM_PATH, DIR_ID, "/Weights.txt"};			    $readmemh (file_name,Mem_Weight2);
+			file_name = {SIM_PATH, "data", DIR_ID, "/Bias.txt"};				$readmemh (file_name,Mem_Bias);
+			file_name = {SIM_PATH, "data", DIR_ID, "/MembPot.txt"};			    $readmemh (file_name,Mem_Potential);
+			file_name = {SIM_PATH, "data", DIR_ID, "/Th.txt"};				    $readmemh (file_name,Mem_Threshold);
+			file_name = {SIM_PATH, "data", DIR_ID, "/PostSpikeHistory.txt"};	$readmemh (file_name,Mem_PostHistory);
+			file_name = {SIM_PATH, "data", DIR_ID, "/PreSpikeHistory.txt"}; 	$readmemh (file_name,Mem_PreHistory);
+			file_name = {SIM_PATH, "data", DIR_ID, "/Weights.txt"};			    $readmemh (file_name,Mem_Weight);
+            //file_name = {SIM_PATH, DIR_ID, "/Weights.txt"};			    $readmemh (file_name,Mem_Weight2);
 		end
 	`endif
 
@@ -292,20 +292,20 @@ weight_fifo
 	reg [100*8:1] dump_file_name;
 	initial
 		begin
-			logical_axon_connectivity_file_name = {SIM_PATH, DIR_ID, "/logical_axon_connectivity.txt"};	
+			logical_axon_connectivity_file_name = {SIM_PATH, "data", DIR_ID, "/logical_axon_connectivity.txt"};	
 			$readmemh (logical_axon_connectivity_file_name, logical_axon_connectivity);
 
-			dump_file_name = {SIM_PATH, DIR_ID, "/dump_Bias.txt"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_Bias.csv"};
 			f1 = $fopen(dump_file_name,"w");
-			dump_file_name = {SIM_PATH, DIR_ID, "/dump_MembPot.txt"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_MembPot.csv"};
 			f2 = $fopen(dump_file_name,"w");
-			dump_file_name = {SIM_PATH, DIR_ID, "/dump_Threshold.txt"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_Threshold.csv"};
 			f3 = $fopen(dump_file_name,"w");
-			dump_file_name = {SIM_PATH, DIR_ID, "/dump_PostHist.txt"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_PostHist.csv"};
 			f4 = $fopen(dump_file_name,"w");
-			dump_file_name = {SIM_PATH, DIR_ID, "/dump_PreHist.txt"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_PreHist.csv"};
 			f5 = $fopen(dump_file_name,"w");
-			dump_file_name = {SIM_PATH, DIR_ID, "/dump_Weights.txt"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_Weights.csv"};
 			f6 = $fopen(dump_file_name,"w");
 			//write header
 			$fwrite(f1, "address,");

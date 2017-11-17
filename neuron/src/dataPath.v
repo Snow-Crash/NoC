@@ -743,7 +743,7 @@ reg [100*8:1] file_name;
 
 initial
 	begin
-	file_name = {SIM_PATH, DIR_ID, "/dump_output_spike.txt"};
+	file_name = {SIM_PATH, "data", DIR_ID, "/dump_output_spike.csv"};
 		f = $fopen(file_name, "w");
 
 		//write header

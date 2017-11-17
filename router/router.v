@@ -10,7 +10,9 @@
 //			local port and west port both request for east port, the request vector which inputed
 //			to east arbiter is 5'b00000, instead of 5'b10001. Althought two ports send request signal,
 //			arbiter doesn't receive request, the two ports will be stalled.
-
+`define DUMP_STALL
+`define DEBUG_ROUTER
+`define DUMP_DROP
 
 module router (clk, clk_local, clk_north, clk_south, clk_east, clk_west,
 reset, local_in, north_in, south_in, east_in, west_in, 
@@ -18,17 +20,23 @@ local_out, north_out, south_out, east_out, west_out,
 local_full, north_full, south_full, east_full, west_full,
 local_neuron_full, north_neighbor_full, south_neighbor_full, east_neighbor_full, west_neighbor_full,
 write_en_local, write_en_north, write_en_south, write_en_east, write_en_west, 
-write_req_local,write_req_north, write_req_south, write_req_east, write_req_west);
+write_req_local,write_req_north, write_req_south, write_req_east, write_req_west, start);
 
 parameter packet_size = 32;
 parameter flit_size = 4;
 parameter X_COORDINATE = 1;
 parameter Y_COORDINATE = 1;
+parameter X_ID = "1";
+parameter Y_ID = "1";
+parameter DIR_ID = {X_ID, "_", Y_ID};
+parameter SIM_PATH = "D:/code/data";
+parameter STOP_STEP = 50;
 
 input clk, clk_north, clk_south, clk_east, clk_west, clk_local;
 input reset;
 input write_en_local, write_en_north, write_en_south, write_en_east, write_en_west;
 input local_neuron_full, north_neighbor_full, south_neighbor_full, east_neighbor_full, west_neighbor_full;
+input start;
 
 input [3:0] north_in, south_in, east_in, west_in;
 input [31:0] local_in;
@@ -197,5 +205,87 @@ switch_matrix crossbar(.input0(local_flit_out), .input1(north_flit_out), .input2
 .output1(north_out), .output2(south_out), .output3(east_out),
 .output4(west_out),
 .sel0(local_select), .sel1(north_select), .sel2(south_select), .sel3(east_select), .sel4(west_select));
+
+
+`ifdef DEBUG_ROUTER
+
+integer router_clk_counter = 0;
+integer step_counter = 0;
+
+always @(posedge clk_local)
+	step_counter = step_counter + 1;
+
+always @(posedge clk)
+		router_clk_counter = router_clk_counter + 1;
+
+`endif
+
+
+`ifdef DUMP_STALL
+
+reg [100*8:1] dump_file_name1;
+integer f1;
+wire write_file;
+wire local_active, north_active, south_active, east_active, west_active;
+wire local_stall_event, north_stall_event, south_stall_event, east_stall_event, west_stall_event;
+
+assign local_active = | local_port_req;
+assign north_active = | north_port_req;
+assign south_active = | south_port_req;
+assign east_active = | east_port_req;
+assign west_active = | west_port_req;
+
+assign local_stall_event = local_active & local_stall;
+assign north_stall_event = north_active & north_stall;
+assign south_stall_event = south_active & south_stall;
+assign east_stall_event = east_active & east_stall;
+assign west_stall_event = west_active & west_stall;
+
+assign write_file = local_stall_event || north_stall_event || south_stall_event || east_stall_event || west_stall_event;
+
+initial
+	begin
+	  	
+		dump_file_name1 = {SIM_PATH, DIR_ID, "/dump_Stall.txt"};	
+		f1 = $fopen(dump_file_name1,"w");
+		$fwrite(f1, "step,north, south, east, west, local,\n");
+	end
+
+always @(posedge clk)
+	begin
+		if (write_file == 1'b1)
+			$fwrite(f1, "%0d,%0d,%0d,%0d,%0d,%0d,\n", router_clk_counter, north_port_req, south_port_req, east_port_req, west_port_req, local_port_req);
+	
+		if(step_counter == STOP_STEP)
+			$fclose(f1);
+	end
+
+`endif
+
+`ifdef DUMP_DROP
+
+reg [100*8:1] dump_file_name2;
+integer f2;
+
+initial
+	begin
+		dump_file_name2 = {SIM_PATH, DIR_ID, "/dump_Drop.txt"};	
+		f2 = $fopen(dump_file_name2,"w");
+		$fwrite(f2, "step,router_clk,packet,\n");
+	end
+
+`endif
+
+always @(posedge clk_local)
+	begin
+		if ((local_full == 1'b1) && (write_en_local == 1'b1))
+			begin
+				$fwrite(f2, "%0d,%0d,%h,\n",step_counter, router_clk_counter, local_in);
+			end
+
+		if (step_counter == STOP_STEP)
+			$fclose(f2);
+
+	end
 
 endmodule

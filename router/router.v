@@ -213,10 +213,11 @@ integer router_clk_counter = 0;
 integer step_counter = 0;
 
 always @(posedge clk_local)
-	step_counter = step_counter + 1;
+	if (start == 1'b1)
+		step_counter = step_counter + 1;
 
 always @(posedge clk)
-		router_clk_counter = router_clk_counter + 1;
+	router_clk_counter = router_clk_counter + 1;
 
 `endif
 

@@ -443,7 +443,7 @@ weight_fifo
 										base_address = i << AXON_CNT_BIT_WIDTH;
 										for(j = 0; j < NUM_AXONS; j = j + 1)
 											if(logical_axon_connectivity[base_address + j] == 1'b1)
-												$fwrite(f6, "%0d,", Mem_PreHistory[base_address + j]);
+												$fwrite(f5, "%0d,", Mem_PreHistory[base_address + j]);
 									end
 								
 								$fwrite(f5, "\n");

@@ -247,7 +247,7 @@ assign write_file = local_stall_event || north_stall_event || south_stall_event 
 initial
 	begin
 	  	
-		dump_file_name1 = {SIM_PATH, DIR_ID, "/dump_Stall.txt"};	
+		dump_file_name1 = {SIM_PATH, "data", DIR_ID, "/dump_Stall.csv"};	
 		f1 = $fopen(dump_file_name1,"w");
 		$fwrite(f1, "step,north, south, east, west, local,\n");
 	end
@@ -270,13 +270,10 @@ integer f2;
 
 initial
 	begin
-		dump_file_name2 = {SIM_PATH, DIR_ID, "/dump_Drop.txt"};	
+		dump_file_name2 = {SIM_PATH, "data", DIR_ID, "/dump_Drop.csv"};	
 		f2 = $fopen(dump_file_name2,"w");
 		$fwrite(f2, "step,router_clk,packet,\n");
 	end
-
-`endif
-
 always @(posedge clk_local)
 	begin
 		if ((local_full == 1'b1) && (write_en_local == 1'b1))
@@ -286,7 +283,9 @@ always @(posedge clk_local)
 
 		if (step_counter == STOP_STEP)
 			$fclose(f2);
-
 	end
+`endif
+
+
 
 endmodule

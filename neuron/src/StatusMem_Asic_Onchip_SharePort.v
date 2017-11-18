@@ -355,8 +355,8 @@ weight_fifo
 						begin
 							axon_id = i[AXON_CNT_BIT_WIDTH-1:0];
 							neuron_id = i[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:AXON_CNT_BIT_WIDTH];
-							$fwrite(f5, "%0d-%0d,", neuron_id, axon_id);
-							$fwrite(f6, "%0d-%0d,", neuron_id, axon_id);
+							$fwrite(f5, "%0d_%0d,", neuron_id, axon_id);
+							$fwrite(f6, "%0d_%0d,", neuron_id, axon_id);
 						end
 				end
 

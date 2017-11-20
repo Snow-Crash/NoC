@@ -236,6 +236,7 @@ integer f1;
 wire write_file;
 wire local_active, north_active, south_active, east_active, west_active;
 wire local_stall_event, north_stall_event, south_stall_event, east_stall_event, west_stall_event;
+wire [4:0] local_stalled_request, north_stalled_request, south_stalled_request, east_stalled_request, west_stalled_request;
 
 assign local_active = | local_port_req;
 assign north_active = | north_port_req;
@@ -248,6 +249,12 @@ assign north_stall_event = north_active & north_stall;
 assign south_stall_event = south_active & south_stall;
 assign east_stall_event = east_active & east_stall;
 assign west_stall_event = west_active & west_stall;
+
+assign local_stalled_request = (local_stall_event)? local_port_req : 5'b00000;
+assign north_stalled_request = (north_stall_event)? north_port_req : 5'b00000;
+assign south_stalled_request = (south_stall_event)? south_port_req : 5'b00000;
+assign east_stalled_request = (east_stall_event) ? east_port_req : 5'b00000;
+assign west_stalled_request = (west_stall_event) ? west_port_req : 5'b00000;
 
 assign write_file = local_stall_event || north_stall_event || south_stall_event || east_stall_event || west_stall_event;
 
@@ -262,7 +269,7 @@ initial
 always @(posedge clk)
 	begin
 		if (write_file == 1'b1)
-			$fwrite(f1, "%0d,%0d,%0d,%0d,%0d,%0d,\n", router_clk_counter, north_port_req, south_port_req, east_port_req, west_port_req, local_port_req);
+			$fwrite(f1, "%0d,%0d,%0d,%0d,%0d,%0d,\n", router_clk_counter, north_stalled_request, south_stalled_request, east_stalled_request, west_stalled_request, local_stalled_request);
 	
 		if(step_counter == STOP_STEP)
 			$fclose(f1);

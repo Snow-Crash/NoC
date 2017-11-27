@@ -83,6 +83,12 @@
 
 module dataPath
 #(
+	parameter X_ID = "1",
+	parameter Y_ID = "1",
+	parameter DIR_ID = {X_ID, "_", Y_ID},
+	parameter SIM_PATH = "D:/code/data",
+	parameter STOP_STEP = 5,
+
 	parameter NUM_NURNS    = 256  ,
 	parameter NUM_AXONS    = 256  ,
 
@@ -98,13 +104,7 @@ module dataPath
 
 	parameter PRIORITY_ENC_OUT_BIT_WIDTH = 3,
 
-	parameter SEED = 0,
-
-	parameter X_ID = "1",
-	parameter Y_ID = "1",
-	parameter DIR_ID = {X_ID, "_", Y_ID},
-	parameter SIM_PATH = "D:/code/data",
-	parameter STOP_STEP = 5
+	parameter SEED = 0
 )
 (
 	input 													clk_i			,

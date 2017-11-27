@@ -6,7 +6,7 @@
 
 `include "neuron_define.v"
 // `define SIM_MEM_INIT
-// //`define QUARTUS_SYN_INIT
+// `define QUARTUS_SYN_INIT
 // `define NULL 0
 // `define DUMP_MEMORY
 
@@ -14,9 +14,9 @@
 module StatusMem_Asic_Onchip_SharePort
 #(
 
-	`ifdef DUMP_MEMORY
-		parameter STOP_STEP = 5,
-	`endif
+	
+	parameter STOP_STEP = 5,
+	
 	parameter NUM_NURNS    = 256  ,
 	parameter NUM_AXONS    = 256  ,
 

@@ -54,9 +54,8 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	parameter X_ID = "1";
 	parameter Y_ID = "1";
 
-	`ifdef DUMP_MEMORY
-		parameter STOP_STEP = 5;
-	`endif
+	
+	parameter STOP_STEP = 5;
 
 	//parameter MEM_A_MIF_PATH = "D:/code/synth/data1_1/mem_A.mif";
 	//parameter MEM_B_MIF_PATH = "D:/code/synth/data1_1/mem_B.mif";
@@ -71,7 +70,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	parameter SIM_PATH =  "D:/code/data";
 
 	input clk, rst_n, start;
-	input [NUM_AXONS - 1:0] inSpike;
+	input [(1<<AXON_CNT_BIT_WIDTH) -1:0] inSpike;
 	output  outSpike;
 	output [31:0] SpikePacket;
 	//REGISTER DECLARATION
@@ -224,6 +223,12 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 
 	dataPath
 	#(
+		
+		.X_ID(X_ID),
+		.Y_ID(Y_ID),
+		.SIM_PATH(SIM_PATH),
+		.STOP_STEP(STOP_STEP),
+
 		.NUM_NURNS			( NUM_NURNS ),
 		.NUM_AXONS			( NUM_AXONS ),
 
@@ -239,12 +244,8 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		
 		.PRIORITY_ENC_OUT_BIT_WIDTH (PRIORITY_ENC_OUT_BIT_WIDTH),
 
-		.SEED 				( SEED ),
+		.SEED 				( SEED )
 
-		.X_ID(X_ID),
-		.Y_ID(Y_ID),
-		.SIM_PATH(SIM_PATH),
-		.STOP_STEP(STOP_STEP)
 	)
 	DATAPATH
 	(
@@ -433,9 +434,9 @@ ConfigMem_Asic
 `ifdef NEW_STATUS_MEMORY
 	StatusMem_Asic_Onchip_SharePort
 	#(
-		`ifdef DUMP_MEMORY
-			.STOP_STEP(STOP_STEP),
-		`endif
+		
+		.STOP_STEP(STOP_STEP),
+		
 		.NUM_NURNS(NUM_NURNS),
 		.NUM_AXONS(NUM_AXONS),
 
@@ -507,9 +508,9 @@ ConfigMem_Asic
 `else
 	StatusMem
 	#(
-		`ifdef DUMP_MEMORY
+		
 		.STOP_STEP(STOP_STEP),
-		`endif
+		
 
 		.NUM_NURNS    		( NUM_NURNS ),
 		.NUM_AXONS    		( NUM_AXONS ),

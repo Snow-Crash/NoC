@@ -10,7 +10,7 @@
 // `define USE_MODULE
 // `define SIM_MEM_INIT
 // `define NULL 0
-// //`define USE_MODULE
+// `define MEM_DECLARE
 
 module ConfigMem_Asic_Onchip
 #(
@@ -141,7 +141,7 @@ assign  write_FixedThreshold = config_write_enable[2];
 assign  write_LearnMode_weight = config_write_enable[1];
 assign  write_Number_Neuron_Axon = config_write_enable[0];
 
-`ifdef USE_MODULE
+`ifdef MEM_DECLARE
 	reg [NURN_CNT_BIT_WIDTH-1:0]	LTP_LTD_Window_addr_reg;
 	reg [NURN_CNT_BIT_WIDTH-1:0]	LTP_LTD_LearnRate_addr_reg;
 	reg [NURN_CNT_BIT_WIDTH-1:0]	LearnMode_Bias_addr_reg;
@@ -297,7 +297,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 		end
 `endif
 
-`ifdef USE_MODULE
+`ifdef MEM_DECLARE
 
 	//window
 	always @ (posedge clk_i)

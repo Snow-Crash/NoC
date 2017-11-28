@@ -79,6 +79,13 @@ module NurnCtrlr
 	output [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	Addr_Config_C_o,
 	output 												rdEn_Config_C_o 	,
 
+`ifdef AER_MULTICAST
+	input												read_next_AER_i,
+	output [NURN_CNT_BIT_WIDTH-1:0]						AER_pointer_o,
+	output 												packet_write_req_o,
+	input												th_compare_i,
+`endif
+
 	//status mem
 	output reg [NURN_CNT_BIT_WIDTH+2-1:0] 				Addr_StatRd_A_o,
 	output reg											rdEn_StatRd_A_o	,
@@ -189,6 +196,15 @@ module NurnCtrlr
 	reg over_write_post_history;
 	reg expired_post_history_write_back;
 	reg expired_post_history_write_back_delay;
+
+`ifdef AER_MULTICAST
+	reg [NURN_CNT_BIT_WIDTH-1:0] AER_pointer;
+	reg en_inc_AER_pointer, recall_spike_reg, send_multicast;
+	reg inc_AER_pointer;
+	reg packet_write_req_delay;
+	reg packet_write_req;
+`endif
+
 
 
 	//LOGIC
@@ -386,6 +402,7 @@ module NurnCtrlr
 			rclNurnAddr_buff <= 0;
 			lrnWrBack_Nurn <= 0;
 			lrnWrBackCntr_Axon <= 0;
+			AER_pointer <= 0;
 		end else begin
 			if (rclCntr_Nurn_rst == 1'b1) begin
 				rclCntr_Nurn <= 0;	
@@ -464,6 +481,59 @@ module NurnCtrlr
 	assign Addr_StatRd_F_o = {rclNurnAddr_buff,lrnCntr_Axon_Pipln};
 	assign Addr_StatWr_D_o = {lrnWrBack_Nurn,lrnWrBackCntr_Axon};
 	assign Addr_StatWr_G_o = {lrnWrBack_Nurn,lrnWrBackCntr_Axon};
+
+`ifdef AER_MULTICAST
+	always @(posedge clk_i or negedge rst_n_i)
+		begin
+			if(rst_n_i == 1'b0)
+				begin
+					AER_pointer <= 0;
+					en_inc_AER_pointer <= 0;
+					recall_spike_reg <= 0;
+					send_multicast <= 0;
+					packet_write_req_delay <= 0;
+				end
+			else
+				begin
+					if (start_i == 1'b1)
+						AER_pointer <= 0;
+					else if (inc_AER_pointer == 1'b1)
+						AER_pointer <= AER_pointer + 1;
+
+					if (cmp_th_o == 1'b1)
+						en_inc_AER_pointer <= 1'b1;
+					else if(read_next_AER_i == 1'b0)
+						en_inc_AER_pointer <= 1'b0;
+					
+					if (th_compare_i == 1'b1 && cmp_th_o == 1'b1)
+						recall_spike_reg <= 1'b1;
+					else if (read_next_AER_i == 1'b0 && recall_spike_reg == 1'b1)
+						recall_spike_reg <= 1'b0;
+					
+					packet_write_req_delay = packet_write_req;
+
+				end
+		end
+		
+	always @(*)
+		begin
+			packet_write_req = 1'b0;
+			inc_AER_pointer = 1'b0;
+
+			if (cmp_th_o == 1'b1 && th_compare_i == 1'b1)
+				packet_write_req = 1'b1;
+			else if (read_next_AER_i == 1'b1 && en_inc_AER_pointer == 1'b1 && recall_spike_reg == 1'b1)
+				packet_write_req = 1'b1;
+		
+			if (cmp_th_o == 1'b1)
+				inc_AER_pointer = 1'b1;
+			else if (read_next_AER_i == 1'b1 && en_inc_AER_pointer == 1'b1)
+				inc_AER_pointer = 1'b1;
+		end
+	
+	assign AER_pointer_o = AER_pointer;
+	assign packet_write_req_o = packet_write_req_delay;
+`endif
 
 
 	//pipelined and registered control signals

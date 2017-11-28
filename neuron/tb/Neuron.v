@@ -119,6 +119,8 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	wire [NURN_CNT_BIT_WIDTH-1:0] access_address_config_A, access_address_config_B;
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] access_address_config_C;
 
+	wire [NURN_CNT_BIT_WIDTH-1:0] AER_pointer;
+
 	//MODULE INSTANTIATIONS
 	NurnCtrlr 
 	#(
@@ -188,6 +190,12 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.wrEn_StatWr_G_o	( wrEn_StatWr_G ),
 		.en_expired_post_history_write_back_i (en_expired_post_history_write_back),
 		.read_weight_fifo_o (read_weight_fifo),
+
+`ifdef AER_MULTICAST
+		.read_next_AER_i	(read_next_AER),
+		.AER_pointer_o		(AER_pointer),
+		.th_compare_i		(th_compare),
+`endif
 
 
 	`ifdef SEPARATE_ADDRESS
@@ -300,6 +308,10 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.start_i			(start),
 		`endif
 
+		`ifdef AER_MULTICAST
+		.th_compare_o		(th_compare),
+		`endif
+
 		.update_weight_enable_o		(update_weight_enable),
 		//.shift_writeback_en_buffer_i (shift_writeback_en_buffer),
 		.expired_post_history_write_back_i(expired_post_history_write_back),
@@ -365,6 +377,11 @@ ConfigMem_Asic
 	.Th_Mask_o(Th_Mask ),
 	.RstPot_o( RstPot),
 	.SpikeAER_o(SpikeAER ),
+
+`ifdef AER_MULTICAST
+		.read_next_AER_o	(read_next_AER),
+		.AER_pointer_i		(AER_pointer),
+`endif
 
 	//read port C
 	.Addr_Config_C_i( Addr_Config_C),

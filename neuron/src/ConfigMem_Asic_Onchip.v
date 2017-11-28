@@ -77,6 +77,12 @@ module ConfigMem_Asic_Onchip
 
 	output												axonLrnMode_o,
 
+	// AER memory
+`ifdef AER_MULTICAST
+	input [NURN_CNT_BIT_WIDTH-1:0]						AER_pointer_i,
+	output												read_next_AER_o,
+`endif
+
 	//config mode
     input config_LTP_LTD_Window_i,
     input config_LTP_LTD_LearnRate_i,
@@ -345,6 +351,16 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 	assign Mask_RestPotential_wire = Mask_RestPotential[Mask_RestPotential_addr_reg];
 
 	//AER
+`ifdef AER_MULTICAST
+	always @ (posedge clk_i)
+		begin
+			if (config_AER_i)
+				AER[Addr_Config_B_i] <= config_data_in;
+			AER_addr_reg <= AER_pointer_i;  
+		end
+	assign AER_wire = AER[AER_addr_reg];
+`else
+	//AER
 	always @ (posedge clk_i)
 		begin
 			if (config_AER_i)
@@ -352,6 +368,7 @@ assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
 			AER_addr_reg <= Addr_Config_B_i;  
 		end
 	assign AER_wire = AER[AER_addr_reg];
+`endif
 
 	//fixed threshold
 	always @ (posedge clk_i)
@@ -587,8 +604,14 @@ assign NurnType_o = NeuronType_RandomThreshold_reg[1];
 assign RandTh_o = NeuronType_RandomThreshold_reg[0];
 assign Th_Mask_o = Mask_RestPotential_reg[DSIZE*2-1:DSIZE];
 assign RstPot_o = Mask_RestPotential_reg[DSIZE-1:0];
-assign SpikeAER_o = AER_reg;
 assign FixedThreshold_o = FixedThreshold_reg;
+
+`ifdef AER_MULTICAST
+	assign SpikeAER_o = AER_wire;
+	assign read_next_AER_o = AER_wire[AER_BIT_WIDTH-1];
+`else
+	assign SpikeAER_o = AER_reg;
+`endif
 
 // assign LTP_Win_o = LTP_LTD_Window_wire[STDP_WIN_BIT_WIDTH*2-1 : STDP_WIN_BIT_WIDTH];
 // assign LTD_Win_o = LTP_LTD_Window_wire[STDP_WIN_BIT_WIDTH - 1:0];

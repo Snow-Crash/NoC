@@ -402,7 +402,6 @@ module NurnCtrlr
 			rclNurnAddr_buff <= 0;
 			lrnWrBack_Nurn <= 0;
 			lrnWrBackCntr_Axon <= 0;
-			AER_pointer <= 0;
 		end else begin
 			if (rclCntr_Nurn_rst == 1'b1) begin
 				rclCntr_Nurn <= 0;	

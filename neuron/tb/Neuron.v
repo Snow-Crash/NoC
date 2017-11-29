@@ -28,7 +28,7 @@
 // //`define SEPARATE_ADDRESS
 // `define RECORD_SPIKE
 
-module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
+module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_req);
 
 	
 	parameter NUM_NURNS    = 2  ;
@@ -73,6 +73,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 	input [(1<<AXON_CNT_BIT_WIDTH) -1:0] inSpike;
 	output  outSpike;
 	output [31:0] SpikePacket;
+	output packet_write_req;
 	//REGISTER DECLARATION
 	//reg  start;
 
@@ -195,6 +196,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike);
 		.read_next_AER_i	(read_next_AER),
 		.AER_pointer_o		(AER_pointer),
 		.th_compare_i		(th_compare),
+		.packet_write_req_o (packet_write_req),
 `endif
 
 

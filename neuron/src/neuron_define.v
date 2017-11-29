@@ -18,5 +18,6 @@
 // `define DUMP_INPUT_SPIKE
 // `define DUMP_RECEIVED_PACKET
 `define AER_MULTICAST
+`define LOCAL_PACKET_BYPASS
 
 

@@ -12,7 +12,12 @@
 
 `include "neuron_define.v"
 
+`ifdef LOCAL_PACKET_BYPASS
+module interface (router_clk, neuron_clk, rst_n, router_reset, write_en, start, data_in, spike, neuron_full,
+                    write_en_from_neuron, write_req_to_router, packet_to_router, packet_from_neuron);
+`else
 module interface (router_clk, neuron_clk, rst_n, router_reset, write_en, start, data_in, spike, neuron_full);
+`endif
 
 parameter packet_size = 32;
 parameter flit_size = 4;
@@ -26,6 +31,106 @@ parameter DIR_ID = {X_ID, "_", Y_ID};
 parameter SIM_PATH = "D:/code/data";
 parameter SYNTH_PATH = "D:/code/synth/data";
 parameter STOP_STEP = 5;
+
+`ifdef LOCAL_PACKET_BYPASS
+
+    parameter X_COORDINATE = 1;
+    parameter Y_COORDINATE = 1;
+    input [packet_size-1:0] packet_from_neuron;
+    output [packet_size-1:0] packet_to_router;
+    input write_en_from_neuron;
+    output reg write_req_to_router;
+    input router_clk, neuron_clk, rst_n, start, router_reset, write_en;
+    input [flit_size - 1:0] data_in;
+    output [(1<<AXON_CNT_BIT_WIDTH) -1:0] spike;
+    //output read_req;
+    output neuron_full;
+
+    wire [packet_size - 1:0] data_out;
+
+    reg [(1<<AXON_CNT_BIT_WIDTH) -1:0] spike_reg;
+    reg clear_spike_reg;
+    reg [AXON_CNT_BIT_WIDTH - 1:0] axon_id;
+    reg write_spike, read_spikebuffer_req;
+    reg set_spike_buffer;
+
+    wire [AXON_CNT_BIT_WIDTH - 1:0] axon_address;
+    wire spikebuffer_empty;
+    wire [packet_size - 1:0] packet;
+
+    spikebuf spikebuffer (
+	.aclr ( router_reset ),
+	.data ( data_in ),
+	.rdclk ( neuron_clk ),
+	.rdreq ( read_spikebuffer_req ),
+	.wrclk ( router_clk ),
+	.wrreq ( write_en ),
+	.q ( packet ),
+	.rdempty ( spikebuffer_empty ),
+	.wrfull ( neuron_full )
+	);
+    
+    assign packet_to_router = packet_from_neuron;
+
+     always @(*)
+        begin
+        set_spike_buffer = 1'b0;
+        write_req_to_router = 1'b0;
+        axon_id = 0;
+        read_spikebuffer_req = 1'b0;
+            if (write_en_from_neuron == 1'b1)
+                begin
+                    if (X_COORDINATE == packet_from_neuron[x_address_length-1:0] && Y_COORDINATE == packet_from_neuron[y_address_length+x_address_length-1:x_address_length])
+                        begin
+                            set_spike_buffer = 1'b1;
+                            write_req_to_router = 1'b0;
+                        end
+                    else
+                        begin
+                            set_spike_buffer = 1'b0;
+                            write_req_to_router = 1'b1;
+                        end
+                end
+            else
+                set_spike_buffer = write_spike;
+
+            if (write_en_from_neuron == 1'b1)
+                axon_id = packet_from_neuron[x_address_length + y_address_length + AXON_CNT_BIT_WIDTH - 1:x_address_length + y_address_length];
+            else
+                axon_id = packet[x_address_length + y_address_length + AXON_CNT_BIT_WIDTH - 1:x_address_length + y_address_length];
+            
+            if (write_en_from_neuron == 1'b1)
+                read_spikebuffer_req = 1'b0;
+            else
+                read_spikebuffer_req = ~ spikebuffer_empty;
+        end
+    
+    always @(posedge neuron_clk or negedge rst_n)
+        begin
+            if(rst_n == 0)
+                write_spike <= 0;
+            else
+                write_spike <= read_spikebuffer_req;
+        end
+
+    always @(posedge neuron_clk or negedge rst_n )
+        begin
+            if (rst_n == 0)
+                spike_reg <= 0;
+            else if(clear_spike_reg == 1)
+                spike_reg <= 0;
+            else if(set_spike_buffer)
+                spike_reg[axon_id] <= 1'b1;
+        end
+    
+    always @(posedge neuron_clk)
+    begin
+        clear_spike_reg <= start;
+    end
+
+    assign spike = spike_reg;
+
+`else
 
 input router_clk, neuron_clk, rst_n, start, router_reset, write_en;
 input [flit_size - 1:0] data_in;
@@ -90,6 +195,7 @@ always @(posedge neuron_clk)
         clear_spike_reg <= start;
     end
 
+`endif
 
 `ifdef DUMP_RECEIVED_PACKET
 

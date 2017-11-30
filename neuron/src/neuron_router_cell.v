@@ -59,10 +59,16 @@ uut_neuron (
     .clk(clk), 
     .rst_n(rst_n), 
     .SpikePacket(packet_to_interface), 
-    .outSpike(outSpike),
+    
     .start(start), 
     .inSpike(spike),
+`ifdef AER_MULTICAST
+    .outSpike(outSpike),
 	.packet_write_req(packet_write_req)
+`else
+    .outSpike(packet_write_req),
+    .packet_write_req( )
+`endif
     );
 
 router #(
@@ -161,9 +167,15 @@ uut (
     .clk(clk), 
     .rst_n(rst_n), 
     .SpikePacket(flit_in_local), 
-    .outSpike(outSpike),
     .start(start), 
     .inSpike(spike)
+`ifdef AER_MULTICAST
+    .outSpike(outSpike),
+	.packet_write_req(packet_write_req)
+`else
+    .outSpike(packet_write_req),
+    .packet_write_req( )
+`endif
     );
 
 router #(
@@ -197,7 +209,7 @@ rt (
         .south_full(full_out_south), 
         .east_full(full_out_east), 
         .west_full(full_out_west),
-        .write_en_local(outSpike), 
+        .write_en_local(packet_write_req), 
         .write_en_north(wr_req_in_north), 
         .write_en_south(wr_req_in_south), 
         .write_en_east(wr_req_in_east), 

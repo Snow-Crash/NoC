@@ -168,7 +168,7 @@ uut (
     .rst_n(rst_n), 
     .SpikePacket(flit_in_local), 
     .start(start), 
-    .inSpike(spike)
+    .inSpike(spike),
 `ifdef AER_MULTICAST
     .outSpike(outSpike),
 	.packet_write_req(packet_write_req)

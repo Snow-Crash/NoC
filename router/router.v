@@ -15,6 +15,7 @@
 `define DUMP_STALL_EVENT
 `define DUMP_DROPPED_PACKET
 `define DUMP_NEURON_OUTPUT_PACKET
+`define DUMP_CONGESTION
 
 module router (clk, clk_local, clk_north, clk_south, clk_east, clk_west,
 reset, local_in, north_in, south_in, east_in, west_in, 
@@ -320,6 +321,54 @@ always @(posedge clk_local)
 
 		if (step_counter == STOP_STEP)
 			$fclose(f3);
+
+	end
+
+`endif
+
+`ifdef DUMP_CONGESTION
+integer f4;
+reg [100*8:1] dump_file_name4;
+wire write_congestion_file, local_congestion, north_congestion, south_congestion, east_congestion, west_congestion;
+wire [4:0] req_to_local, req_to_north, req_to_south, req_to_east, req_to_west;
+wire local_congested, north_congested, south_congested, east_congested, west_congested;
+
+
+assign req_to_local = {west_port_req[0], east_port_req[0], south_port_req[0], north_port_req[0], local_port_req[0]};
+assign req_to_north = {west_port_req[1], east_port_req[1], south_port_req[1], north_port_req[1], local_port_req[1]};
+assign req_to_south = {west_port_req[2], east_port_req[2], south_port_req[2], north_port_req[2], local_port_req[2]};
+assign req_to_east = {west_port_req[3], east_port_req[3], south_port_req[3], north_port_req[3], local_port_req[3]};
+assign req_to_west = {west_port_req[4], east_port_req[4], south_port_req[4], north_port_req[4], local_port_req[4]};
+
+assign local_requested = | req_to_local;
+assign north_requested = | req_to_north;
+assign south_requested = | req_to_south;
+assign east_requested = | req_to_east;
+assign west_requested = |req_to_west;
+
+assign local_congestion = local_neuron_full & local_requested;
+assign north_congestion = north_neighbor_full & north_requested;
+assign south_congestion = south_neighbor_full & south_requested;
+assign east_congestion = east_neighbor_full & east_requested;
+assign west_congestion = west_neighbor_full & west_requested;
+
+assign write_congestion_file = | {local_congestion, north_congestion, south_congestion, east_congestion, west_congestion};
+
+initial
+    begin
+        dump_file_name4 = {SIM_PATH, "data", DIR_ID, "/dump_congestion.csv"};
+		f4 = $fopen(dump_file_name4,"w");
+		$fwrite(f4, "step,neuron_clk,router_clk,north,south,east,west,local,\n");
+    end
+
+always @(posedge clk)
+	begin
+
+		if (write_congestion_file == 1'b1)
+			 $fwrite(f4, "%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,\n", step_counter, neuron_clk_counter, router_clk_counter, local_congestion, north_congestion, south_congestion, east_congestion, west_congestion );
+
+		if (step_counter == STOP_STEP)
+			$fclose(f4);
 
 	end
 

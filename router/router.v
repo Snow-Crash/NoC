@@ -264,7 +264,7 @@ initial
 	  	
 		dump_file_name1 = {SIM_PATH, "data", DIR_ID, "/dump_stall_event.csv"};	
 		f1 = $fopen(dump_file_name1,"w");
-		$fwrite(f1, "step,north, south, east, west, local,\n");
+		$fwrite(f1, "router_clk,north, south, east, west, local,\n");
 	end
 
 always @(posedge clk)

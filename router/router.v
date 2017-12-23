@@ -41,10 +41,10 @@ input write_en_local, write_en_north, write_en_south, write_en_east, write_en_we
 input local_neuron_full, north_neighbor_full, south_neighbor_full, east_neighbor_full, west_neighbor_full;
 input start;
 
-input [3:0] north_in, south_in, east_in, west_in;
+input [flit_size-1:0] north_in, south_in, east_in, west_in;
 input [31:0] local_in;
 
-output [3:0] local_out, north_out, south_out, east_out, west_out;
+output [flit_size-1:0] local_out, north_out, south_out, east_out, west_out;
 
 output local_full, north_full, south_full, east_full, west_full;
 
@@ -55,8 +55,8 @@ output write_req_local, write_req_north, write_req_south, write_req_east, write_
 wire local_buf_empty, north_buf_empty, south_buf_empty, east_buf_empty, west_buf_empty;
 wire local_read_buf, north_read_buf, south_read_buf, east_read_buf, west_read_buf;
 wire local_stall, north_stall, south_stall, east_stall, west_stall;
-wire [3:0] local_flit_in, north_flit_in, south_flit_in, east_flit_in, west_flit_in;
-wire [3:0] local_flit_out, north_flit_out, south_flit_out, east_flit_out, west_flit_out;
+wire [flit_size-1:0] local_flit_in, north_flit_in, south_flit_in, east_flit_in, west_flit_in;
+wire [flit_size-1:0] local_flit_out, north_flit_out, south_flit_out, east_flit_out, west_flit_out;
 wire local_address_ready, north_address_ready, south_address_ready, east_address_ready, west_address_ready;
 wire [2:0] local_destination, north_destination, south_destination, east_destination, west_destination;
 

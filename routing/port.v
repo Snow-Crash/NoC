@@ -78,7 +78,7 @@ assign mux_out = (mux_select) ? mux_input1 : mux_input2;
 
 assign flit_out = mux_out;
 assign mux_input1 = flit_in;
-assign mux_input2 = next_address_reg[3:0];
+assign mux_input2 = next_address_reg[flit_size - 1:0];
 
 //destination_port register
 //load destination port when current address is completely loaded
@@ -129,8 +129,8 @@ always @(posedge clk or posedge reset)
             end
         else if (shift_current_address)
             begin
-                current_address_reg[address_size - 5:0] <= current_address_reg[address_size - 1:4];
-                current_address_reg[address_size - 1:address_size - 4] <= flit_in;
+                current_address_reg[address_size - flit_size - 1:0] <= current_address_reg[address_size - 1:flit_size];
+                current_address_reg[address_size - 1:address_size - flit_size] <= flit_in;
             end
     end
 assign current_address = current_address_reg;
@@ -146,7 +146,7 @@ always @(posedge clk or posedge reset)
                 next_address_reg <= next_address;
         else if (shift_next_address)
                 //next_address_reg <= next_address_reg >> 4;
-                next_address_reg <= {4'h0, next_address_reg[address_size - 1:4]};
+                next_address_reg <= {flit_size'h0, next_address_reg[address_size - 1:flit_size]};
     end
 
 //full signal mux

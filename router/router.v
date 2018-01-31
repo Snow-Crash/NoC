@@ -332,6 +332,12 @@ reg [100*8:1] dump_file_name4;
 wire write_congestion_file, local_congestion, north_congestion, south_congestion, east_congestion, west_congestion;
 wire [4:0] req_to_local, req_to_north, req_to_south, req_to_east, req_to_west;
 wire local_congested, north_congested, south_congested, east_congested, west_congested;
+//counter to record how many request
+integer local_counter = 0;
+integer north_counter = 0;
+integer south_counter = 0;
+integer east_counter = 0;
+integer west_counter = 0;
 
 
 assign req_to_local = {west_port_req[0], east_port_req[0], south_port_req[0], north_port_req[0], local_port_req[0]};
@@ -367,8 +373,27 @@ always @(posedge clk)
 		if (write_congestion_file == 1'b1)
 			 $fwrite(f4, "%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,\n", step_counter, neuron_clk_counter, router_clk_counter, local_congestion, north_congestion, south_congestion, east_congestion, west_congestion );
 
+		if (local_requested == 1'b1)
+			local_counter = local_counter + 1;
+		if (north_requested == 1'b1)
+			north_counter = north_counter + 1;
+		if (south_requested == 1'b1)
+			south_counter = south_counter + 1;
+		if (east_requested == 1'b1)
+			east_counter = east_counter + 1;
+		if (west_requested == 1'b1)
+			west_counter = west_counter + 1;
+
 		if (step_counter == STOP_STEP)
+			begin
+				$fwrite(f4, "%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,\n", step_counter, neuron_clk_counter, router_clk_counter, local_counter, north_counter, south_counter, east_counter, west_counter );
+
+			end
 			$fclose(f4);
+		
+
+
+		
 
 	end
 

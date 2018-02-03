@@ -465,7 +465,7 @@ ConfigMem_Asic
 `endif
 
 
-	StatusMem_Asic_Onchip_Splitport
+	StatusMem_Asic
 	#(
 		
 		.STOP_STEP(STOP_STEP),
@@ -486,7 +486,7 @@ ConfigMem_Asic
 		.SIM_PATH(SIM_PATH),
 		.SYNTH_PATH(SYNTH_PATH)
 	)
-	StatusMem_split
+	StatusMem_Asic
 	(
 
 		.start_i(start),

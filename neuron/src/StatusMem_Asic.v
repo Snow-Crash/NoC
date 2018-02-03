@@ -11,7 +11,7 @@
 // `define DUMP_MEMORY
 
 
-module StatusMem_Asic_Onchip_Splitport
+module StatusMem_Asic
 #(
 
 	

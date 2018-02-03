@@ -102,6 +102,9 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 	wire [DSIZE-1:0] data_StatRd_A, data_StatRd_E, data_StatRd_F;
 	wire [STDP_WIN_BIT_WIDTH-1:0] data_StatRd_C;
 
+	wire [DSIZE-1:0] data_wr_bias, data_wr_potential, data_wr_threshold, data_rd_bias, data_rd_potential, data_rd_threshold;
+	wire [STDP_WIN_BIT_WIDTH-1:0] data_wr_posthistory, data_rd_posthistory;
+
 	//data path
 	wire [DSIZE-1:0] data_StatWr_B, data_StatWr_G;
 	wire [STDP_WIN_BIT_WIDTH-1:0] data_StatWr_D;
@@ -284,6 +287,17 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 		.data_StatWr_D_o 	( data_StatWr_D ),
 		.data_StatWr_G_o 	( data_StatWr_G ),
 
+		.data_rd_bias_i(data_rd_bias),
+		.data_rd_potential_i(data_rd_potential),
+		.data_rd_threshold_i(data_rd_threshold),
+		.data_rd_posthistory_i(data_rd_posthistory),
+
+		.data_wr_bias_o(data_wr_bias),
+		.data_wr_potential_o(data_wr_potential),
+		.data_wr_threshold_o(data_wr_threshold),
+		.data_wr_posthistory_o(data_wr_posthistory),
+
+
 		//in spike buffer
 		.rcl_inSpike_i 		( Rcl_InSpike 	),
 		.lrn_inSpike_i 		( Lrn_InSpike 	),
@@ -449,6 +463,92 @@ ConfigMem_Asic
 		.axonLrnMode_o 		( axonLrnMode 	)
 	);
 `endif
+
+
+	StatusMem_Asic_Onchip_Splitport
+	#(
+		
+		.STOP_STEP(STOP_STEP),
+		
+		.NUM_NURNS(NUM_NURNS),
+		.NUM_AXONS(NUM_AXONS),
+
+		.DSIZE(DSIZE),
+
+		.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
+		.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+
+		.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
+
+		
+		.X_ID(X_ID),
+		.Y_ID(Y_ID),
+		.SIM_PATH(SIM_PATH),
+		.SYNTH_PATH(SYNTH_PATH)
+	)
+	StatusMem_split
+	(
+
+		.start_i(start),
+		.clk_i(clk),
+		.rst_n_i(rst_n),
+
+		//read port A
+		.Addr_StatRd_A_i								(Addr_StatRd_A),
+		.read_enable_bias_i								(read_enable_bias),
+		.read_enable_potential_i						(read_enable_potential),
+		.read_enable_threshold_i						(read_enable_threshold),
+		.read_enable_posthistory_i						(read_enable_posthistory),
+
+		.write_enable_bias_i 							(write_enable_bias),
+		.write_enable_potential_i						(write_enable_potential),
+		.write_enable_threshold_i						(write_enable_threshold),
+		.write_enable_posthistory_i						(write_enable_posthistory),
+
+		//.data_StatRd_A_o								(data_StatRd_A),
+		.data_wr_bias_i(data_wr_bias),
+		.data_wr_potential_i(data_wr_potential),
+		.data_wr_threshold_i(data_wr_threshold),
+		.data_wr_posthistory_i(data_wr_posthistory),
+
+		.data_rd_bias_o(data_rd_bias),
+		.data_rd_potential_o(data_rd_potential),
+		.data_rd_threshold_o(data_rd_threshold),
+		.data_rd_posthistory_o(data_rd_posthistory),
+
+		//write port B
+		.Addr_StatWr_B_i(Addr_StatWr_B),
+		//.data_StatWr_B_i(data_StatWr_B),
+		
+		//read port C
+		.Addr_StatRd_C_i(Addr_StatRd_C),
+		.rdEn_StatRd_C_i(rdEn_StatRd_C),
+		.data_StatRd_C_o(),
+
+		//write port D
+		.Addr_StatWr_D_i(Addr_StatWr_D),
+		.wrEn_StatWr_D_i(wrEn_StatWr_D),
+		.data_StatWr_D_i(data_StatWr_D),
+		
+		//read port E
+		.Addr_StatRd_E_i(Addr_StatRd_E),
+		.rdEn_StatRd_E_i(rdEn_StatRd_E),
+
+		.data_StatRd_E_o(),
+		
+		//read port F
+		.Addr_StatRd_F_i(Addr_StatRd_F),
+		.rdEn_StatRd_F_i(read_weight_fifo),
+
+		.data_StatRd_F_o(),
+
+		//write port G
+		.Addr_StatWr_G_i(Addr_StatWr_G),
+		.wrEn_StatWr_G_i(write_enable_G),
+		.data_StatWr_G_i(data_StatWr_G)
+	);
+
+
 
 `ifdef NEW_STATUS_MEMORY
 	StatusMem_Asic_Onchip_SharePort

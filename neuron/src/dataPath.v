@@ -104,6 +104,8 @@ module dataPath
 
 	parameter PRIORITY_ENC_OUT_BIT_WIDTH = 3,
 
+	parameter DSIZE = DATA_BIT_WIDTH_INT + DATA_BIT_WIDTH_FRAC,
+
 	parameter SEED = 0
 )
 (
@@ -131,6 +133,16 @@ module dataPath
 	output reg [DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC-1:0] data_StatWr_B_o	,
 	output [STDP_WIN_BIT_WIDTH-1:0] 						data_StatWr_D_o	,
 	output [DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC-1:0] 	data_StatWr_G_o	,
+
+	input [DSIZE-1:0]										data_rd_bias_i,
+	input [DSIZE-1:0]										data_rd_potential_i,
+	input [DSIZE-1:0]										data_rd_threshold_i,
+	input [STDP_WIN_BIT_WIDTH-1:0]							data_rd_posthistory_i,
+
+	output reg [DSIZE-1:0]									data_wr_bias_o,
+	output reg [DSIZE-1:0]									data_wr_potential_o,
+	output reg [DSIZE-1:0]									data_wr_threshold_o,
+	output reg [STDP_WIN_BIT_WIDTH-1:0]						data_wr_posthistory_o,
 
 	//in spike buffer
 	input 													rcl_inSpike_i	,
@@ -168,7 +180,7 @@ module dataPath
 	output													en_expired_post_history_write_back_o
 
 );
-	parameter DSIZE = DATA_BIT_WIDTH_INT + DATA_BIT_WIDTH_FRAC;
+	
 
 	//SELECT LINE ENCODING
 	//--------------------------------------------------//
@@ -219,7 +231,10 @@ module dataPath
 	reg [DSIZE-1:0] bufBias_delay[1:0];
 	reg expired_post_history_write_back_delay;
 
-	
+	//test
+	reg [DSIZE-1:0] rclAdd_B_t, bufBias_t, bufTh_t;
+	reg [STDP_WIN_BIT_WIDTH-1:0] PostSpkHist_t;
+	wire [DSIZE:0] negTh_t;
 
 	//WIRE DECLARATION
 	//--------------------------------------------------//
@@ -264,11 +279,15 @@ module dataPath
 			end
 
 			if (buffBias_i == 1'b1) begin
-				bufBias <= data_StatRd_A_i;
+				// bufBias <= data_StatRd_A_i;
+				bufBias <= data_rd_bias_i;
+				bufBias_t <= data_rd_bias_i;
 			end
 
 			if (cmp_th_i == 1'b1) begin
-				bufTh <= data_StatRd_A_i;
+				// bufTh <= data_StatRd_A_i;
+				bufTh <= data_rd_threshold_i;
+				bufTh_t <= data_rd_threshold_i;
 				rclOutSpikeReg_dly <= {comp_out,comp_out};
 				lrnOutSpikeReg <= comp_out;
 			end else begin
@@ -281,9 +300,13 @@ module dataPath
 				if (lrnOutSpikeReg == 1'b1) begin
 					PostSpkHist <= 0;
 				end else if (comp_out == 1'b1) begin
-					PostSpkHist <= data_StatRd_A_i[STDP_WIN_BIT_WIDTH-1:0] + 1;
+					// PostSpkHist <= data_StatRd_A_i[STDP_WIN_BIT_WIDTH-1:0] + 1;
+					PostSpkHist <= data_rd_posthistory_i + 1;
+					PostSpkHist_t <=data_rd_posthistory_i + 1;
 				end else begin
-					PostSpkHist <= data_StatRd_A_i[STDP_WIN_BIT_WIDTH-1:0];
+					// PostSpkHist <= data_StatRd_A_i[STDP_WIN_BIT_WIDTH-1:0];
+					PostSpkHist <= data_rd_posthistory_i;
+					PostSpkHist_t <= data_rd_posthistory_i;
 				end
 				temp_LTD_win <= LTD_Win_i;
 			end
@@ -312,7 +335,9 @@ module dataPath
 		end
 	
 	//recall adder inputs
-	assign negTh = (~data_StatRd_A_i) + 1;
+	//assign negTh = (~data_StatRd_A_i) + 1;
+	assign negTh = (~data_rd_threshold_i) + 1;
+	assign negTh_t = (~data_rd_threshold_i) + 1;
 	always @(*)	begin
 		//port A
 		rclAdd_A = AccReg;
@@ -320,10 +345,20 @@ module dataPath
 		//Port B
 		case (sel_rclAdd_B_i)
 			RCL_ADD_B_WT      : rclAdd_B = (rcl_inSpike_i == 1'b1) ? data_StatRd_E_i : 0;
-			RCL_ADD_B_BIAS    : rclAdd_B = data_StatRd_A_i;
-			RCL_ADD_B_MEMB_POT: rclAdd_B = data_StatRd_A_i;
+			// RCL_ADD_B_BIAS    : rclAdd_B = data_StatRd_A_i;
+			// RCL_ADD_B_MEMB_POT: rclAdd_B = data_StatRd_A_i;
+			RCL_ADD_B_BIAS    : rclAdd_B = data_rd_bias_i;
+			RCL_ADD_B_MEMB_POT: rclAdd_B = data_rd_potential_i;
 			default           : rclAdd_B = negTh[DSIZE-1:0];//RCL_ADD_B_NEG_TH
 		endcase
+
+		case (sel_rclAdd_B_i)
+			RCL_ADD_B_WT      : rclAdd_B_t = (rcl_inSpike_i == 1'b1) ? data_StatRd_E_i : 0;
+			RCL_ADD_B_BIAS    : rclAdd_B_t = data_rd_bias_i;
+			RCL_ADD_B_MEMB_POT: rclAdd_B_t = data_rd_potential_i;
+			default           : rclAdd_B_t = negTh_t[DSIZE-1:0];//RCL_ADD_B_NEG_TH
+		endcase
+
 	end
 
 	// Comparator:
@@ -341,7 +376,8 @@ module dataPath
 		end
 
 		if (updtPostSpkHist_i == 1'b1) begin
-			if (data_StatRd_A_i[STDP_WIN_BIT_WIDTH-1:0] <= LTD_Win_i) begin
+			//if (data_StatRd_A_i[STDP_WIN_BIT_WIDTH-1:0] <= LTD_Win_i) begin
+			if (data_rd_posthistory_i <= LTD_Win_i) begin
 				comp_out  =  1'b1 ;
 			end
 		end
@@ -380,6 +416,34 @@ module dataPath
 			end 
 		endcase
 	end
+
+	always @(*)
+		begin
+			data_wr_bias_o = updtReg_WeightBias; 
+
+			if (rclOutSpikeReg_dly[0] == 1'b1) 
+				begin
+					if (NurnType_i == 1'b1)
+						data_wr_potential_o = AccReg;
+					else
+						data_wr_potential_o = RstPot_i;	
+				end 
+			else
+				data_wr_potential_o = bufMembPot;
+
+			if (rclOutSpikeReg_dly[0] == 1'b1) 
+				begin
+					if (RandTh_i == 1'b1)
+						data_wr_threshold_o = delta_WtBias_Th;
+					else
+						data_wr_threshold_o = bufTh;
+				end
+			else
+				data_wr_threshold_o = bufTh;
+
+			data_wr_posthistory_o = post_history_mux;
+		end
+
 	assign data_StatWr_D_o = PreSpikeHist_Ppln[0];
 	assign data_StatWr_G_o = updtReg_WeightBias;
 
@@ -736,8 +800,8 @@ assign update_weight_enable_o = weight_writeback_enable_buffer[3];
 Signed_Comparator
 #(.DSIZE(DSIZE))
 Comparator
-(.A_din_i(AccReg), .B_din_i(data_StatRd_A_i), .equal(threshold_equal), .lower(), .greater(threshold_greater));
-
+// (.A_din_i(AccReg), .B_din_i(data_StatRd_A_i), .equal(threshold_equal), .lower(), .greater(threshold_greater));
+(.A_din_i(AccReg), .B_din_i(data_rd_threshold_i), .equal(threshold_equal), .lower(), .greater(threshold_greater));
 
 `ifdef DUMP_OUTPUT_SPIKE
 

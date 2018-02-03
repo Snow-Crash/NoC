@@ -125,12 +125,12 @@ module dataPath
 	input  [DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC-1:0]		FixedThreshold_i,
 
 	//status memory
-	input  [DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC-1:0] 	data_StatRd_A_i	,
+	//input  [DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC-1:0] 	data_StatRd_A_i	,
 	input  [STDP_WIN_BIT_WIDTH-1:0] 						data_StatRd_C_i	,
 	input  [DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC-1:0] 	data_StatRd_E_i	,
 	input  [DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC-1:0] 	data_StatRd_F_i	,
 
-	output reg [DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC-1:0] data_StatWr_B_o	,
+	//output reg [DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC-1:0] data_StatWr_B_o	,
 	output [STDP_WIN_BIT_WIDTH-1:0] 						data_StatWr_D_o	,
 	output [DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC-1:0] 	data_StatWr_G_o	,
 
@@ -231,10 +231,6 @@ module dataPath
 	reg [DSIZE-1:0] bufBias_delay[1:0];
 	reg expired_post_history_write_back_delay;
 
-	//test
-	reg [DSIZE-1:0] rclAdd_B_t, bufBias_t, bufTh_t;
-	reg [STDP_WIN_BIT_WIDTH-1:0] PostSpkHist_t;
-	wire [DSIZE:0] negTh_t;
 
 	//WIRE DECLARATION
 	//--------------------------------------------------//
@@ -281,13 +277,11 @@ module dataPath
 			if (buffBias_i == 1'b1) begin
 				// bufBias <= data_StatRd_A_i;
 				bufBias <= data_rd_bias_i;
-				bufBias_t <= data_rd_bias_i;
 			end
 
 			if (cmp_th_i == 1'b1) begin
 				// bufTh <= data_StatRd_A_i;
 				bufTh <= data_rd_threshold_i;
-				bufTh_t <= data_rd_threshold_i;
 				rclOutSpikeReg_dly <= {comp_out,comp_out};
 				lrnOutSpikeReg <= comp_out;
 			end else begin
@@ -302,11 +296,9 @@ module dataPath
 				end else if (comp_out == 1'b1) begin
 					// PostSpkHist <= data_StatRd_A_i[STDP_WIN_BIT_WIDTH-1:0] + 1;
 					PostSpkHist <= data_rd_posthistory_i + 1;
-					PostSpkHist_t <=data_rd_posthistory_i + 1;
 				end else begin
 					// PostSpkHist <= data_StatRd_A_i[STDP_WIN_BIT_WIDTH-1:0];
 					PostSpkHist <= data_rd_posthistory_i;
-					PostSpkHist_t <= data_rd_posthistory_i;
 				end
 				temp_LTD_win <= LTD_Win_i;
 			end
@@ -337,7 +329,6 @@ module dataPath
 	//recall adder inputs
 	//assign negTh = (~data_StatRd_A_i) + 1;
 	assign negTh = (~data_rd_threshold_i) + 1;
-	assign negTh_t = (~data_rd_threshold_i) + 1;
 	always @(*)	begin
 		//port A
 		rclAdd_A = AccReg;
@@ -350,13 +341,6 @@ module dataPath
 			RCL_ADD_B_BIAS    : rclAdd_B = data_rd_bias_i;
 			RCL_ADD_B_MEMB_POT: rclAdd_B = data_rd_potential_i;
 			default           : rclAdd_B = negTh[DSIZE-1:0];//RCL_ADD_B_NEG_TH
-		endcase
-
-		case (sel_rclAdd_B_i)
-			RCL_ADD_B_WT      : rclAdd_B_t = (rcl_inSpike_i == 1'b1) ? data_StatRd_E_i : 0;
-			RCL_ADD_B_BIAS    : rclAdd_B_t = data_rd_bias_i;
-			RCL_ADD_B_MEMB_POT: rclAdd_B_t = data_rd_potential_i;
-			default           : rclAdd_B_t = negTh_t[DSIZE-1:0];//RCL_ADD_B_NEG_TH
 		endcase
 
 	end
@@ -385,37 +369,37 @@ module dataPath
 
 
 	//writeback
-	assign postSpike_pad = 0;
-	always@(*) begin
-		case(sel_wrBackStat_B_i)
-			WR_BACK_STAT_B_BIAS: begin 
-			 	data_StatWr_B_o = updtReg_WeightBias; 
-			end
-			WR_BACK_STAT_B_MEMB_POT: begin
-				if (rclOutSpikeReg_dly[0] == 1'b1) begin
-					if (NurnType_i == 1'b1) begin
-						data_StatWr_B_o = AccReg;
-					end else begin
-						data_StatWr_B_o = RstPot_i;	
-					end
-				end else begin
-					data_StatWr_B_o = bufMembPot;
-				end
-			end 
-			WR_BACK_STAT_B_TH: begin
-				data_StatWr_B_o = bufTh;
-				if (rclOutSpikeReg_dly[0] == 1'b1) begin
-					if (RandTh_i == 1'b1) begin
-						data_StatWr_B_o = delta_WtBias_Th;	
-					end
-				end
-			end
-			default: begin //WR_BACK_STAT_B_POST_HIST
-				//data_StatWr_B_o = {postSpike_pad,PostSpkHist}; 
-				data_StatWr_B_o = {postSpike_pad,post_history_mux}; 
-			end 
-		endcase
-	end
+	// assign postSpike_pad = 0;
+	// always@(*) begin
+	// 	case(sel_wrBackStat_B_i)
+	// 		WR_BACK_STAT_B_BIAS: begin 
+	// 		 	data_StatWr_B_o = updtReg_WeightBias; 
+	// 		end
+	// 		WR_BACK_STAT_B_MEMB_POT: begin
+	// 			if (rclOutSpikeReg_dly[0] == 1'b1) begin
+	// 				if (NurnType_i == 1'b1) begin
+	// 					data_StatWr_B_o = AccReg;
+	// 				end else begin
+	// 					data_StatWr_B_o = RstPot_i;	
+	// 				end
+	// 			end else begin
+	// 				data_StatWr_B_o = bufMembPot;
+	// 			end
+	// 		end 
+	// 		WR_BACK_STAT_B_TH: begin
+	// 			data_StatWr_B_o = bufTh;
+	// 			if (rclOutSpikeReg_dly[0] == 1'b1) begin
+	// 				if (RandTh_i == 1'b1) begin
+	// 					data_StatWr_B_o = delta_WtBias_Th;	
+	// 				end
+	// 			end
+	// 		end
+	// 		default: begin //WR_BACK_STAT_B_POST_HIST
+	// 			//data_StatWr_B_o = {postSpike_pad,PostSpkHist}; 
+	// 			data_StatWr_B_o = {postSpike_pad,post_history_mux}; 
+	// 		end 
+	// 	endcase
+	// end
 
 	always @(*)
 		begin

@@ -87,7 +87,7 @@ module NurnCtrlr
 `endif
 
 	//status mem
-	output reg [NURN_CNT_BIT_WIDTH+2-1:0] 				Addr_StatRd_A_o,
+	output reg [NURN_CNT_BIT_WIDTH-1:0] 				Addr_StatRd_A_o,
 	output reg											rdEn_StatRd_A_o	,
 
 	output reg [NURN_CNT_BIT_WIDTH-1:0] 				Addr_StatWr_B_o,
@@ -443,19 +443,24 @@ module NurnCtrlr
 	always @(*) begin
 		//status read port A
 		rdEn_StatRd_A_o = 1'b0;
-		Addr_StatRd_A_o = {rclCntr_Nurn,2'b00};
+		//Addr_StatRd_A_o = {rclCntr_Nurn,2'b00};
+		Addr_StatRd_A_o = rclCntr_Nurn;
 		if (StatRd_A_bias == 1'b1) begin
 			rdEn_StatRd_A_o = 1'b1;
-			Addr_StatRd_A_o = {rclCntr_Nurn,2'b00};
+			//Addr_StatRd_A_o = {rclCntr_Nurn,2'b00};
+			Addr_StatRd_A_o = rclCntr_Nurn;
 		end else if (StatRd_A_MembPot == 1'b1) begin
 			rdEn_StatRd_A_o = 1'b1;
-			Addr_StatRd_A_o = {rclCntr_Nurn,2'b01};
+			// Addr_StatRd_A_o = {rclCntr_Nurn,2'b01};
+			Addr_StatRd_A_o = rclCntr_Nurn;
 		end else if (StatRd_A_Th == 1'b1) begin
 			rdEn_StatRd_A_o = 1'b1;
-			Addr_StatRd_A_o = {rclCntr_Nurn,2'b10};
+			// Addr_StatRd_A_o = {rclCntr_Nurn,2'b10};
+			Addr_StatRd_A_o = rclCntr_Nurn;
 		end else if (rdPostSpkHist == 1'b1) begin
 			rdEn_StatRd_A_o = 1'b1;
-			Addr_StatRd_A_o = {rclNurnAddr_buff,2'b11};
+			// Addr_StatRd_A_o = {rclNurnAddr_buff,2'b11};
+			Addr_StatRd_A_o = rclNurnAddr_buff;
 		end
 
 		//status write port B

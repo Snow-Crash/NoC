@@ -17,15 +17,18 @@ module StatusMem_Asic_Onchip_Splitport
 	
 	parameter STOP_STEP = 5,
 	
-	parameter NUM_NURNS    = 256  ,
-	parameter NUM_AXONS    = 256  ,
+	parameter NUM_NURNS = 256  ,
+	parameter NUM_AXONS = 256  ,
 
-	parameter DSIZE    = 16 ,
+	parameter DSIZE = 16 ,
 
-	parameter NURN_CNT_BIT_WIDTH   = 8 ,
-	parameter AXON_CNT_BIT_WIDTH   = 8 ,
+	parameter NURN_CNT_BIT_WIDTH = 8 ,
+	parameter AXON_CNT_BIT_WIDTH = 8 ,
 
 	parameter STDP_WIN_BIT_WIDTH = 8,
+
+    parameter DATA_BIT_WIDTH_INT = 8,
+    parameter DATA_BIT_WIDTH_FRAC = 8 ,
 
 	
 	parameter X_ID = "1",
@@ -41,7 +44,7 @@ module StatusMem_Asic_Onchip_Splitport
 	input 												rst_n_i,
 
 	//read port A
-	input [NURN_CNT_BIT_WIDTH+2-1:0] 					Addr_StatRd_A_i,
+	input [NURN_CNT_BIT_WIDTH-1:0] 					    Addr_StatRd_A_i,
 	input 												read_enable_bias_i,
     input                                               read_enable_potential_i,
     input                                               read_enable_threshold_i,
@@ -52,21 +55,18 @@ module StatusMem_Asic_Onchip_Splitport
     input [DSIZE-1:0]                                   data_wr_threshold_i,
     input [STDP_WIN_BIT_WIDTH-1:0]                      data_wr_posthistory_i,
 
-    input write_enable_bias_i,
-    input write_enable_potential_i,
-    input write_enable_threshold_i,
-    input write_enable_posthistory_i,
+    input                                               write_enable_bias_i,
+    input                                               write_enable_potential_i,
+    input                                               write_enable_threshold_i,
+    input                                                  write_enable_posthistory_i,
 
     output [DSIZE-1:0]                                  data_rd_bias_o,
     output [DSIZE-1:0]                                  data_rd_potential_o,
     output [DSIZE-1:0]                                  data_rd_threshold_o,
     output [STDP_WIN_BIT_WIDTH-1:0]                     data_rd_posthistory_o,
 
-	//output reg [DSIZE-1:0]								data_StatRd_A_o,
-
 	//write port B
 	input [NURN_CNT_BIT_WIDTH-1:0] 						Addr_StatWr_B_i,
-	//input [DSIZE-1:0]									data_StatWr_B_i,
 	
 	//read port C
 	input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	Addr_StatRd_C_i,
@@ -130,19 +130,15 @@ module StatusMem_Asic_Onchip_Splitport
     reg [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]                        read_address_register_prehistory;
     reg [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]                        read_address_register_weight_E, read_address_register_weight_F;
 
-    wire [DSIZE-1:0] data_out_bias_o, data_out_potential_o, data_out_threshold_o, data_out_weight_o;
-    wire [STDP_WIN_BIT_WIDTH-1:0] data_out_posthistory_o;
-    wire [NURN_CNT_BIT_WIDTH-1:0] addr_b;
-    reg [1:0] sel_A_reg;
 	wire [DSIZE-1:0] data_StatRd_E, data_StatRd_F;
 	reg fifo_write_enable;
 
-    assign addr_b = Addr_StatWr_B_i;
+    
     //memory bias
 	always @(posedge clk_i)
         begin
 	        if (read_enable_bias_i == 1'b1)
-	            read_address_register_bias <= Addr_StatRd_A_i[NURN_CNT_BIT_WIDTH+2-1:2];
+	            read_address_register_bias <= Addr_StatRd_A_i;
 		    if (write_enable_bias_i == 1'b1)
 			    Mem_Bias[Addr_StatWr_B_i] <= data_wr_bias_i;
         end
@@ -151,7 +147,7 @@ module StatusMem_Asic_Onchip_Splitport
     always @(posedge clk_i)
         begin
 	        if (read_enable_potential_i == 1'b1)
-	            read_address_register_potential <= Addr_StatRd_A_i[NURN_CNT_BIT_WIDTH+2-1:2];
+	            read_address_register_potential <= Addr_StatRd_A_i;
 		    if (write_enable_potential_i == 1'b1)
 			    Mem_Potential[Addr_StatWr_B_i] <= data_wr_potential_i;
         end
@@ -160,7 +156,7 @@ module StatusMem_Asic_Onchip_Splitport
     always @(posedge clk_i)
         begin
 	        if (read_enable_threshold_i == 1'b1)
-	            read_address_register_threshold <= Addr_StatRd_A_i[NURN_CNT_BIT_WIDTH+2-1:2];
+	            read_address_register_threshold <= Addr_StatRd_A_i;
 		    if (write_enable_threshold_i == 1'b1)
 			    Mem_Threshold[Addr_StatWr_B_i] <= data_wr_threshold_i;
         end
@@ -169,7 +165,7 @@ module StatusMem_Asic_Onchip_Splitport
     always @(posedge clk_i)
         begin
 	        if (read_enable_posthistory_i == 1'b1)
-	            read_address_register_posthistory <= Addr_StatRd_A_i[NURN_CNT_BIT_WIDTH+2-1:2];
+	            read_address_register_posthistory <= Addr_StatRd_A_i;
 		    if (write_enable_posthistory_i == 1'b1)
 			    Mem_PostHistory[Addr_StatWr_B_i] <= data_wr_posthistory_i;
         end
@@ -193,44 +189,6 @@ module StatusMem_Asic_Onchip_Splitport
         end
     assign data_StatRd_E = Mem_Weight[read_address_register_weight_E];
 	assign data_StatRd_E_o = data_StatRd_E;
-
-    // always @(posedge clk_i)
-    //     begin
-	//         if (rdEn_StatRd_F_i == 1'b1)
-	//             read_address_register_weight_F <= Addr_StatRd_F_i;
-	// 	    if (wrEn_StatWr_G_i == 1'b1)
-	// 		    Mem_Weight2[wrEn_StatWr_G_i] <= data_StatWr_G_i;
-    //     end
-    // assign data_StatRd_F_o = Mem_Weight2[read_address_register_weight_F];
-
-
-//test
-// always @(posedge clk_i or negedge rst_n_i)
-// 	begin
-// 		if (rst_n_i == 1'b0)
-// 			sel_A_reg <= 1'b0;
-// 		else
-// 			sel_A_reg <= Addr_StatRd_A_i[1:0];
-// 	end
-
-// always @(*)
-// 	begin
-// 		data_StatRd_A_o = 0;
-// 		case (sel_A_reg)
-// 	        2'b00: begin
-// 	        	data_StatRd_A_o = data_out_bias_o;//Bias
-// 	        end
-// 	        2'b01: begin
-// 	        	data_StatRd_A_o = data_out_potential_o;//MembPot
-// 	        end
-// 	        2'b10: begin
-// 	        	data_StatRd_A_o = data_out_threshold_o;//Th
-// 	        end
-// 	        default: begin//2'b11
-// 	        	data_StatRd_A_o = data_out_posthistory_o;//PostSpikeHist
-// 	        end
-// 		endcase
-// 	end
 
 always @(posedge clk_i or negedge rst_n_i)
 	begin

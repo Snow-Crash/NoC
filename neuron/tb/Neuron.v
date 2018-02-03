@@ -86,7 +86,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_Config_C, Addr_StatRd_C;
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_StatWr_D, Addr_StatRd_E;
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_StatRd_F, Addr_StatWr_G;
-	wire [NURN_CNT_BIT_WIDTH+2-1:0] Addr_StatRd_A;
+	wire [NURN_CNT_BIT_WIDTH-1:0] Addr_StatRd_A;
 	wire [NURN_CNT_BIT_WIDTH-1:0] Addr_StatWr_B;
 	//wire shift_writeback_en_buffer;
 	wire expired_post_history_write_back;
@@ -278,12 +278,12 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 		.FixedThreshold_i	(FixedThreshold),
 
 		//status memory
-		.data_StatRd_A_i 	( data_StatRd_A ),
+		//.data_StatRd_A_i 	( data_StatRd_A ),
 		.data_StatRd_C_i 	( data_StatRd_C ),
 		.data_StatRd_E_i 	( data_StatRd_E ),
 		.data_StatRd_F_i 	( data_StatRd_F ),
 
-		.data_StatWr_B_o 	( data_StatWr_B ),
+		//.data_StatWr_B_o 	( data_StatWr_B ),
 		.data_StatWr_D_o 	( data_StatWr_D ),
 		.data_StatWr_G_o 	( data_StatWr_G ),
 
@@ -506,10 +506,10 @@ ConfigMem_Asic
 		.write_enable_posthistory_i						(write_enable_posthistory),
 
 		//.data_StatRd_A_o								(data_StatRd_A),
-		.data_wr_bias_i(data_wr_bias),
-		.data_wr_potential_i(data_wr_potential),
-		.data_wr_threshold_i(data_wr_threshold),
-		.data_wr_posthistory_i(data_wr_posthistory),
+		.data_wr_bias_i									(data_wr_bias),
+		.data_wr_potential_i							(data_wr_potential),
+		.data_wr_threshold_i							(data_wr_threshold),
+		.data_wr_posthistory_i							(data_wr_posthistory),
 
 		.data_rd_bias_o(data_rd_bias),
 		.data_rd_potential_o(data_rd_potential),
@@ -519,83 +519,6 @@ ConfigMem_Asic
 		//write port B
 		.Addr_StatWr_B_i(Addr_StatWr_B),
 		//.data_StatWr_B_i(data_StatWr_B),
-		
-		//read port C
-		.Addr_StatRd_C_i(Addr_StatRd_C),
-		.rdEn_StatRd_C_i(rdEn_StatRd_C),
-		.data_StatRd_C_o(),
-
-		//write port D
-		.Addr_StatWr_D_i(Addr_StatWr_D),
-		.wrEn_StatWr_D_i(wrEn_StatWr_D),
-		.data_StatWr_D_i(data_StatWr_D),
-		
-		//read port E
-		.Addr_StatRd_E_i(Addr_StatRd_E),
-		.rdEn_StatRd_E_i(rdEn_StatRd_E),
-
-		.data_StatRd_E_o(),
-		
-		//read port F
-		.Addr_StatRd_F_i(Addr_StatRd_F),
-		.rdEn_StatRd_F_i(read_weight_fifo),
-
-		.data_StatRd_F_o(),
-
-		//write port G
-		.Addr_StatWr_G_i(Addr_StatWr_G),
-		.wrEn_StatWr_G_i(write_enable_G),
-		.data_StatWr_G_i(data_StatWr_G)
-	);
-
-
-
-`ifdef NEW_STATUS_MEMORY
-	StatusMem_Asic_Onchip_SharePort
-	#(
-		
-		.STOP_STEP(STOP_STEP),
-		
-		.NUM_NURNS(NUM_NURNS),
-		.NUM_AXONS(NUM_AXONS),
-
-		.DSIZE(DSIZE),
-
-		.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
-		.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
-
-		.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
-
-		
-		.X_ID(X_ID),
-		.Y_ID(Y_ID),
-		.SIM_PATH(SIM_PATH),
-		.SYNTH_PATH(SYNTH_PATH)
-	)
-	StatusMem_Asic
-	(
-
-		.start_i(start),
-		.clk_i(clk),
-		.rst_n_i(rst_n),
-
-		//read port A
-		.Addr_StatRd_A_i								(Addr_StatRd_A),
-		.read_enable_bias_i								(read_enable_bias),
-		.read_enable_potential_i						(read_enable_potential),
-		.read_enable_threshold_i						(read_enable_threshold),
-		.read_enable_posthistory_i						(read_enable_posthistory),
-
-		.write_enable_bias_i 							(write_enable_bias),
-		.write_enable_potential_i						(write_enable_potential),
-		.write_enable_threshold_i						(write_enable_threshold),
-		.write_enable_posthistory_i						(write_enable_posthistory),
-
-		.data_StatRd_A_o								(data_StatRd_A),
-
-		//write port B
-		.Addr_StatWr_B_i(Addr_StatWr_B),
-		.data_StatWr_B_i(data_StatWr_B),
 		
 		//read port C
 		.Addr_StatRd_C_i(Addr_StatRd_C),
@@ -624,83 +547,160 @@ ConfigMem_Asic
 		.wrEn_StatWr_G_i(write_enable_G),
 		.data_StatWr_G_i(data_StatWr_G)
 	);
-`else
-	StatusMem
-	#(
+
+
+
+// `ifdef NEW_STATUS_MEMORY
+// 	StatusMem_Asic_Onchip_SharePort
+// 	#(
 		
-		.STOP_STEP(STOP_STEP),
+// 		.STOP_STEP(STOP_STEP),
+		
+// 		.NUM_NURNS(NUM_NURNS),
+// 		.NUM_AXONS(NUM_AXONS),
+
+// 		.DSIZE(DSIZE),
+
+// 		.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
+// 		.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+
+// 		.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
+
+		
+// 		.X_ID(X_ID),
+// 		.Y_ID(Y_ID),
+// 		.SIM_PATH(SIM_PATH),
+// 		.SYNTH_PATH(SYNTH_PATH)
+// 	)
+// 	StatusMem_Asic
+// 	(
+
+// 		.start_i(start),
+// 		.clk_i(clk),
+// 		.rst_n_i(rst_n),
+
+// 		//read port A
+// 		.Addr_StatRd_A_i								(Addr_StatRd_A),
+// 		.read_enable_bias_i								(read_enable_bias),
+// 		.read_enable_potential_i						(read_enable_potential),
+// 		.read_enable_threshold_i						(read_enable_threshold),
+// 		.read_enable_posthistory_i						(read_enable_posthistory),
+
+// 		.write_enable_bias_i 							(write_enable_bias),
+// 		.write_enable_potential_i						(write_enable_potential),
+// 		.write_enable_threshold_i						(write_enable_threshold),
+// 		.write_enable_posthistory_i						(write_enable_posthistory),
+
+// 		.data_StatRd_A_o								(data_StatRd_A),
+
+// 		//write port B
+// 		.Addr_StatWr_B_i(Addr_StatWr_B),
+// 		.data_StatWr_B_i(data_StatWr_B),
+		
+// 		//read port C
+// 		.Addr_StatRd_C_i(Addr_StatRd_C),
+// 		.rdEn_StatRd_C_i(rdEn_StatRd_C),
+// 		.data_StatRd_C_o(data_StatRd_C),
+
+// 		//write port D
+// 		.Addr_StatWr_D_i(Addr_StatWr_D),
+// 		.wrEn_StatWr_D_i(wrEn_StatWr_D),
+// 		.data_StatWr_D_i(data_StatWr_D),
+		
+// 		//read port E
+// 		.Addr_StatRd_E_i(Addr_StatRd_E),
+// 		.rdEn_StatRd_E_i(rdEn_StatRd_E),
+
+// 		.data_StatRd_E_o(data_StatRd_E),
+		
+// 		//read port F
+// 		.Addr_StatRd_F_i(Addr_StatRd_F),
+// 		.rdEn_StatRd_F_i(read_weight_fifo),
+
+// 		.data_StatRd_F_o(data_StatRd_F),
+
+// 		//write port G
+// 		.Addr_StatWr_G_i(Addr_StatWr_G),
+// 		.wrEn_StatWr_G_i(write_enable_G),
+// 		.data_StatWr_G_i(data_StatWr_G)
+// 	);
+// `else
+// 	StatusMem
+// 	#(
+		
+// 		.STOP_STEP(STOP_STEP),
 		
 
-		.NUM_NURNS    		( NUM_NURNS ),
-		.NUM_AXONS    		( NUM_AXONS ),
+// 		.NUM_NURNS    		( NUM_NURNS ),
+// 		.NUM_AXONS    		( NUM_AXONS ),
 
-		.DSIZE				( DSIZE ),
+// 		.DSIZE				( DSIZE ),
 
-		.NURN_CNT_BIT_WIDTH ( NURN_CNT_BIT_WIDTH ),
-		.AXON_CNT_BIT_WIDTH ( AXON_CNT_BIT_WIDTH ),
+// 		.NURN_CNT_BIT_WIDTH ( NURN_CNT_BIT_WIDTH ),
+// 		.AXON_CNT_BIT_WIDTH ( AXON_CNT_BIT_WIDTH ),
 
-		.STDP_WIN_BIT_WIDTH ( STDP_WIN_BIT_WIDTH ),
+// 		.STDP_WIN_BIT_WIDTH ( STDP_WIN_BIT_WIDTH ),
 
-		.X_ID				(X_ID),
-		.Y_ID				(Y_ID),
-		.SIM_PATH			(SIM_PATH),
-		.SYNTH_PATH			(SYNTH_PATH)
-		//.BIAS_MIF_PATH		(BIAS_MIF_PATH),
-		//.MEMBPOT_MIF_PATH	(MEMBPOT_MIF_PATH),
-		//.TH_MIF_PATH		(TH_MIF_PATH),
-		//.POSTSPIKEHISTORY_MIF_PATH	(POSTSPIKEHISTORY_MIF_PATH),
-		//.PRESPIKEHISTORY_MIF_PATH	(PRESPIKEHISTORY_MIF_PATH),
-		//.WEIGHTS_MIF_PATH 	(WEIGHTS_MIF_PATH)
+// 		.X_ID				(X_ID),
+// 		.Y_ID				(Y_ID),
+// 		.SIM_PATH			(SIM_PATH),
+// 		.SYNTH_PATH			(SYNTH_PATH)
+// 		//.BIAS_MIF_PATH		(BIAS_MIF_PATH),
+// 		//.MEMBPOT_MIF_PATH	(MEMBPOT_MIF_PATH),
+// 		//.TH_MIF_PATH		(TH_MIF_PATH),
+// 		//.POSTSPIKEHISTORY_MIF_PATH	(POSTSPIKEHISTORY_MIF_PATH),
+// 		//.PRESPIKEHISTORY_MIF_PATH	(PRESPIKEHISTORY_MIF_PATH),
+// 		//.WEIGHTS_MIF_PATH 	(WEIGHTS_MIF_PATH)
 
-	)
-	STATUSMEM
-	(
-		`ifdef DUMP_MEMORY
-			.start_i(start),
-		`endif
-		.clk_i				( clk   ),
-		.rst_n_i			( rst_n ),
+// 	)
+// 	STATUSMEM
+// 	(
+// 		`ifdef DUMP_MEMORY
+// 			.start_i(start),
+// 		`endif
+// 		.clk_i				( clk   ),
+// 		.rst_n_i			( rst_n ),
 
-		//read port A
-		.Addr_StatRd_A_i	( Addr_StatRd_A ),
-		.rdEn_StatRd_A_i	( rdEn_StatRd_A ),
+// 		//read port A
+// 		.Addr_StatRd_A_i	( Addr_StatRd_A ),
+// 		.rdEn_StatRd_A_i	( rdEn_StatRd_A ),
 
-		.data_StatRd_A_o 	( data_StatRd_A ),
+// 		.data_StatRd_A_o 	( data_StatRd_A ),
 
-		//write port B
-		.Addr_StatWr_B_i	( Addr_StatWr_B ),
-		.wrEn_StatWr_B_i	( wrEn_StatWr_B ),
-		.data_StatWr_B_i	( data_StatWr_B ),
+// 		//write port B
+// 		.Addr_StatWr_B_i	( Addr_StatWr_B ),
+// 		.wrEn_StatWr_B_i	( wrEn_StatWr_B ),
+// 		.data_StatWr_B_i	( data_StatWr_B ),
 		
-		//read port C
-		.Addr_StatRd_C_i	( Addr_StatRd_C ),
-		.rdEn_StatRd_C_i	( rdEn_StatRd_C ),
+// 		//read port C
+// 		.Addr_StatRd_C_i	( Addr_StatRd_C ),
+// 		.rdEn_StatRd_C_i	( rdEn_StatRd_C ),
 
-		.data_StatRd_C_o    ( data_StatRd_C ),
+// 		.data_StatRd_C_o    ( data_StatRd_C ),
 
-		//write port D
-		.Addr_StatWr_D_i	( Addr_StatWr_D ),
-		.wrEn_StatWr_D_i	( wrEn_StatWr_D ),
-		.data_StatWr_D_i	( data_StatWr_D ),	
+// 		//write port D
+// 		.Addr_StatWr_D_i	( Addr_StatWr_D ),
+// 		.wrEn_StatWr_D_i	( wrEn_StatWr_D ),
+// 		.data_StatWr_D_i	( data_StatWr_D ),	
 					
-		//read port E
-		.Addr_StatRd_E_i	( Addr_StatRd_E ),
-		.rdEn_StatRd_E_i	( rdEn_StatRd_E ),
+// 		//read port E
+// 		.Addr_StatRd_E_i	( Addr_StatRd_E ),
+// 		.rdEn_StatRd_E_i	( rdEn_StatRd_E ),
 
-		.data_StatRd_E_o 	( data_StatRd_E ),
+// 		.data_StatRd_E_o 	( data_StatRd_E ),
 		
-		//read port F
-		.Addr_StatRd_F_i	( Addr_StatRd_F ),
-		.rdEn_StatRd_F_i	( rdEn_StatRd_F ),
+// 		//read port F
+// 		.Addr_StatRd_F_i	( Addr_StatRd_F ),
+// 		.rdEn_StatRd_F_i	( rdEn_StatRd_F ),
 
-		.data_StatRd_F_o 	( data_StatRd_F ),
+// 		.data_StatRd_F_o 	( data_StatRd_F ),
 
-		//write port G
-		.Addr_StatWr_G_i	( Addr_StatWr_G ),
-		.wrEn_StatWr_G_i	( write_enable_G ),
-		.data_StatWr_G_i 	( data_StatWr_G )
-	);
-`endif
+// 		//write port G
+// 		.Addr_StatWr_G_i	( Addr_StatWr_G ),
+// 		.wrEn_StatWr_G_i	( write_enable_G ),
+// 		.data_StatWr_G_i 	( data_StatWr_G )
+// 	);
+// `endif
 
 	assign write_enable_G = update_weight_enable & wrEn_StatWr_G;
 

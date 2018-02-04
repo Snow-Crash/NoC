@@ -721,15 +721,18 @@ module NurnCtrlr
 				begin
 					read_enable_bias_o = 1'b1;
 				end 
-			else if (StatRd_A_MembPot == 1'b1) 
+			//else if (StatRd_A_MembPot == 1'b1)
+			if (StatRd_A_MembPot == 1'b1) 
 				begin
 					read_enable_potential_o = 1'b1;
 				end 
-			else if (StatRd_A_Th == 1'b1) 
+			//else if (StatRd_A_Th == 1'b1) 
+			if (StatRd_A_Th == 1'b1) 
 				begin
 					read_enable_threshold_o = 1'b1;
 				end 
-			else if (rdPostSpkHist == 1'b1) 
+			//else if (rdPostSpkHist == 1'b1) 
+			if (rdPostSpkHist == 1'b1) 
 				begin
 					read_enable_posthistory_o = 1'b1;
 				end

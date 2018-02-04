@@ -492,6 +492,7 @@ ConfigMem_Asic
 		.start_i(start),
 		.clk_i(clk),
 		.rst_n_i(rst_n),
+		.ce(1'b1),
 
 		//read port A
 		.Addr_StatRd_A_i								(Addr_StatRd_A),

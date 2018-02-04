@@ -42,6 +42,7 @@ module StatusMem_Asic
 	input												start_i,
 	input 												clk_i,
 	input 												rst_n_i,
+	input												ce,
 
 	//read port A
 	input [NURN_CNT_BIT_WIDTH-1:0] 					    Addr_StatRd_A_i,
@@ -133,8 +134,74 @@ module StatusMem_Asic
 	wire [DSIZE-1:0] data_StatRd_E, data_StatRd_F;
 	reg fifo_write_enable;
 
-    
-    //memory bias
+`ifdef SINGLE_PORT_STATUS_MEM
+
+	reg [DSIZE-1:0] Mem_Bias_dout, Mem_Potential_dout, Mem_Threshold_dout;
+	reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PostHistory_dout;
+`endif
+
+`ifdef SINGLE_PORT_STATUS_MEM
+	always  @(posedge clk_i)
+		begin
+			if(ce)  
+				begin
+					if(write_enable_bias_i)  
+						begin
+							Mem_Bias[Addr_StatWr_B_i] <= data_wr_bias_i;
+							Mem_Bias_dout <= data_wr_bias_i;
+						end
+					else
+						Mem_Bias_dout <= Mem_Bias[Addr_StatRd_A_i];
+				end
+		end
+	assign data_rd_bias_o = Mem_Bias_dout;
+
+	always  @(posedge clk_i)
+		begin
+			if(ce)  
+				begin
+					if(write_enable_potential_i)  
+						begin
+							Mem_Potential[Addr_StatWr_B_i] <= data_wr_potential_i;
+							Mem_Potential_dout <= data_wr_potential_i;
+						end
+					else
+						Mem_Potential_dout <= Mem_Potential[Addr_StatRd_A_i];
+				end
+		end
+	assign data_rd_potential_o = Mem_Potential_dout;
+
+	always  @(posedge clk_i)
+		begin
+			if(ce)  
+				begin
+					if(write_enable_posthistory_i)  
+						begin
+							Mem_PostHistory[Addr_StatWr_B_i] <= data_wr_posthistory_i;
+							Mem_PostHistory_dout <= data_wr_posthistory_i;
+						end
+					else
+						Mem_PostHistory_dout <= Mem_PostHistory[Addr_StatRd_A_i];
+				end
+		end
+	assign data_rd_posthistory_o = Mem_PostHistory_dout;
+
+	always  @(posedge clk_i)
+		begin
+			if(ce)  
+				begin
+					if(write_enable_threshold_i)  
+						begin
+							Mem_Threshold[Addr_StatWr_B_i] <= data_wr_threshold_i;
+							Mem_Threshold_dout <= data_wr_threshold_i;
+						end
+					else
+						Mem_Threshold_dout <= Mem_Threshold[Addr_StatRd_A_i];
+				end
+		end
+	assign data_rd_threshold_o = Mem_Threshold_dout;
+`else    
+    memory bias
 	always @(posedge clk_i)
         begin
 	        if (read_enable_bias_i == 1'b1)
@@ -170,6 +237,7 @@ module StatusMem_Asic
 			    Mem_PostHistory[Addr_StatWr_B_i] <= data_wr_posthistory_i;
         end
     assign data_rd_posthistory_o = Mem_PostHistory[read_address_register_posthistory];
+`endif
 
     always @(posedge clk_i)
         begin
@@ -251,17 +319,17 @@ weight_fifo
 			logical_axon_connectivity_file_name = {SIM_PATH, "data", DIR_ID, "/logical_axon_connectivity.txt"};	
 			$readmemh (logical_axon_connectivity_file_name, logical_axon_connectivity);
 
-			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_Bias_test.csv"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_Bias.csv"};
 			f1 = $fopen(dump_file_name,"w");
-			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_MembPot_test.csv"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_MembPot.csv"};
 			f2 = $fopen(dump_file_name,"w");
-			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_Threshold_test.csv"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_Threshold.csv"};
 			f3 = $fopen(dump_file_name,"w");
-			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_PostHist_test.csv"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_PostHist.csv"};
 			f4 = $fopen(dump_file_name,"w");
-			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_PreHist_test.csv"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_PreHist.csv"};
 			f5 = $fopen(dump_file_name,"w");
-			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_Weights_test.csv"};
+			dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_Weights.csv"};
 			f6 = $fopen(dump_file_name,"w");
 			//write header
 			$fwrite(f1, "address,");

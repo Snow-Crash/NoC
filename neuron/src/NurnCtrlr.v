@@ -30,7 +30,7 @@
 
 `include "neuron_define.v"
 // `timescale 1ns/100ps
-//`define SEPARATE_ADDRESS
+`define SEPARATE_ADDRESS
 
 module NurnCtrlr
 #(
@@ -114,15 +114,15 @@ module NurnCtrlr
 	output reg [NURN_CNT_BIT_WIDTH-1:0]						read_address_potential_o,
 	output reg [NURN_CNT_BIT_WIDTH-1:0]						read_address_threshold_o,
 	output reg [NURN_CNT_BIT_WIDTH-1:0]						read_address_posthistory_o,
-	output reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]	read_address_prehistory_o,
-	output reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]	read_address_weight_o,
+	// output reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]	read_address_prehistory_o,
+	// output reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]	read_address_weight_o,
 
 	output reg [NURN_CNT_BIT_WIDTH-1:0]						write_address_bias_o,
 	output reg [NURN_CNT_BIT_WIDTH-1:0]						write_address_potential_o,
 	output reg [NURN_CNT_BIT_WIDTH-1:0]						write_address_threshold_o,
 	output reg [NURN_CNT_BIT_WIDTH-1:0]						write_address_posthistory_o,
-	output reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]	write_address_prehistory_o,
-	output reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]	write_address_weight_o,
+	// output reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]	write_address_prehistory_o,
+	// output reg [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]	write_address_weight_o,
 `endif
 
 	//asic status memory
@@ -663,35 +663,29 @@ module NurnCtrlr
 	//assign write_enable_prehistory_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
 	//assign write_enable_weight_o = PStgEn_wrBack & inc_wrBackAddr_Pipln[0];
 
+// read and write address generate
 `ifdef SEPARATE_ADDRESS
 	always @(*)
 		begin
-			write_address_bias_o = rclNurnAddr_buff;
+			write_address_bias_o = lrnWrBack_Nurn;
 			write_address_potential_o = rclNurnAddr_buff;
-			write_address_posthistory_o = rclNurnAddr_buff;
 			write_address_threshold_o = rclNurnAddr_buff;
-				if (LrnBias_Pipln[0] == 1'b1) 
-					begin
-						write_address_bias_o = lrnWrBack_Nurn;
-					end 
-				else if (wr_MembPot_dly[0] == 1'b1) 
-					begin
-						write_address_potential_o = rclNurnAddr_buff;
-					end 
-				else if (wrEn_th_dly[0] == 1'b1) 
-					begin
-						write_address_threshold_o = rclNurnAddr_buff;
-					end 
-				else if (wrPostSpkHist == 1'b1) 
-					begin
-						write_address_posthistory_o = rclNurnAddr_buff;
-					end 
-				else if (expired_post_history_write_back_delay == 1'b1) 
-					begin
-						write_address_posthistory_o = lrnWrBack_Nurn;
-					end
-			write_address_prehistory_o = {lrnWrBack_Nurn,lrnWrBackCntr_Axon};
-			write_address_weight_o =  {lrnWrBack_Nurn,lrnWrBackCntr_Axon};
+			
+			// two ways to generate post history address, seems results are the same
+			// need to check which one is better.
+			write_address_posthistory_o = rclNurnAddr_buff;
+			// if (expired_post_history_write_back_delay == 1'b1) 
+			// 	write_address_posthistory_o = lrnWrBack_Nurn;
+			// else
+			// 	write_address_posthistory_o = rclNurnAddr_buff;
+
+			read_address_bias_o = rclCntr_Nurn;
+			read_address_potential_o = rclCntr_Nurn;
+			read_address_threshold_o = rclCntr_Nurn;
+			read_address_posthistory_o = rclNurnAddr_buff;
+
+			//read_address_prehistory_o = {rclNurnAddr_buff,lrnCntr_Axon};
+			//read_address_weight_o = {rclCntr_Nurn,rclCntr_Axon};
 		end
 `endif
 
@@ -706,16 +700,6 @@ module NurnCtrlr
 			//read_enable_prehistory_o = enLrnWtPipln;
 			//read_enable_weight_recall_o = rdEn_StatRd_E_o;
 			//read_enable_weight_learn_o = PStgEn_rdWt;
-
-		`ifdef SEPARATE_ADDRESS
-			read_address_bias_o = rclCntr_Nurn;
-			read_address_potential_o = rclCntr_Nurn;
-			read_address_threshold_o = rclCntr_Nurn;
-			read_address_posthistory_o = rclCntr_Nurn;
-
-			read_address_prehistory_o = {rclNurnAddr_buff,lrnCntr_Axon};
-			read_address_weight_o = {rclCntr_Nurn,rclCntr_Axon};
-		`endif
 
 			if (StatRd_A_bias == 1'b1) 
 				begin
@@ -736,25 +720,6 @@ module NurnCtrlr
 				begin
 					read_enable_posthistory_o = 1'b1;
 				end
-
-		`ifdef SEPARATE_ADDRESS
-			if (StatRd_A_bias == 1'b1) 
-				begin
-					read_address_bias_o = rclCntr_Nurn;
-				end 
-			else if (StatRd_A_MembPot == 1'b1) 
-				begin
-					read_address_potential_o = rclCntr_Nurn;
-				end 
-			else if (StatRd_A_Th == 1'b1) 
-				begin
-					read_address_threshold_o = rclCntr_Nurn;
-				end 
-			else if (rdPostSpkHist == 1'b1) 
-				begin
-					read_address_posthistory_o = rclNurnAddr_buff;
-				end
-		`endif
 		end
 
 endmodule

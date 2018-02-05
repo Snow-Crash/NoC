@@ -135,23 +135,32 @@ module StatusMem_Asic
 	reg fifo_write_enable;
 
 `ifdef SINGLE_PORT_STATUS_MEM
-
+	// output reg
 	reg [DSIZE-1:0] Mem_Bias_dout, Mem_Potential_dout, Mem_Threshold_dout;
 	reg [STDP_WIN_BIT_WIDTH-1:0] Mem_PostHistory_dout;
+	// address mux
+	wire [NURN_CNT_BIT_WIDTH-1:0] Mem_Bias_addr, Mem_Potential_addr, Mem_PostHistory_addr, Mem_Threshold_addr;
 `endif
 
 `ifdef SINGLE_PORT_STATUS_MEM
+	assign Mem_Bias_addr = (write_enable_bias_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
+	assign Mem_Potential_addr = (write_enable_potential_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
+	assign Mem_Threshold_addr = (write_enable_threshold_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
+	assign Mem_PostHistory_addr = (write_enable_posthistory_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
+
 	always  @(posedge clk_i)
 		begin
 			if(ce)  
 				begin
 					if(write_enable_bias_i)  
 						begin
-							Mem_Bias[Addr_StatWr_B_i] <= data_wr_bias_i;
+							//Mem_Bias[Addr_StatWr_B_i] <= data_wr_bias_i;
+							Mem_Bias[Mem_Bias_addr] <= data_wr_bias_i;
 							Mem_Bias_dout <= data_wr_bias_i;
 						end
 					else
-						Mem_Bias_dout <= Mem_Bias[Addr_StatRd_A_i];
+						// Mem_Bias_dout <= Mem_Bias[Addr_StatRd_A_i];
+						Mem_Bias_dout <= Mem_Bias[Mem_Bias_addr];
 				end
 		end
 	assign data_rd_bias_o = Mem_Bias_dout;
@@ -162,11 +171,13 @@ module StatusMem_Asic
 				begin
 					if(write_enable_potential_i)  
 						begin
-							Mem_Potential[Addr_StatWr_B_i] <= data_wr_potential_i;
+							//Mem_Potential[Addr_StatWr_B_i] <= data_wr_potential_i;
+							Mem_Potential[Mem_Potential_addr] <= data_wr_potential_i;
 							Mem_Potential_dout <= data_wr_potential_i;
 						end
 					else
-						Mem_Potential_dout <= Mem_Potential[Addr_StatRd_A_i];
+						// Mem_Potential_dout <= Mem_Potential[Addr_StatRd_A_i];
+						Mem_Potential_dout <= Mem_Potential[Mem_Potential_addr];
 				end
 		end
 	assign data_rd_potential_o = Mem_Potential_dout;
@@ -177,11 +188,13 @@ module StatusMem_Asic
 				begin
 					if(write_enable_posthistory_i)  
 						begin
-							Mem_PostHistory[Addr_StatWr_B_i] <= data_wr_posthistory_i;
+							//Mem_PostHistory[Addr_StatWr_B_i] <= data_wr_posthistory_i;
+							Mem_PostHistory[Mem_PostHistory_addr] <= data_wr_posthistory_i;
 							Mem_PostHistory_dout <= data_wr_posthistory_i;
 						end
 					else
-						Mem_PostHistory_dout <= Mem_PostHistory[Addr_StatRd_A_i];
+						// Mem_PostHistory_dout <= Mem_PostHistory[Addr_StatRd_A_i];
+						Mem_PostHistory_dout <= Mem_PostHistory[Mem_PostHistory_addr];
 				end
 		end
 	assign data_rd_posthistory_o = Mem_PostHistory_dout;
@@ -192,11 +205,13 @@ module StatusMem_Asic
 				begin
 					if(write_enable_threshold_i)  
 						begin
-							Mem_Threshold[Addr_StatWr_B_i] <= data_wr_threshold_i;
+							//Mem_Threshold[Addr_StatWr_B_i] <= data_wr_threshold_i;
+							Mem_Threshold[Mem_Threshold_addr] <= data_wr_threshold_i;
 							Mem_Threshold_dout <= data_wr_threshold_i;
 						end
 					else
-						Mem_Threshold_dout <= Mem_Threshold[Addr_StatRd_A_i];
+						// Mem_Threshold_dout <= Mem_Threshold[Addr_StatRd_A_i];
+						Mem_Threshold_dout <= Mem_Threshold[Mem_Threshold_addr];
 				end
 		end
 	assign data_rd_threshold_o = Mem_Threshold_dout;

@@ -59,12 +59,22 @@ module StatusMem_Asic
     input                                               write_enable_bias_i,
     input                                               write_enable_potential_i,
     input                                               write_enable_threshold_i,
-    input                                                  write_enable_posthistory_i,
+    input                                               write_enable_posthistory_i,
 
     output [DSIZE-1:0]                                  data_rd_bias_o,
     output [DSIZE-1:0]                                  data_rd_potential_o,
     output [DSIZE-1:0]                                  data_rd_threshold_o,
     output [STDP_WIN_BIT_WIDTH-1:0]                     data_rd_posthistory_o,
+
+	input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_bias_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_potential_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_threshold_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_posthistory_i,
+
+	input [NURN_CNT_BIT_WIDTH-1:0]						write_addr_bias_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						write_addr_potential_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						write_addr_threshold_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						write_addr_posthistory_i,
 
 	//write port B
 	input [NURN_CNT_BIT_WIDTH-1:0] 						Addr_StatWr_B_i,
@@ -143,10 +153,17 @@ module StatusMem_Asic
 `endif
 
 `ifdef SINGLE_PORT_STATUS_MEM
-	assign Mem_Bias_addr = (write_enable_bias_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
-	assign Mem_Potential_addr = (write_enable_potential_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
-	assign Mem_Threshold_addr = (write_enable_threshold_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
-	assign Mem_PostHistory_addr = (write_enable_posthistory_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
+	`ifdef SEPARATE_ADDRESS
+		assign Mem_Bias_addr = (write_enable_bias_i == 1'b1) ? write_addr_bias_i : read_addr_bias_i;
+		assign Mem_Potential_addr = (write_enable_potential_i == 1'b1) ? write_addr_potential_i : read_addr_potential_i;
+		assign Mem_Threshold_addr = (write_enable_threshold_i == 1'b1) ? write_addr_threshold_i : read_addr_threshold_i;
+		assign Mem_PostHistory_addr = (write_enable_posthistory_i == 1'b1) ? write_addr_posthistory_i : read_addr_posthistory_i;
+	`else
+		assign Mem_Bias_addr = (write_enable_bias_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
+		assign Mem_Potential_addr = (write_enable_potential_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
+		assign Mem_Threshold_addr = (write_enable_threshold_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
+		assign Mem_PostHistory_addr = (write_enable_posthistory_i == 1'b1) ? Addr_StatWr_B_i : Addr_StatRd_A_i;
+	`endif
 
 	always  @(posedge clk_i)
 		begin

@@ -30,7 +30,7 @@
 
 `include "neuron_define.v"
 // `timescale 1ns/100ps
-`define SEPARATE_ADDRESS
+// `define SEPARATE_ADDRESS
 
 module NurnCtrlr
 #(

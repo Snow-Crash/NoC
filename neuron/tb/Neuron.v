@@ -25,7 +25,7 @@
 // `define DUMP_MEMORY
 // `define NEW_STATUS_MEMORY
 // `define NEW_CONFIG_MEMORY
-// //`define SEPARATE_ADDRESS
+// `define SEPARATE_ADDRESS
 // `define RECORD_SPIKE
 
 module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_req);
@@ -116,7 +116,8 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 	assign SpikePacket = SpikeAER;
 	//assign outSpike = outSpike_o;
 	wire [NURN_CNT_BIT_WIDTH-1:0] read_address_bias, read_address_posthistory, read_address_potential, read_address_threshold;
-	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]   read_address_weight, read_address_prehistory;
+	wire [NURN_CNT_BIT_WIDTH-1:0] write_address_bias, write_address_posthistory, write_address_potential, write_address_threshold;
+	//wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]   read_address_weight, read_address_prehistory;
 	wire [DSIZE-1:0] data_StatRd_A2;
 	//--------------------------------------------------//
 
@@ -208,15 +209,11 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 		.read_address_potential_o			(read_address_potential),
 		.read_address_threshold_o			(read_address_threshold),
 		.read_address_posthistory_o			(read_address_posthistory),
-		.read_address_prehistory_o			(read_address_prehistory),
-		.read_address_weight_o				(read_address_weight),
 
 		.write_address_bias_o				(write_address_bias),
 		.write_address_potential_o			(write_address_potential),
 		.write_address_threshold_o			(write_address_threshold),
 		.write_address_posthistory_o		(write_address_posthistory),
-		.write_address_prehistory_o			(write_address_prehistor),
-		.write_address_weight_o				(write_address_weight)
 	`endif
 
 		.read_enable_bias_o					(read_enable_bias),
@@ -517,6 +514,17 @@ ConfigMem_Asic
 		.data_rd_threshold_o(data_rd_threshold),
 		.data_rd_posthistory_o(data_rd_posthistory),
 
+`ifdef SEPARATE_ADDRESS
+		.read_addr_bias_i								(read_address_bias),
+		.read_addr_potential_i							(read_address_potential),
+		.read_addr_threshold_i							(read_address_threshold),
+		.read_addr_posthistory_i						(read_address_posthistory),
+
+		.write_addr_bias_i								(write_address_bias),
+		.write_addr_potential_i							(write_address_potential),
+		.write_addr_threshold_i							(write_address_threshold),
+		.write_addr_posthistory_i						(write_address_posthistory),
+`endif
 		//write port B
 		.Addr_StatWr_B_i(Addr_StatWr_B),
 		//.data_StatWr_B_i(data_StatWr_B),

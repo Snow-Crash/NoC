@@ -332,8 +332,137 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 
 	);
 
-`ifdef NEW_CONFIG_MEMORY
-ConfigMem_Asic_Onchip
+// `ifdef NEW_CONFIG_MEMORY
+// ConfigMem_Asic_Onchip
+// #(
+// 	.NUM_NURNS(NUM_NURNS)  ,
+// 	.NUM_AXONS(NUM_AXONS) ,
+
+// 	.DSIZE(DSIZE) ,
+
+// 	.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
+// 	.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+
+// 	.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
+
+// 	.AER_BIT_WIDTH(AER_BIT_WIDTH),
+
+// 	.CONFIG_PARAMETER_NUMBER(9),
+
+// 	.LEARN_MODE_MEMORY_WIDTH(2),
+	
+
+// 	.X_ID(X_ID),
+// 	.Y_ID(Y_ID),
+// 	.SYNTH_PATH(SYNTH_PATH),
+// 	.SIM_PATH(SIM_PATH)	
+
+// )
+// ConfigMem_Asic
+// (
+// 	.clk_i(clk)			,
+// 	.rst_n_i(rst_n)			,
+
+// 	.config_data_in(),
+
+// 	.config_write_enable(),
+
+// 	.FixedThreshold_o(FixedThreshold),
+// 	.Number_Neuron_o(),
+// 	.Number_Axon_o(),
+
+// 	//read port A
+// 	.Addr_Config_A_i(Addr_Config_A),
+// 	.rdEn_Config_A_i(rdEn_Config_A),
+
+// 	.LTP_Win_o(LTP_Win ),
+// 	.LTD_Win_o(LTD_Win ),
+// 	.LTP_LrnRt_o(LTP_LrnRt ),
+// 	.LTD_LrnRt_o(LTD_LrnRt ),
+// 	.biasLrnMode_o(biasLrnMode ),
+	
+// 	//read port B
+// 	.Addr_Config_B_i(Addr_Config_B ),
+// 	.rdEn_Config_B_i(rdEn_Config_B),
+
+// 	.NurnType_o(NurnType ),
+// 	.RandTh_o(RandTh),
+// 	.Th_Mask_o(Th_Mask ),
+// 	.RstPot_o( RstPot),
+// 	.SpikeAER_o(SpikeAER ),
+
+// `ifdef AER_MULTICAST
+// 		.read_next_AER_o	(read_next_AER),
+// 		.AER_pointer_i		(AER_pointer),
+// `endif
+
+// 	//read port C
+// 	.Addr_Config_C_i( Addr_Config_C),
+// 	.rdEn_Config_C_i(rdEn_Config_C ),
+
+// 	.axonLrnMode_o(axonLrnMode )
+// );
+
+
+// `else
+
+
+// 	ConfigMem
+// 	#(
+// 		.NUM_NURNS				( NUM_NURNS ),
+// 		.NUM_AXONS				( NUM_AXONS ),
+
+// 		.DSIZE					( DSIZE ),
+
+// 		.NURN_CNT_BIT_WIDTH		( NURN_CNT_BIT_WIDTH ),
+// 		.AXON_CNT_BIT_WIDTH		( AXON_CNT_BIT_WIDTH ),
+
+// 		.STDP_WIN_BIT_WIDTH		( STDP_WIN_BIT_WIDTH ),
+// 		.AER_BIT_WIDTH 			( AER_BIT_WIDTH ),
+
+// 		.X_ID					(X_ID),
+// 		.Y_ID					(Y_ID),
+// 		.SYNTH_PATH				(SYNTH_PATH),
+// 		.SIM_PATH				(SIM_PATH)
+// 		//.MEM_A_MIF_PATH			(MEM_A_MIF_PATH),
+// 		//.MEM_B_MIF_PATH			(MEM_B_MIF_PATH),
+// 		//.MEM_C_MIF_PATH			(MEM_C_MIF_PATH)
+// 	)
+// 	CONFIGMEM
+// 	(
+// 		.clk_i				( clk 	),
+// 		.rst_n_i			( rst_n ),
+
+// 		//read port A
+// 		.Addr_Config_A_i  	( Addr_Config_A ),
+// 		.rdEn_Config_A_i  	( rdEn_Config_A ),
+
+// 		.LTP_Win_o			( LTP_Win ),
+// 		.LTD_Win_o	( LTD_Win ),
+// 		.LTP_LrnRt_o		( LTP_LrnRt 	),
+// 		.LTD_LrnRt_o		( LTD_LrnRt 	),
+// 		.biasLrnMode_o 		( biasLrnMode   ),
+		
+// 		//read port B
+// 		.Addr_Config_B_i	( Addr_Config_B ),
+// 		.rdEn_Config_B_i 	( rdEn_Config_B ),
+
+// 		.NurnType_o 		( NurnType 		),
+// 		.RandTh_o			( RandTh 		),
+// 		.Th_Mask_o			( Th_Mask 		),
+// 		.RstPot_o			( RstPot 		),
+// 		.SpikeAER_o			( SpikeAER 		),
+
+// 		//read port C
+// 		.Addr_Config_C_i	( Addr_Config_C ),
+// 		.rdEn_Config_C_i 	( rdEn_Config_C ),
+
+// 		.axonLrnMode_o 		( axonLrnMode 	)
+// 	);
+// `endif
+
+
+ConfigMem_Asic
 #(
 	.NUM_NURNS(NUM_NURNS)  ,
 	.NUM_AXONS(NUM_AXONS) ,
@@ -400,66 +529,11 @@ ConfigMem_Asic
 	.Addr_Config_C_i( Addr_Config_C),
 	.rdEn_Config_C_i(rdEn_Config_C ),
 
-	.axonLrnMode_o(axonLrnMode )
+	.axonLrnMode_o(axonLrnMode ),
+	.ce(1'b1)
 );
 
 
-`else
-
-
-	ConfigMem
-	#(
-		.NUM_NURNS				( NUM_NURNS ),
-		.NUM_AXONS				( NUM_AXONS ),
-
-		.DSIZE					( DSIZE ),
-
-		.NURN_CNT_BIT_WIDTH		( NURN_CNT_BIT_WIDTH ),
-		.AXON_CNT_BIT_WIDTH		( AXON_CNT_BIT_WIDTH ),
-
-		.STDP_WIN_BIT_WIDTH		( STDP_WIN_BIT_WIDTH ),
-		.AER_BIT_WIDTH 			( AER_BIT_WIDTH ),
-
-		.X_ID					(X_ID),
-		.Y_ID					(Y_ID),
-		.SYNTH_PATH				(SYNTH_PATH),
-		.SIM_PATH				(SIM_PATH)
-		//.MEM_A_MIF_PATH			(MEM_A_MIF_PATH),
-		//.MEM_B_MIF_PATH			(MEM_B_MIF_PATH),
-		//.MEM_C_MIF_PATH			(MEM_C_MIF_PATH)
-	)
-	CONFIGMEM
-	(
-		.clk_i				( clk 	),
-		.rst_n_i			( rst_n ),
-
-		//read port A
-		.Addr_Config_A_i  	( Addr_Config_A ),
-		.rdEn_Config_A_i  	( rdEn_Config_A ),
-
-		.LTP_Win_o			( LTP_Win ),
-		.LTD_Win_o	( LTD_Win ),
-		.LTP_LrnRt_o		( LTP_LrnRt 	),
-		.LTD_LrnRt_o		( LTD_LrnRt 	),
-		.biasLrnMode_o 		( biasLrnMode   ),
-		
-		//read port B
-		.Addr_Config_B_i	( Addr_Config_B ),
-		.rdEn_Config_B_i 	( rdEn_Config_B ),
-
-		.NurnType_o 		( NurnType 		),
-		.RandTh_o			( RandTh 		),
-		.Th_Mask_o			( Th_Mask 		),
-		.RstPot_o			( RstPot 		),
-		.SpikeAER_o			( SpikeAER 		),
-
-		//read port C
-		.Addr_Config_C_i	( Addr_Config_C ),
-		.rdEn_Config_C_i 	( rdEn_Config_C ),
-
-		.axonLrnMode_o 		( axonLrnMode 	)
-	);
-`endif
 
 
 	StatusMem_Asic

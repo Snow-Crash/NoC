@@ -102,6 +102,7 @@ wire [AXON_CNT_BIT_WIDTH-1:0]   axon_id;
 reg [AXON_CNT_BIT_WIDTH-1:0]    axon_id_reg;
 reg [AXON_CNT_BIT_WIDTH+NURN_CNT_BIT_WIDTH-1:0] LearnMode_Weight_addr_reg;
 wire [255:0]                    axon_mode_all;
+reg [AER_BIT_WIDTH-1:0]			AER_reg;
 
 
 //  //rwo registers store number of neuron and number of axon
@@ -358,7 +359,8 @@ always @ (posedge clk_i)
             LearnMode_Weight[Addr_Config_C_i] <= config_data_in[DSIZE-1];
         LearnMode_Weight_addr_reg <= Addr_Config_C_i;  
     end
-assign axonLrnMode_o = LearnMode_Weight[LearnMode_Weight_addr_reg];
+//assign axonLrnMode_o = LearnMode_Weight[LearnMode_Weight_addr_reg];
+assign axonLrnMode_o = axon_mode_all[axon_id_reg];
 
 
 //registers to store memory output
@@ -368,6 +370,7 @@ always @(posedge clk_i or negedge rst_n_i)
 			begin
                 config_A_reg <= 0;
                 config_B_reg <= 0;
+				AER_reg <= 0;
 			end
 		else
 			begin
@@ -378,6 +381,7 @@ always @(posedge clk_i or negedge rst_n_i)
 				if (rdEn_Config_B_i == 1'b1)
 					begin
                         config_B_reg <= config_B_dout;
+						AER_reg <= config_AER_dout;
 					end
 			end
 	end
@@ -395,7 +399,7 @@ assign Th_Mask_o = config_B_reg[DSIZE*3+4-1:DSIZE*2+4];
 assign RstPot_o = config_B_reg[DSIZE*2+4-1:DSIZE+4];
 assign FixedThreshold_o = config_B_reg[DSIZE*4-1:4];
 assign AERnum = config_B_reg[3:0];
-assign SpikeAER_o = config_AER_dout;
+assign SpikeAER_o = AER_reg;
 
 
 

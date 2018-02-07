@@ -440,43 +440,43 @@ module NurnCtrlr
 
 	//Address generation
 	//--------------------------------------------------//
-	always @(*) begin
-		//status read port A
-		rdEn_StatRd_A_o = 1'b0;
-		//Addr_StatRd_A_o = {rclCntr_Nurn,2'b00};
-		Addr_StatRd_A_o = rclCntr_Nurn;
-		if (StatRd_A_bias == 1'b1) begin
-			rdEn_StatRd_A_o = 1'b1;
-			//Addr_StatRd_A_o = {rclCntr_Nurn,2'b00};
-			Addr_StatRd_A_o = rclCntr_Nurn;
-		end else if (StatRd_A_MembPot == 1'b1) begin
-			rdEn_StatRd_A_o = 1'b1;
-			// Addr_StatRd_A_o = {rclCntr_Nurn,2'b01};
-			Addr_StatRd_A_o = rclCntr_Nurn;
-		end else if (StatRd_A_Th == 1'b1) begin
-			rdEn_StatRd_A_o = 1'b1;
-			// Addr_StatRd_A_o = {rclCntr_Nurn,2'b10};
-			Addr_StatRd_A_o = rclCntr_Nurn;
-		end else if (rdPostSpkHist == 1'b1) begin
-			rdEn_StatRd_A_o = 1'b1;
-			// Addr_StatRd_A_o = {rclNurnAddr_buff,2'b11};
-			Addr_StatRd_A_o = rclNurnAddr_buff;
-		end
+	// always @(*) begin
+	// 	//status read port A
+	// 	rdEn_StatRd_A_o = 1'b0;
+	// 	Addr_StatRd_A_o = {rclCntr_Nurn,2'b00};
+	// 	// Addr_StatRd_A_o = rclCntr_Nurn;
+	// 	if (StatRd_A_bias == 1'b1) begin
+	// 		rdEn_StatRd_A_o = 1'b1;
+	// 		Addr_StatRd_A_o = {rclCntr_Nurn,2'b00};
+	// 		// Addr_StatRd_A_o = rclCntr_Nurn;
+	// 	end else if (StatRd_A_MembPot == 1'b1) begin
+	// 		rdEn_StatRd_A_o = 1'b1;
+	// 		Addr_StatRd_A_o = {rclCntr_Nurn,2'b01};
+	// 		// Addr_StatRd_A_o = rclCntr_Nurn;
+	// 	end else if (StatRd_A_Th == 1'b1) begin
+	// 		rdEn_StatRd_A_o = 1'b1;
+	// 		Addr_StatRd_A_o = {rclCntr_Nurn,2'b10};
+	// 		// Addr_StatRd_A_o = rclCntr_Nurn;
+	// 	end else if (rdPostSpkHist == 1'b1) begin
+	// 		rdEn_StatRd_A_o = 1'b1;
+	// 		Addr_StatRd_A_o = {rclNurnAddr_buff,2'b11};
+	// 		// Addr_StatRd_A_o = rclNurnAddr_buff;
+	// 	end
 
-		//status write port B
-		Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b00};
-		if (LrnBias_Pipln[0] == 1'b1) begin
-			Addr_StatWr_B_o = lrnWrBack_Nurn;//,2'b00};
-		end else if (wr_MembPot_dly[0] == 1'b1) begin
-			Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b01};
-		end else if (wrEn_th_dly[0] == 1'b1) begin
-			Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b10};
-		end else if (wrPostSpkHist == 1'b1) begin
-			Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b11};
-		end else if (expired_post_history_write_back_delay == 1'b1) begin
-			Addr_StatWr_B_o = lrnWrBack_Nurn;//,2'b11};
-		end
-	end
+	// 	//status write port B
+	// 	Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b00};
+	// 	if (LrnBias_Pipln[0] == 1'b1) begin
+	// 		Addr_StatWr_B_o = lrnWrBack_Nurn;//,2'b00};
+	// 	end else if (wr_MembPot_dly[0] == 1'b1) begin
+	// 		Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b01};
+	// 	end else if (wrEn_th_dly[0] == 1'b1) begin
+	// 		Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b10};
+	// 	end else if (wrPostSpkHist == 1'b1) begin
+	// 		Addr_StatWr_B_o = rclNurnAddr_buff;//,2'b11};
+	// 	end else if (expired_post_history_write_back_delay == 1'b1) begin
+	// 		Addr_StatWr_B_o = lrnWrBack_Nurn;//,2'b11};
+	// 	end
+	// end
 	assign Addr_Config_B_o = rclCntr_Nurn;
 	assign Addr_Config_A_o = rclNurnAddr_buff;
 	assign Addr_StatRd_E_o = {rclCntr_Nurn,rclCntr_Axon};

@@ -344,9 +344,9 @@ end
 always @(posedge clk_i or negedge rst_n_i)
     begin
         if (rst_n_i == 1'b0)
-            axon_id_reg = 0;
+            axon_id_reg <= 0;
         else
-            axon_id_reg = axon_id;
+            axon_id_reg <= axon_id;
     end
 assign axon_mode_all = {axon_mode_4_dout, axon_mode_3_dout, axon_mode_2_dout, axon_mode_1_dout};
 assign axon_mode_o = axon_mode_all[axon_id_reg];

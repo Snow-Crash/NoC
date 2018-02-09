@@ -654,7 +654,7 @@ module dataPath
 					PreSpikeHist_Ppln[4] <= preSpikeHist;
 					//PreSpikeHist_Ppln[4] <= ?????
 				end
-			else if (axonLrnMode_i == 1'b1) 
+			else //if (axonLrnMode_i == 1'b1) 
 				begin
 					PreSpikeHist_Ppln[4] <= preSpikeHist;
 					PreSpikeHist_Ppln[3] <= PreSpikeHist_Ppln[4];

@@ -397,7 +397,7 @@ assign NurnType_o = config_B_reg[1+1+DSIZE*3+4-1];
 assign RandTh_o = config_B_reg[1+DSIZE*3+4-1];
 assign Th_Mask_o = config_B_reg[DSIZE*3+4-1:DSIZE*2+4];
 assign RstPot_o = config_B_reg[DSIZE*2+4-1:DSIZE+4];
-assign FixedThreshold_o = config_B_reg[DSIZE*4-1:4];
+assign FixedThreshold_o = config_B_reg[DSIZE+4-1:4];
 assign AERnum = config_B_reg[3:0];
 assign SpikeAER_o = AER_reg;
 

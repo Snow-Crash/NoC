@@ -792,7 +792,9 @@ ConfigMem_Asic
 		.NUM_AXONS			( NUM_AXONS ),
 		.AXON_CNT_BIT_WIDTH	( AXON_CNT_BIT_WIDTH ),
 		.X_ID					(X_ID),
-		.Y_ID					(Y_ID)
+		.Y_ID					(Y_ID),
+		.SIM_PATH			(SIM_PATH),
+		.STOP_STEP			(STOP_STEP)
 	)
 	INSPIKEBUF
 	(

@@ -30,7 +30,9 @@ module InSpikeBuf
 	parameter AXON_CNT_BIT_WIDTH   = 8 ,
 	parameter X_ID = "1",
 	parameter Y_ID = "1",
-	parameter DIR_ID = {X_ID, "_", Y_ID}
+	parameter DIR_ID = {X_ID, "_", Y_ID},
+	parameter SIM_PATH = "D:/code/data",
+	parameter STOP_STEP = 5
 )
 (
 	input 			clk_i			,
@@ -137,6 +139,48 @@ module InSpikeBuf
 	  		end	  		
 	  	end
 	end
+
+`ifdef DUMP_SPIKE_BUF
+	integer clock_counter = 0;
+	integer step_counter = 0;
+	integer f1, axon_id;
+	reg [100*8:1] dump_file_name;
+
+	always @(posedge clk_i)
+		begin
+			clock_counter = clock_counter + 1;
+			
+			if (start_i == 1'b1)
+				step_counter = step_counter + 1;
+		end
+	initial
+		begin
+		dump_file_name = {SIM_PATH, "data", DIR_ID, "/dump_spike_buffer.csv"};
+		f1 = $fopen(dump_file_name,"w");
+		$fwrite(f1, "step,");
+		for (i = 0; i != 256; i = i + 1)
+			begin
+				$fwrite(f1, "%0d,", i);
+			end
+		$fwrite(f1, "\n");
+		end
+
+	always @(posedge clk_i)
+		begin
+			if (step_counter < STOP_STEP)
+				begin
+					if (start_i == 1'b1)
+						begin
+						$fwrite(f1, "%0d,", step_counter);
+						for (i = 0; i != 256; i = i + 1)
+							$fwrite(f1, "%b,", spike_in[i]);
+						$fwrite(f1, "\n");
+						end
+				end
+			else
+				$fclose(f1);
+		end
+`endif
 
 
 endmodule

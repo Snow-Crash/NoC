@@ -119,9 +119,29 @@ module StatusMem_Asic
 		reg /*sparse*/ [STDP_WIN_BIT_WIDTH-1:0] Mem_PreHistory     [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
         reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight         [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
 
+		// neuron 0 - 31
+		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight_1         [8192-1:0];
+		// neuron 31 - 63
+		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight_2         [8192-1:0];
+		// neuron 64 - 95
+		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight_3         [8192-1:0];
+		// neuron 96-127
+		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight_4         [8192-1:0];
+
+		// neuron 0 - 31
+		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_PreHistory_1		[8192-1:0];
+		// neuron 31 - 63
+		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_PreHistory_2		[8192-1:0];
+		// neuron 64 - 95
+		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_PreHistory_3		[8192-1:0];
+		// neuron 96-127
+		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_PreHistory_4		[8192-1:0];
+
     //initial memory
 	`ifdef SIM_MEM_INIT
 		reg [100*8:1] file_name;
+		integer idx, file;
+		reg [DSIZE-1:0] data;
 		initial begin
 			file_name = {SIM_PATH, "data", DIR_ID, "/Bias.txt"};				$readmemh (file_name,Mem_Bias);
 			file_name = {SIM_PATH, "data", DIR_ID, "/MembPot.txt"};			    $readmemh (file_name,Mem_Potential);
@@ -130,6 +150,34 @@ module StatusMem_Asic
 			file_name = {SIM_PATH, "data", DIR_ID, "/PreSpikeHistory.txt"}; 	$readmemh (file_name,Mem_PreHistory);
 			file_name = {SIM_PATH, "data", DIR_ID, "/Weights.txt"};			    $readmemh (file_name,Mem_Weight);
             //file_name = {SIM_PATH, DIR_ID, "/Weights.txt"};			    $readmemh (file_name,Mem_Weight2);
+
+			//initialize 4 weight memory
+			file_name = {SIM_PATH, "data", DIR_ID, "/Weights.txt"};
+			file = $fopen(file_name, "r+");
+			for(idx = 0 ; idx <=(8192-1) ; idx = idx + 1)
+				begin
+					$fscanf (file, "%h\n", data); 
+					Mem_Weight_1[idx] = data;
+				end
+
+			for(idx = 0 ; idx <=(8192-1) ; idx = idx + 1)
+				begin
+					$fscanf (file, "%h\n", data); 
+					Mem_Weight_2[idx] = data;
+				end
+			
+			for(idx = 0 ; idx <=(8192-1) ; idx = idx + 1)
+				begin
+					$fscanf (file, "%h\n", data); 
+					Mem_Weight_3[idx] = data;
+				end
+
+			for(idx = 0 ; idx <=(8192-1) ; idx = idx + 1)
+				begin
+					$fscanf (file, "%h\n", data); 
+					Mem_Weight_4[idx] = data;
+				end
+			$fclose(file);
 		end
 	`endif
 
@@ -143,6 +191,22 @@ module StatusMem_Asic
 
 	wire [DSIZE-1:0] data_StatRd_E, data_StatRd_F;
 	reg fifo_write_enable;
+
+	reg [STDP_WIN_BIT_WIDTH-1:0] pre_history_rd_mux, pre_history_wr_mux;
+	reg weight_1_wr_en, weight_2_wr_en, weight_3_wr_en, weight_4_wr_en;
+	reg weight_recall_1_rd_en, weight_recall_2_rd_en, weight_recall_3_rd_en, weight_recall_4_rd_en;
+	reg [1:0] weight_recall_rd_sel_reg, weight_learn_rd_sel;
+	wire [1:0] weight_recall_rd_sel;
+	wire [1:0] weight_mem_wr_sel;
+	wire [DSIZE-1:0] weight_mem_1_out, weight_mem_2_out, weight_mem_3_out, weight_mem_4_out;
+	reg [AXON_CNT_BIT_WIDTH+NURN_CNT_BIT_WIDTH-3:0] weight_1_rd_addr_reg, weight_2_rd_addr_reg, weight_3_rd_addr_reg, weight_4_rd_addr_reg;
+	reg [DSIZE-1:0] data_e;
+	wire [DSIZE-1:0] data_f;
+	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-3:0] weight_recall_rd_addr, weight_mem_wr_addr;
+
+	reg pre_history_1_wr_en, pre_history_2_wr_en, pre_history_3_wr_en, pre_history_4_wr_en;
+	reg pre_history_1_rd_en, pre_history_2_rd_en, pre_history_3_rd_en, pre_history_4_rd_en;
+	reg [1:0] pre_history_wr_sel, pre_history_rd_sel;
 
 `ifdef SINGLE_PORT_STATUS_MEM
 	// output reg
@@ -288,7 +352,176 @@ module StatusMem_Asic
 			    Mem_Weight[Addr_StatWr_G_i] <= data_StatWr_G_i;
         end
     assign data_StatRd_E = Mem_Weight[read_address_register_weight_E];
-	assign data_StatRd_E_o = data_StatRd_E;
+	//assign data_StatRd_E_o = data_StatRd_E;
+	assign data_StatRd_E_o = data_e;
+
+always @(posedge clk_i or negedge rst_n_i)
+	begin
+		if (rst_n_i == 1'b0)
+			begin
+				weight_recall_rd_sel_reg <= 0;
+				weight_learn_rd_sel <= 0;
+			end
+		else
+			begin
+				weight_recall_rd_sel_reg <= Addr_StatRd_E_i[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-2];
+				weight_learn_rd_sel <= Addr_StatRd_F_i[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-2];
+			end
+	end
+assign weight_mem_wr_sel = Addr_StatWr_G_i[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-2];
+
+assign weight_mem_wr_addr = Addr_StatWr_G_i[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-3:0];
+assign weight_recall_rd_addr = Addr_StatRd_E_i[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-3:0];
+assign weight_recall_rd_sel = Addr_StatRd_E_i[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-2];
+
+// weight memory recall read en generate and output select
+always @(*)
+	begin
+		weight_recall_1_rd_en = 1'b0;
+		weight_recall_2_rd_en = 1'b0;
+		weight_recall_3_rd_en = 1'b0;
+		weight_recall_4_rd_en = 1'b0;
+		data_e = 0;
+		case (weight_recall_rd_sel_reg)
+			2'b00:
+				data_e = weight_mem_1_out;
+			2'b01:
+				data_e = weight_mem_2_out;
+			2'b10:
+				data_e = weight_mem_3_out;
+			2'b11:
+				data_e = weight_mem_4_out;
+			default:
+			data_e = weight_mem_1_out;
+		endcase
+
+
+		case (weight_recall_rd_sel)
+			2'b00:
+				begin
+					weight_recall_1_rd_en = rdEn_StatRd_E_i;
+				end
+			2'b01:
+				begin
+					weight_recall_2_rd_en = rdEn_StatRd_E_i;
+				end
+			2'b10:
+				begin
+					weight_recall_3_rd_en = rdEn_StatRd_E_i;
+				end
+			2'b11:
+				begin
+					weight_recall_4_rd_en = rdEn_StatRd_E_i;
+				end
+			default:
+				begin
+					weight_recall_1_rd_en = 1'b0;
+					weight_recall_2_rd_en = 1'b0;
+					weight_recall_3_rd_en = 1'b0;
+					weight_recall_4_rd_en = 1'b0;
+				end
+		endcase
+	end
+
+//weight memory write en generate
+always @(*)
+	begin
+		weight_1_wr_en = 1'b0;
+		weight_2_wr_en = 1'b0;
+		weight_3_wr_en = 1'b0;
+		weight_4_wr_en = 1'b0;
+
+		case (weight_mem_wr_sel)
+			2'b00:
+				begin
+					weight_1_wr_en = wrEn_StatWr_G_i;
+				end
+			2'b01:
+				begin
+					weight_2_wr_en = wrEn_StatWr_G_i;
+				end
+			2'b10:
+				begin
+					weight_3_wr_en = wrEn_StatWr_G_i;
+				end
+			2'b11:
+				begin
+					weight_4_wr_en = wrEn_StatWr_G_i;
+				end
+			default:
+				begin
+				  	weight_1_wr_en = 1'b0;
+					weight_2_wr_en = 1'b0;
+					weight_3_wr_en = 1'b0;
+					weight_4_wr_en = 1'b0;
+				end
+		endcase
+
+	end
+
+	always @(posedge clk_i)
+        begin
+	        if (weight_recall_1_rd_en == 1'b1)
+	            weight_1_rd_addr_reg <= weight_recall_rd_addr;
+		    if (weight_1_wr_en == 1'b1)
+			    Mem_Weight_1[weight_mem_wr_addr] <= data_StatWr_G_i;
+        end
+    assign weight_mem_1_out = Mem_Weight_1[weight_1_rd_addr_reg];
+
+	always @(posedge clk_i)
+        begin
+	        if (weight_recall_2_rd_en == 1'b1)
+	            weight_2_rd_addr_reg <= weight_recall_rd_addr;
+		    if (weight_2_wr_en == 1'b1)
+			    Mem_Weight_2[weight_mem_wr_addr] <= data_StatWr_G_i;
+        end
+    assign weight_mem_2_out = Mem_Weight_2[weight_2_rd_addr_reg];
+
+		always @(posedge clk_i)
+        begin
+	        if (weight_recall_3_rd_en == 1'b1)
+	            weight_3_rd_addr_reg <= weight_recall_rd_addr;
+		    if (weight_3_wr_en == 1'b1)
+			    Mem_Weight_3[weight_mem_wr_addr] <= data_StatWr_G_i;
+        end
+    assign weight_mem_3_out = Mem_Weight_3[weight_3_rd_addr_reg];
+
+	always @(posedge clk_i)
+        begin
+	        if (weight_recall_4_rd_en == 1'b1)
+	            weight_4_rd_addr_reg <= weight_recall_rd_addr;
+		    if (weight_4_wr_en == 1'b1)
+			    Mem_Weight_4[weight_mem_wr_addr] <= data_StatWr_G_i;
+        end
+    assign weight_mem_4_out = Mem_Weight_4[weight_4_rd_addr_reg];
+
+//fifo
+generic_fifo_sc_b
+#(
+	.dw(DSIZE),
+	.aw(9)
+)
+weight_fifo_2
+(
+	.clk(clk_i), 
+	.rst(rst_n_i), 
+	.clr(start_i), 
+	.din(data_e), 
+	.we(fifo_write_enable), 
+	//.dout(data_f), 
+	.dout(data_StatRd_F_o), 
+	.re(rdEn_StatRd_F_i),
+	.full(), 
+	.empty(), 
+	.full_r(),
+	.empty_r(),
+	.full_n(), 
+	.empty_n(), 
+	.full_n_r(), 
+	.empty_n_r(),
+	.level()
+);
+
 
 always @(posedge clk_i or negedge rst_n_i)
 	begin
@@ -311,7 +544,8 @@ weight_fifo
 	.clr(start_i), 
 	.din(data_StatRd_E), 
 	.we(fifo_write_enable), 
-	.dout(data_StatRd_F_o), 
+	//.dout(data_StatRd_F_o), 
+	.dout(), 
 	.re(rdEn_StatRd_F_i),
 	.full(), 
 	.empty(), 

@@ -65,6 +65,9 @@ module ConfigMem_Asic
 	output [DSIZE-1:0] 									RstPot_o,
 	output [AER_BIT_WIDTH-1:0] 							SpikeAER_o,
 
+	input [NURN_CNT_BIT_WIDTH:0]						Addr_AER_i,
+	input 												rdEn_AER_i,
+
 	//read port C
 	input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	Addr_Config_C_i,
 	input 												rdEn_Config_C_i,
@@ -74,7 +77,9 @@ module ConfigMem_Asic
     input                                               ce,
 
     input [NURN_CNT_BIT_WIDTH-1:0]						AER_pointer_i,
-	output												read_next_AER_o
+	output												read_next_AER_o,
+	input												multicast_i,
+	output [3:0]										AER_number_o
 
 );
 
@@ -147,6 +152,7 @@ reg [63:0]                          axon_mode_4                    [255:0];
 		reg data_B1, data_B2;
 		reg [AER_BIT_WIDTH-1:0] data_A1;
 		reg [256-1:0] data_learn_mode;
+		reg [3:0] data_AER_num;
 		integer idx2;
 			
 		initial begin
@@ -193,8 +199,8 @@ reg [63:0]                          axon_mode_4                    [255:0];
 			if (file5 == `NULL) begin  $stop; end
 			file_name = {SIM_PATH, "data", DIR_ID, "/FixedTh.txt"};	 	file6 = $fopen(file_name, "r+");
 			if (file6 == `NULL) begin  $stop; end
-            // file_name = {SIM_PATH, "data", DIR_ID, "/AERnum.txt"};	 	file7 = $fopen(file_name, "r+");
-			// if (file6 == `NULL) begin  $stop; end
+            file_name = {SIM_PATH, "data", DIR_ID, "/AERnum.txt"};	 	file7 = $fopen(file_name, "r+");
+			 if (file7 == `NULL) begin  $stop; end
 
 			for(idx = 0 ; idx <= ((1<<NURN_CNT_BIT_WIDTH) - 1) ; idx = idx + 1)
 			begin
@@ -204,10 +210,12 @@ reg [63:0]                          axon_mode_4                    [255:0];
 				$fscanf (file4, "%h\n", data_D2);       //rest 
 				$fscanf (file5, "%h\n", data_A1);       //aer
 				$fscanf (file6, "%h\n", data_D3);       //fixed th
-                config_B[idx] = {data_B1, data_B2, data_D1, data_D2, data_D3, 4'b0};
-                config_AER[idx] = data_A1;
+				$fscanf (file7, "%h\n", data_AER_num);       //fixed th
+                config_B[idx] = {data_B1, data_B2, data_D1, data_D2, data_D3, data_AER_num};
+                //config_AER[idx] = data_A1;
 			end
-		
+			$readmemh ({SIM_PATH, "data", DIR_ID, "/SpikeAER.txt"},config_AER);
+			
 			$fclose(file1);
 			$fclose(file2);
 			$fclose(file3);
@@ -277,11 +285,11 @@ begin
         begin
             if(config_write_enable)
                 begin
-                    config_AER[Addr_Config_B_i] <= config_data_in;
+                    config_AER[Addr_AER_i] <= config_data_in;
                     config_AER_dout <= config_data_in;
                 end
             else
-                config_AER_dout <= config_AER[Addr_Config_B_i];
+                config_AER_dout <= config_AER[Addr_AER_i];
         end
 end
 
@@ -381,8 +389,9 @@ always @(posedge clk_i or negedge rst_n_i)
 				if (rdEn_Config_B_i == 1'b1)
 					begin
                         config_B_reg <= config_B_dout;
-						AER_reg <= config_AER_dout;
 					end
+				if (rdEn_AER_i == 1'b1)
+					AER_reg <= config_AER_dout;
 			end
 	end
 
@@ -398,9 +407,9 @@ assign RandTh_o = config_B_reg[1+DSIZE*3+4-1];
 assign Th_Mask_o = config_B_reg[DSIZE*3+4-1:DSIZE*2+4];
 assign RstPot_o = config_B_reg[DSIZE*2+4-1:DSIZE+4];
 assign FixedThreshold_o = config_B_reg[DSIZE+4-1:4];
-assign AERnum = config_B_reg[3:0];
-assign SpikeAER_o = AER_reg;
-
+assign AER_number_o = config_B_reg[3:0];
+assign SpikeAER_o = (multicast_i == 1'b0)? AER_reg : config_AER_dout;
+assign read_next_AER_o = config_AER_dout[AER_BIT_WIDTH-1];
 
 
 

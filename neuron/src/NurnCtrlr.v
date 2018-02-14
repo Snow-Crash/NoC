@@ -85,6 +85,15 @@ module NurnCtrlr
 	output 												packet_write_req_o,
 	input												th_compare_i,
 `endif
+	
+	output												rdEn_AER_o,
+	output [NURN_CNT_BIT_WIDTH:0]						Addr_AER_o,
+	input												multicast_i,
+	output												send_req_NI_o,
+	input												outSpike_i,
+	input												read_next_AER_i,
+	input												th_compare_i,
+	input [3:0]											AER_number_i,
 
 	//status mem
 	output reg [NURN_CNT_BIT_WIDTH-1:0] 				Addr_StatRd_A_o,
@@ -205,6 +214,18 @@ module NurnCtrlr
 	reg packet_write_req;
 `endif
 
+	parameter MULTICAST_IDLE = 0;
+	parameter MULTICAST_START = 1;
+	parameter MULTICAST_SEND = 2;
+	parameter MULTICAST_STOP = 3;
+	// multicast 
+	reg [NURN_CNT_BIT_WIDTH:0] Addr_AER_multicast;
+	reg rdEn_AER_multicast;
+	wire send_req_multicast;
+	reg [2:0] multicast_cs, multicast_ns;
+	reg	inc_Addr_AER, set_spike_state, reset_spike_state, send_multicast, send_multicast_delay, th_compare_delay;
+	reg spike_state;
+	reg [3:0] AER_number_reg, AER_counter;
 
 
 	//LOGIC
@@ -485,6 +506,132 @@ module NurnCtrlr
 	assign Addr_StatRd_F_o = {rclNurnAddr_buff,lrnCntr_Axon_Pipln};
 	assign Addr_StatWr_D_o = {lrnWrBack_Nurn,lrnWrBackCntr_Axon};
 	assign Addr_StatWr_G_o = {lrnWrBack_Nurn,lrnWrBackCntr_Axon};
+
+    //multicast relevant control signal and address generate
+	assign Addr_AER_o = (multicast_i == 1'b0) ? Addr_Config_B_o : Addr_AER_multicast;
+	//assign rdEn_AER_o = (multicast_i == 1'b0) ? rdEn_Config_B_o : rdEn_AER_multicast;
+	assign rdEn_AER_o = rdEn_Config_B_o;
+	assign send_req_NI_o = (multicast_i == 1'b0) ? outSpike_i : send_req_multicast;
+	assign send_req_multicast = send_multicast_delay && spike_state;
+
+	always @(posedge clk_i or negedge rst_n_i)
+		begin
+			if (rst_n_i == 1'b0)
+				multicast_cs <= 0;
+			else
+				multicast_cs <= multicast_ns;
+		end
+
+	always @(*)
+		begin
+			case(multicast_cs)
+				MULTICAST_IDLE:
+					begin
+						if (cmp_th_o == 1'b1)
+							multicast_ns = MULTICAST_START;
+						else
+							multicast_ns = MULTICAST_IDLE;
+					end
+				MULTICAST_START:
+					begin
+						multicast_ns = MULTICAST_SEND;
+					end
+				MULTICAST_SEND:
+					begin
+						if (AER_counter < AER_number_reg)
+							multicast_ns = MULTICAST_SEND;
+						else
+							multicast_ns = MULTICAST_STOP;
+					end
+				MULTICAST_STOP:
+					begin
+						multicast_ns = MULTICAST_IDLE;
+					end
+			endcase
+		end
+
+	always @(*)
+		begin
+			inc_Addr_AER = 1'b0;
+			set_spike_state = 1'b0;
+			reset_spike_state = 1'b0;
+			send_multicast = 1'b0;
+				case(multicast_cs)
+					MULTICAST_IDLE:
+						inc_Addr_AER = 1'b0;
+					MULTICAST_START:
+						begin
+							set_spike_state = 1'b1;
+						end
+					MULTICAST_SEND:
+						begin
+							if (AER_counter < AER_number_reg)
+								begin
+									inc_Addr_AER = 1'b1;
+								end
+							else
+								begin
+									inc_Addr_AER = 1'b0;
+								end
+							if ((spike_state == 1'b1) &&(AER_counter < AER_number_reg))
+								send_multicast = 1'b1;
+							else
+								send_multicast = 1'b0;
+								
+						end
+					MULTICAST_STOP:
+						begin
+							reset_spike_state = 1'b1;
+							inc_Addr_AER = 1'b0;
+						end
+					default:
+						begin
+							inc_Addr_AER = 1'b0;
+							set_spike_state = 1'b0;
+							reset_spike_state = 1'b0;
+							send_multicast = 1'b0;
+						end
+				endcase
+		end
+
+always @(posedge clk_i or negedge rst_n_i)
+	begin
+		if (rst_n_i == 1'b0)
+			begin
+				spike_state <= 1'b0;
+				Addr_AER_multicast <= 0;
+				send_multicast_delay = 1'b0;
+				th_compare_delay <= 1'b0;
+				AER_number_reg <= 0;
+				AER_counter <= 0;
+
+			end
+		else
+			begin
+				if (start_i == 1'b1)
+					Addr_AER_multicast <= 0;
+				else if (inc_Addr_AER == 1'b1)
+					Addr_AER_multicast <= Addr_AER_multicast + 1'b1;
+				
+				if (set_spike_state == 1'b1)
+					AER_number_reg <= AER_number_i;
+				else if (reset_spike_state == 1'b1)
+					AER_number_reg <= 0;
+				
+				if (inc_Addr_AER == 1'b1)
+					AER_counter = AER_counter + 1'b1;
+				else if (reset_spike_state == 1'b1)
+					AER_counter <= 0;
+				
+				th_compare_delay <= th_compare_i;
+				
+				if (set_spike_state == 1'b1)
+					spike_state <= th_compare_delay;
+				else if (reset_spike_state == 1'b1)
+					spike_state <= 1'b0;
+				send_multicast_delay <= send_multicast;
+			end
+	end
 
 `ifdef AER_MULTICAST
 	always @(posedge clk_i or negedge rst_n_i)

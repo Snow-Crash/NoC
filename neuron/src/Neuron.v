@@ -538,6 +538,7 @@ ConfigMem_Asic
 	.multicast_i			(1'b0),
 	.AER_number_o				(AER_number),
 	.rdEn_AER_i				(rdEn_AER),
+	.Addr_AER_i				(Addr_AER),
 	//read port C
 	.Addr_Config_C_i( Addr_Config_C),
 	.rdEn_Config_C_i(rdEn_Config_C ),

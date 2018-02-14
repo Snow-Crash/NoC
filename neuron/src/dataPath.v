@@ -172,9 +172,7 @@ module dataPath
 	input													start_i,
 	`endif
 
-	//`ifdef AER_MULTICAST
 	output													th_compare_o,
-	//`endif
 	
 	output													update_weight_enable_o,
 	output													en_expired_post_history_write_back_o
@@ -306,10 +304,7 @@ module dataPath
 	end
 	assign outSpike_o = rclOutSpikeReg_dly[0] & (~rclOutSpikeReg_dly[1]);//generates a pulse
 
-//`ifdef AER_MULTICAST
-	//assign th_compare_o = rclOutSpikeReg_dly[1];
 	assign th_compare_o = comp_out;
-//`endif
 
 	//expired post synaptic history
 	always @(*)

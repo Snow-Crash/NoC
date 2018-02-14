@@ -78,20 +78,13 @@ module NurnCtrlr
 	input 												axonLrnMode_i 	,
 	output [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	Addr_Config_C_o,
 	output 												rdEn_Config_C_o 	,
-
-`ifdef AER_MULTICAST
-	input												read_next_AER_i,
-	output [NURN_CNT_BIT_WIDTH-1:0]						AER_pointer_o,
-	output 												packet_write_req_o,
-	input												th_compare_i,
-`endif
 	
 	output												rdEn_AER_o,
 	output [NURN_CNT_BIT_WIDTH:0]						Addr_AER_o,
 	input												multicast_i,
 	output												send_req_NI_o,
 	input												outSpike_i,
-	input												read_next_AER_i,
+	//input												read_next_AER_i,
 	input												th_compare_i,
 	input [3:0]											AER_number_i,
 
@@ -206,13 +199,7 @@ module NurnCtrlr
 	reg expired_post_history_write_back;
 	reg expired_post_history_write_back_delay;
 
-`ifdef AER_MULTICAST
-	reg [NURN_CNT_BIT_WIDTH-1:0] AER_pointer;
-	reg en_inc_AER_pointer, recall_spike_reg, send_multicast;
-	reg inc_AER_pointer;
-	reg packet_write_req_delay;
-	reg packet_write_req;
-`endif
+
 
 	parameter MULTICAST_IDLE = 0;
 	parameter MULTICAST_START = 1;
@@ -220,7 +207,6 @@ module NurnCtrlr
 	parameter MULTICAST_STOP = 3;
 	// multicast 
 	reg [NURN_CNT_BIT_WIDTH:0] Addr_AER_multicast;
-	reg rdEn_AER_multicast;
 	wire send_req_multicast;
 	reg [2:0] multicast_cs, multicast_ns;
 	reg	inc_Addr_AER, set_spike_state, reset_spike_state, send_multicast, send_multicast_delay, th_compare_delay;
@@ -633,58 +619,58 @@ always @(posedge clk_i or negedge rst_n_i)
 			end
 	end
 
-`ifdef AER_MULTICAST
-	always @(posedge clk_i or negedge rst_n_i)
-		begin
-			if(rst_n_i == 1'b0)
-				begin
-					AER_pointer <= 0;
-					en_inc_AER_pointer <= 0;
-					recall_spike_reg <= 0;
-					send_multicast <= 0;
-					packet_write_req_delay <= 0;
-				end
-			else
-				begin
-					if (start_i == 1'b1)
-						AER_pointer <= 0;
-					else if (inc_AER_pointer == 1'b1)
-						AER_pointer <= AER_pointer + 1;
+// `ifdef AER_MULTICAST
+// 	always @(posedge clk_i or negedge rst_n_i)
+// 		begin
+// 			if(rst_n_i == 1'b0)
+// 				begin
+// 					AER_pointer <= 0;
+// 					en_inc_AER_pointer <= 0;
+// 					recall_spike_reg <= 0;
+// 					send_multicast <= 0;
+// 					packet_write_req_delay <= 0;
+// 				end
+// 			else
+// 				begin
+// 					if (start_i == 1'b1)
+// 						AER_pointer <= 0;
+// 					else if (inc_AER_pointer == 1'b1)
+// 						AER_pointer <= AER_pointer + 1;
 
-					if (cmp_th_o == 1'b1)
-						en_inc_AER_pointer <= 1'b1;
-					else if(read_next_AER_i == 1'b0)
-						en_inc_AER_pointer <= 1'b0;
+// 					if (cmp_th_o == 1'b1)
+// 						en_inc_AER_pointer <= 1'b1;
+// 					else if(read_next_AER_i == 1'b0)
+// 						en_inc_AER_pointer <= 1'b0;
 					
-					if (th_compare_i == 1'b1 && cmp_th_o == 1'b1)
-						recall_spike_reg <= 1'b1;
-					else if (read_next_AER_i == 1'b0 && recall_spike_reg == 1'b1)
-						recall_spike_reg <= 1'b0;
+// 					if (th_compare_i == 1'b1 && cmp_th_o == 1'b1)
+// 						recall_spike_reg <= 1'b1;
+// 					else if (read_next_AER_i == 1'b0 && recall_spike_reg == 1'b1)
+// 						recall_spike_reg <= 1'b0;
 					
-					packet_write_req_delay = packet_write_req;
+// 					packet_write_req_delay = packet_write_req;
 
-				end
-		end
+// 				end
+// 		end
 		
-	always @(*)
-		begin
-			packet_write_req = 1'b0;
-			inc_AER_pointer = 1'b0;
+// 	always @(*)
+// 		begin
+// 			packet_write_req = 1'b0;
+// 			inc_AER_pointer = 1'b0;
 
-			if (cmp_th_o == 1'b1 && th_compare_i == 1'b1)
-				packet_write_req = 1'b1;
-			else if (read_next_AER_i == 1'b1 && en_inc_AER_pointer == 1'b1 && recall_spike_reg == 1'b1)
-				packet_write_req = 1'b1;
+// 			if (cmp_th_o == 1'b1 && th_compare_i == 1'b1)
+// 				packet_write_req = 1'b1;
+// 			else if (read_next_AER_i == 1'b1 && en_inc_AER_pointer == 1'b1 && recall_spike_reg == 1'b1)
+// 				packet_write_req = 1'b1;
 		
-			if (cmp_th_o == 1'b1)
-				inc_AER_pointer = 1'b1;
-			else if (read_next_AER_i == 1'b1 && en_inc_AER_pointer == 1'b1)
-				inc_AER_pointer = 1'b1;
-		end
+// 			if (cmp_th_o == 1'b1)
+// 				inc_AER_pointer = 1'b1;
+// 			else if (read_next_AER_i == 1'b1 && en_inc_AER_pointer == 1'b1)
+// 				inc_AER_pointer = 1'b1;
+// 		end
 	
-	assign AER_pointer_o = AER_pointer;
-	assign packet_write_req_o = packet_write_req_delay;
-`endif
+// 	assign AER_pointer_o = AER_pointer;
+// 	assign packet_write_req_o = packet_write_req_delay;
+// `endif
 
 
 	//pipelined and registered control signals

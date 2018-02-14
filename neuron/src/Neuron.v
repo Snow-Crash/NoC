@@ -198,16 +198,11 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 		.en_expired_post_history_write_back_i (en_expired_post_history_write_back),
 		.read_weight_fifo_o (read_weight_fifo),
 
-`ifdef AER_MULTICAST
-		.read_next_AER_i	(read_next_AER),
-		.AER_pointer_o		(AER_pointer),
-		.th_compare_i		(th_compare),
-		.packet_write_req_o (packet_write_req),
-`endif
+
 		.outSpike_i			(outSpike),
-		.read_next_AER_i	(read_next_AER),
+
 		.th_compare_i		(th_compare),
-		.multicast_i		(1'b0),
+		.multicast_i		(1'b1),
 		.Addr_AER_o			(Addr_AER),
 		.AER_number_i		(AER_number),
 		.send_req_NI_o		(packet_write_req),
@@ -331,9 +326,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 		.start_i			(start),
 		`endif
 
-		//`ifdef AER_MULTICAST
 		.th_compare_o		(th_compare),
-		//`endif
 
 		.update_weight_enable_o		(update_weight_enable),
 		//.shift_writeback_en_buffer_i (shift_writeback_en_buffer),
@@ -530,12 +523,9 @@ ConfigMem_Asic
 	.RstPot_o( RstPot),
 	.SpikeAER_o(SpikeAER ),
 
-//`ifdef AER_MULTICAST
-		.read_next_AER_o	(read_next_AER),
-		.AER_pointer_i		(AER_pointer),
-	.Addr_AER_i(Addr_AER),
-//`endif
-	.multicast_i			(1'b0),
+
+// //`endif
+	.multicast_i			(1'b1),
 	.AER_number_o				(AER_number),
 	.rdEn_AER_i				(rdEn_AER),
 	.Addr_AER_i				(Addr_AER),

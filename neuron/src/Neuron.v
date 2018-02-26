@@ -127,6 +127,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 	wire [NURN_CNT_BIT_WIDTH-1:0] AER_pointer;
 	wire [NURN_CNT_BIT_WIDTH:0] Addr_AER;
 	wire [3:0] AER_number;
+	wire [1:0] Axon_scaling;
 
 	//MODULE INSTANTIATIONS
 	NurnCtrlr 
@@ -202,7 +203,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 		.outSpike_i			(outSpike),
 
 		.th_compare_i		(th_compare),
-		.multicast_i		(1'b1),
+		.multicast_i		(1'b0),
 		.Addr_AER_o			(Addr_AER),
 		.AER_number_i		(AER_number),
 		.send_req_NI_o		(packet_write_req),
@@ -534,6 +535,10 @@ ConfigMem_Asic
 	.rdEn_Config_C_i(rdEn_Config_C ),
 
 	.axonLrnMode_o(axonLrnMode ),
+
+	.Addr_axon_scaling_i	(Addr_StatRd_E[AXON_CNT_BIT_WIDTH-1:0]),
+	.Axon_scaling_o (Axon_scaling),
+
 	.ce(1'b1)
 );
 
@@ -632,7 +637,9 @@ ConfigMem_Asic
 		//write port G
 		.Addr_StatWr_G_i(Addr_StatWr_G),
 		.wrEn_StatWr_G_i(write_enable_G),
-		.data_StatWr_G_i(data_StatWr_G)
+		.data_StatWr_G_i(data_StatWr_G),
+
+		.Axon_scaling_i(Axon_scaling)
 	);
 
 

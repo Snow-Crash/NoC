@@ -21,6 +21,7 @@ module StatusMem_Asic
 	parameter NUM_AXONS = 256  ,
 
 	parameter DSIZE = 16 ,
+	parameter WEIGHT_SIZE = 12,
 
 	parameter NURN_CNT_BIT_WIDTH = 8 ,
 	parameter AXON_CNT_BIT_WIDTH = 8 ,
@@ -89,6 +90,8 @@ module StatusMem_Asic
 	input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	Addr_StatWr_D_i,
 	input 												wrEn_StatWr_D_i,
 	input [STDP_WIN_BIT_WIDTH-1:0]						data_StatWr_D_i,
+
+	input [1:0]											Axon_scaling_i,
 	
 	//read port E
 	input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	Addr_StatRd_E_i,
@@ -120,13 +123,13 @@ module StatusMem_Asic
         reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight         [0:(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1];
 
 		// neuron 0 - 31
-		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight_1         [8192-1:0];
+		reg /*sparse*/ [WEIGHT_SIZE-1:0] 			 	Mem_Weight_1         [8192-1:0];
 		// neuron 31 - 63
-		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight_2         [8192-1:0];
+		reg /*sparse*/ [WEIGHT_SIZE-1:0] 			 	Mem_Weight_2         [8192-1:0];
 		// neuron 64 - 95
-		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight_3         [8192-1:0];
+		reg /*sparse*/ [WEIGHT_SIZE-1:0] 			 	Mem_Weight_3         [8192-1:0];
 		// neuron 96-127
-		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_Weight_4         [8192-1:0];
+		reg /*sparse*/ [WEIGHT_SIZE-1:0] 			 	Mem_Weight_4         [8192-1:0];
 
 		// neuron 0 - 31
 		reg /*sparse*/ [DSIZE-1:0] 			 	Mem_PreHistory_1		[8192-1:0];
@@ -198,15 +201,21 @@ module StatusMem_Asic
 	reg [1:0] weight_recall_rd_sel_reg, weight_learn_rd_sel;
 	wire [1:0] weight_recall_rd_sel;
 	wire [1:0] weight_mem_wr_sel;
-	wire [DSIZE-1:0] weight_mem_1_out, weight_mem_2_out, weight_mem_3_out, weight_mem_4_out;
+	wire [WEIGHT_SIZE-1:0] weight_mem_1_out, weight_mem_2_out, weight_mem_3_out, weight_mem_4_out;
 	reg [AXON_CNT_BIT_WIDTH+NURN_CNT_BIT_WIDTH-3:0] weight_1_rd_addr_reg, weight_2_rd_addr_reg, weight_3_rd_addr_reg, weight_4_rd_addr_reg;
-	reg [DSIZE-1:0] data_e;
+	reg [WEIGHT_SIZE-1:0] data_e;
 	wire [DSIZE-1:0] data_f;
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-3:0] weight_recall_rd_addr, weight_mem_wr_addr;
 
 	reg pre_history_1_wr_en, pre_history_2_wr_en, pre_history_3_wr_en, pre_history_4_wr_en;
 	reg pre_history_1_rd_en, pre_history_2_rd_en, pre_history_3_rd_en, pre_history_4_rd_en;
 	reg [1:0] pre_history_wr_sel, pre_history_rd_sel;
+
+	reg [1:0] scaling_pipeline [3:0];
+	wire [DSIZE+2-1:0] weight_fifo_2_out;
+	reg [15:0] scaled_weight;
+	reg [11:0] scaled_back_weight;
+	wire [3:0] sign_bit;
 
 `ifdef SINGLE_PORT_STATUS_MEM
 	// output reg
@@ -353,7 +362,8 @@ module StatusMem_Asic
         end
     assign data_StatRd_E = Mem_Weight[read_address_register_weight_E];
 	//assign data_StatRd_E_o = data_StatRd_E;
-	assign data_StatRd_E_o = data_e;
+	//assign data_StatRd_E_o = data_e;
+	assign data_StatRd_E_o = scaled_weight;
 
 always @(posedge clk_i or negedge rst_n_i)
 	begin
@@ -464,7 +474,8 @@ always @(*)
 	        if (weight_recall_1_rd_en == 1'b1)
 	            weight_1_rd_addr_reg <= weight_recall_rd_addr;
 		    if (weight_1_wr_en == 1'b1)
-			    Mem_Weight_1[weight_mem_wr_addr] <= data_StatWr_G_i;
+			    //Mem_Weight_1[weight_mem_wr_addr] <= data_StatWr_G_i;
+				Mem_Weight_1[weight_mem_wr_addr] <= scaled_back_weight;
         end
     assign weight_mem_1_out = Mem_Weight_1[weight_1_rd_addr_reg];
 
@@ -473,7 +484,8 @@ always @(*)
 	        if (weight_recall_2_rd_en == 1'b1)
 	            weight_2_rd_addr_reg <= weight_recall_rd_addr;
 		    if (weight_2_wr_en == 1'b1)
-			    Mem_Weight_2[weight_mem_wr_addr] <= data_StatWr_G_i;
+			    //Mem_Weight_2[weight_mem_wr_addr] <= data_StatWr_G_i;
+				Mem_Weight_2[weight_mem_wr_addr] <= scaled_back_weight;
         end
     assign weight_mem_2_out = Mem_Weight_2[weight_2_rd_addr_reg];
 
@@ -482,7 +494,8 @@ always @(*)
 	        if (weight_recall_3_rd_en == 1'b1)
 	            weight_3_rd_addr_reg <= weight_recall_rd_addr;
 		    if (weight_3_wr_en == 1'b1)
-			    Mem_Weight_3[weight_mem_wr_addr] <= data_StatWr_G_i;
+			    //Mem_Weight_3[weight_mem_wr_addr] <= data_StatWr_G_i;
+				Mem_Weight_3[weight_mem_wr_addr] <= scaled_back_weight;
         end
     assign weight_mem_3_out = Mem_Weight_3[weight_3_rd_addr_reg];
 
@@ -491,14 +504,66 @@ always @(*)
 	        if (weight_recall_4_rd_en == 1'b1)
 	            weight_4_rd_addr_reg <= weight_recall_rd_addr;
 		    if (weight_4_wr_en == 1'b1)
-			    Mem_Weight_4[weight_mem_wr_addr] <= data_StatWr_G_i;
+			    //Mem_Weight_4[weight_mem_wr_addr] <= data_StatWr_G_i;
+				Mem_Weight_4[weight_mem_wr_addr] <= scaled_back_weight;
         end
     assign weight_mem_4_out = Mem_Weight_4[weight_4_rd_addr_reg];
+
+assign sign_bit = {data_e[WEIGHT_SIZE-1], data_e[WEIGHT_SIZE-1], data_e[WEIGHT_SIZE-1], data_e[WEIGHT_SIZE-1]};
+//shift weight
+always @(*)
+	begin
+		case(Axon_scaling_i)
+			2'b00:
+				scaled_weight = {sign_bit, data_e[11:0]};
+			2'b01:
+				scaled_weight = {sign_bit[2:0], data_e[11:0], 1'b0};
+			2'b10:
+				scaled_weight = {sign_bit[1:0], data_e[11:0], 2'b0};
+			2'b11:
+				scaled_weight = {data_e[11:0], 4'b0};
+			default:
+				scaled_weight = {sign_bit, data_e[11:0]};
+		endcase
+		
+		case(scaling_pipeline[0])
+			2'b00:
+				scaled_back_weight = data_StatWr_G_i[11:0];
+			2'b01:
+				scaled_back_weight = data_StatWr_G_i[12:1];
+			2'b10:
+				scaled_back_weight = data_StatWr_G_i[13:2];
+			2'b11:
+				scaled_back_weight = data_StatWr_G_i[15:4];
+			default:
+				scaled_back_weight = data_StatWr_G_i[11:0];
+		endcase
+	end
+
+always @(posedge clk_i or negedge rst_n_i)
+	begin
+		if (rst_n_i == 1'b0)
+			begin
+				scaling_pipeline[0] <= 0;
+				scaling_pipeline[1] <= 0;
+				scaling_pipeline[2] <= 0;
+				scaling_pipeline[3] <= 0;
+			end
+		else
+			begin
+				scaling_pipeline[3] <= weight_fifo_2_out[1:0];
+				scaling_pipeline[2] <= scaling_pipeline[3];
+				scaling_pipeline[1] <= scaling_pipeline[2];
+				scaling_pipeline[0] <= scaling_pipeline[1];
+			end	
+	end
+
 
 //fifo
 generic_fifo_sc_b
 #(
-	.dw(DSIZE),
+	//.dw(DSIZE),
+	.dw(DSIZE+2),
 	.aw(9)
 )
 weight_fifo_2
@@ -506,10 +571,11 @@ weight_fifo_2
 	.clk(clk_i), 
 	.rst(rst_n_i), 
 	.clr(start_i), 
-	.din(data_e), 
+	// .din(data_e), 
+	.din({scaled_weight,Axon_scaling_i}), 
 	.we(fifo_write_enable), 
-	//.dout(data_f), 
-	.dout(data_StatRd_F_o), 
+	// .dout(data_f), 
+	.dout(weight_fifo_2_out), 
 	.re(rdEn_StatRd_F_i),
 	.full(), 
 	.empty(), 
@@ -521,7 +587,9 @@ weight_fifo_2
 	.empty_n_r(),
 	.level()
 );
-
+//	.din({scaled_weight,Axon_scaling_i}), 
+assign data_StatRd_F_o = weight_fifo_2_out[DSIZE+2-1:2];
+//assign data_StatRd_F_o = weight_fifo_2_out;
 
 always @(posedge clk_i or negedge rst_n_i)
 	begin

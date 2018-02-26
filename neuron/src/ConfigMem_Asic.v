@@ -73,6 +73,8 @@ module ConfigMem_Asic
 	input 												rdEn_Config_C_i,
 
 	output												axonLrnMode_o,
+	input [AXON_CNT_BIT_WIDTH-1:0]						Addr_axon_scaling_i,
+	output [1:0]										Axon_scaling_o,
 
     input                                               ce,
 
@@ -108,7 +110,7 @@ reg [AXON_CNT_BIT_WIDTH-1:0]    axon_id_reg;
 reg [AXON_CNT_BIT_WIDTH+NURN_CNT_BIT_WIDTH-1:0] LearnMode_Weight_addr_reg;
 wire [255:0]                    axon_mode_all;
 reg [AER_BIT_WIDTH-1:0]			AER_reg;
-
+reg [1:0]						axon_scaling_out;
 
 //  //rwo registers store number of neuron and number of axon
 // always @(posedge clk_i or negedge rst_n_i)
@@ -142,7 +144,8 @@ reg [63:0]                          axon_mode_1                    [255:0];
 reg [63:0]                          axon_mode_2                    [255:0];
 reg [63:0]                          axon_mode_3                    [255:0];
 reg [63:0]                          axon_mode_4                    [255:0];
-
+// axon sclaling
+reg [1:0]							axon_scaling					[255:0];
 
 `ifdef SIM_MEM_INIT
 		integer file1, file2, file3, file4, file5, idx, file6, file7;
@@ -225,8 +228,8 @@ reg [63:0]                          axon_mode_4                    [255:0];
 			//-----------------------------
 			
 			// initialize mem_C
-			file_name = {SIM_PATH, "data", DIR_ID, "/LrnModeWght.txt"};
-			$readmemh (file_name,LearnMode_Weight);
+			file_name = {SIM_PATH, "data", DIR_ID, "/AxonScaling.txt"};
+			$readmemh (file_name,axon_scaling);
 
 			//initialize memc2
 			file_name = {SIM_PATH, "data", DIR_ID, "/LrnModeWght.txt"}; 	file1 = $fopen(file_name, "r+");
@@ -244,7 +247,10 @@ reg [63:0]                          axon_mode_4                    [255:0];
 
 			$fclose(file1);
 			//-----------------------------
-				
+
+			//initialize axon sclaling
+			file_name = {SIM_PATH, "data", DIR_ID, "/AxonScaling.txt"};
+			$readmemh (file_name,LearnMode_Weight);
 		end
 `endif
 
@@ -369,6 +375,21 @@ always @ (posedge clk_i)
     end
 //assign axonLrnMode_o = LearnMode_Weight[LearnMode_Weight_addr_reg];
 assign axonLrnMode_o = axon_mode_all[axon_id_reg];
+
+always  @(posedge clk_i)
+begin
+    if(ce)
+        begin
+            if(config_write_enable)
+                begin
+                    axon_scaling[Addr_axon_scaling_i] <= config_data_in;
+                    axon_scaling_out <= config_data_in;
+                end
+            else
+                axon_scaling_out <= axon_scaling[Addr_axon_scaling_i];
+        end
+end
+assign Axon_scaling_o = axon_scaling_out;
 
 
 //registers to store memory output

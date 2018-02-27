@@ -639,7 +639,8 @@ ConfigMem_Asic
 		.wrEn_StatWr_G_i(write_enable_G),
 		.data_StatWr_G_i(data_StatWr_G),
 
-		.Axon_scaling_i(Axon_scaling)
+		.Axon_scaling_i(Axon_scaling),
+		.en_config(1'b0)
 	);
 
 

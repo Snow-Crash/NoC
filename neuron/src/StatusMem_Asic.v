@@ -108,7 +108,9 @@ module StatusMem_Asic
 	//write port G
 	input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	Addr_StatWr_G_i,
 	input 												wrEn_StatWr_G_i,
-	input [DSIZE-1:0]									data_StatWr_G_i
+	input [DSIZE-1:0]									data_StatWr_G_i,
+
+	input 												en_config
 
 );
 
@@ -216,6 +218,7 @@ module StatusMem_Asic
 	reg [15:0] scaled_weight;
 	reg [11:0] scaled_back_weight;
 	wire [3:0] sign_bit;
+	wire [11:0] weight_write_back;
 
 `ifdef SINGLE_PORT_STATUS_MEM
 	// output reg
@@ -475,7 +478,7 @@ always @(*)
 	            weight_1_rd_addr_reg <= weight_recall_rd_addr;
 		    if (weight_1_wr_en == 1'b1)
 			    //Mem_Weight_1[weight_mem_wr_addr] <= data_StatWr_G_i;
-				Mem_Weight_1[weight_mem_wr_addr] <= scaled_back_weight;
+				Mem_Weight_1[weight_mem_wr_addr] <= weight_write_back;
         end
     assign weight_mem_1_out = Mem_Weight_1[weight_1_rd_addr_reg];
 
@@ -485,7 +488,7 @@ always @(*)
 	            weight_2_rd_addr_reg <= weight_recall_rd_addr;
 		    if (weight_2_wr_en == 1'b1)
 			    //Mem_Weight_2[weight_mem_wr_addr] <= data_StatWr_G_i;
-				Mem_Weight_2[weight_mem_wr_addr] <= scaled_back_weight;
+				Mem_Weight_2[weight_mem_wr_addr] <= weight_write_back;
         end
     assign weight_mem_2_out = Mem_Weight_2[weight_2_rd_addr_reg];
 
@@ -495,7 +498,7 @@ always @(*)
 	            weight_3_rd_addr_reg <= weight_recall_rd_addr;
 		    if (weight_3_wr_en == 1'b1)
 			    //Mem_Weight_3[weight_mem_wr_addr] <= data_StatWr_G_i;
-				Mem_Weight_3[weight_mem_wr_addr] <= scaled_back_weight;
+				Mem_Weight_3[weight_mem_wr_addr] <= weight_write_back;
         end
     assign weight_mem_3_out = Mem_Weight_3[weight_3_rd_addr_reg];
 
@@ -505,7 +508,7 @@ always @(*)
 	            weight_4_rd_addr_reg <= weight_recall_rd_addr;
 		    if (weight_4_wr_en == 1'b1)
 			    //Mem_Weight_4[weight_mem_wr_addr] <= data_StatWr_G_i;
-				Mem_Weight_4[weight_mem_wr_addr] <= scaled_back_weight;
+				Mem_Weight_4[weight_mem_wr_addr] <= weight_write_back;
         end
     assign weight_mem_4_out = Mem_Weight_4[weight_4_rd_addr_reg];
 
@@ -539,6 +542,8 @@ always @(*)
 				scaled_back_weight = data_StatWr_G_i[11:0];
 		endcase
 	end
+
+assign weight_write_back = (en_config == 1'b0) ? scaled_back_weight : data_StatWr_G_i;
 
 always @(posedge clk_i or negedge rst_n_i)
 	begin

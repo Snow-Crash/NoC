@@ -62,13 +62,8 @@ uut_neuron (
     
     .start(start), 
     .inSpike(spike),
-`ifdef AER_MULTICAST
     .outSpike(outSpike),
 	.packet_write_req(packet_write_req)
-`else
-    .outSpike(packet_write_req),
-    .packet_write_req( )
-`endif
     );
 
 router #(

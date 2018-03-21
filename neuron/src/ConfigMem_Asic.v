@@ -38,7 +38,7 @@ module ConfigMem_Asic
 
 
 	//input data port for config mode
-	input [DSIZE*2-1:0]									config_data_in,
+	input [63:0]									config_data_in,
 	input [CONFIG_PARAMETER_NUMBER-1:0] 				config_write_enable,
 
 	output [DSIZE-1:0] 									FixedThreshold_o,
@@ -81,7 +81,18 @@ module ConfigMem_Asic
     input [NURN_CNT_BIT_WIDTH-1:0]						AER_pointer_i,
 	output												read_next_AER_o,
 	input												multicast_i,
-	output [3:0]										AER_number_o
+	output [3:0]										AER_number_o,
+	output												multicast_o,
+
+	input 												wr_config_A_i,
+    input 												wr_config_B_i,
+    input 												wr_config_C1_i,
+    input												wr_config_C2_i,
+    input 												wr_config_C3_i,
+    input 												wr_config_C4_i,
+    input 												wr_config_AER_i,
+	input												wr_config_scaling,
+	input												wr_coreconfig_i
 
 );
 
@@ -111,6 +122,7 @@ reg [AXON_CNT_BIT_WIDTH+NURN_CNT_BIT_WIDTH-1:0] LearnMode_Weight_addr_reg;
 wire [255:0]                    axon_mode_all;
 reg [AER_BIT_WIDTH-1:0]			AER_reg;
 reg [1:0]						axon_scaling_out;
+reg [AXON_CNT_BIT_WIDTH+NURN_CNT_BIT_WIDTH:0] core_config;
 
  //core config 
 always @(posedge clk_i or negedge rst_n_i)
@@ -262,10 +274,10 @@ always  @(posedge clk_i)
 begin
     if(ce)
         begin
-            if(config_write_enable)
+            if(wr_config_A_i)
                 begin
-                    config_A[Addr_Config_A_i] <= config_data_in;
-                    config_A_dout <= config_data_in;
+                    config_A[Addr_Config_A_i] <= config_data_in[CONFIG_A_WIDTH-1:0];
+                    config_A_dout <= config_data_in[CONFIG_A_WIDTH-1:0];
                 end
             else
                 config_A_dout <= config_A[Addr_Config_A_i];
@@ -276,10 +288,10 @@ always  @(posedge clk_i)
 begin
     if(ce)
         begin
-            if(config_write_enable)
+            if(wr_config_B_i)
                 begin
-                    config_B[Addr_Config_B_i] <= config_data_in;
-                    config_B_dout <= config_data_in;
+                    config_B[Addr_Config_B_i] <= config_data_in[CONFIG_B_WIDTH-1:0];
+                    config_B_dout <= config_data_in[CONFIG_B_WIDTH-1:0];
                 end
             else
                 config_B_dout <= config_B[Addr_Config_B_i];
@@ -290,10 +302,10 @@ always  @(posedge clk_i)
 begin
     if(ce)
         begin
-            if(config_write_enable)
+            if(wr_config_AER_i)
                 begin
-                    config_AER[Addr_AER_i] <= config_data_in;
-                    config_AER_dout <= config_data_in;
+                    config_AER[Addr_AER_i] <= config_data_in[AER_BIT_WIDTH-1:0];
+                    config_AER_dout <= config_data_in[AER_BIT_WIDTH-1:0];
                 end
             else
                 config_AER_dout <= config_AER[Addr_AER_i];
@@ -304,7 +316,7 @@ always  @(posedge clk_i)
 begin
     if(ce)
         begin
-            if(config_write_enable)
+            if(wr_config_C1_i)
                 begin
                     axon_mode_1[neuron_id] <= config_data_in;
                     axon_mode_1_dout <= config_data_in;
@@ -318,7 +330,7 @@ always  @(posedge clk_i)
 begin
     if(ce)
         begin
-            if(config_write_enable)
+            if(wr_config_C2_i)
                 begin
                     axon_mode_2[neuron_id] <= config_data_in;
                     axon_mode_2_dout <= config_data_in;
@@ -332,7 +344,7 @@ always  @(posedge clk_i)
 begin
     if(ce)
         begin
-            if(config_write_enable)
+            if(wr_config_C3_i)
                 begin
                     axon_mode_3[neuron_id] <= config_data_in;
                     axon_mode_3_dout <= config_data_in;
@@ -346,7 +358,7 @@ always  @(posedge clk_i)
 begin
     if(ce)
         begin
-            if(config_write_enable)
+            if(wr_config_C4_i)
                 begin
                     axon_mode_4[neuron_id] <= config_data_in;
                     axon_mode_4_dout <= config_data_in;

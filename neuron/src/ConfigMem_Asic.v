@@ -112,23 +112,24 @@ wire [255:0]                    axon_mode_all;
 reg [AER_BIT_WIDTH-1:0]			AER_reg;
 reg [1:0]						axon_scaling_out;
 
-//  //rwo registers store number of neuron and number of axon
-// always @(posedge clk_i or negedge rst_n_i)
-// 	begin
-// 	  	if (rst_n_i == 1'b0)
-// 		  	begin
-// 				Number_Neuron_Axon <= 0;
-// 			end
-// 		else
-// 			begin
-// 				if(write_Number_Neuron_Axon == 1'b1)
-// 					begin
-// 						Number_Neuron_Axon <= config_data_in[NURN_CNT_BIT_WIDTH-1:0];
-// 					end			
-// 			end
-// 	end
-// assign Number_Neuron_o = Number_Neuron_Axon[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:AXON_CNT_BIT_WIDTH];
-// assign Number_Axon_o = Number_Neuron_Axon[AXON_CNT_BIT_WIDTH-1:0];
+ //core config 
+always @(posedge clk_i or negedge rst_n_i)
+	begin
+	  	if (rst_n_i == 1'b0)
+		  	begin
+				core_config <= 0;
+			end
+		else
+			begin
+				if(wr_coreconfig_i == 1'b1)
+					begin
+						core_config <= config_data_in[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH:0];
+					end			
+			end
+	end
+assign Number_Neuron_o = core_config[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:AXON_CNT_BIT_WIDTH];
+assign Number_Axon_o = core_config[AXON_CNT_BIT_WIDTH-1:0];
+assign multicast_o = core_config[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH];
 
 
 reg /*sparse*/ 						LearnMode_Weight 					[(1<<(NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH))-1:0];

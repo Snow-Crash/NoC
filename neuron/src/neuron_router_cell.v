@@ -1,6 +1,6 @@
 `include "neuron_define.v"
 
-module neuron_router_cell(clk, rst_n, rt_clk, rt_rst, start,
+module neuron_router_cell(clk, rst_n, rt_clk, rt_rst, start, spike_neuron_id, neuron_spike,
 clk_east, clk_west, clk_north, clk_south,
 wr_req_in_north, wr_req_in_south, wr_req_in_east, wr_req_in_west,
 wr_req_out_north, wr_req_out_south, wr_req_out_east, wr_req_out_west,
@@ -31,6 +31,8 @@ input [3:0] flit_in_north, flit_in_south, flit_in_east, flit_in_west;
 output [3:0] flit_out_north, flit_out_south, flit_out_east, flit_out_west;
 input full_in_north, full_in_south, full_in_east, full_in_west;
 output full_out_north, full_out_south, full_out_east, full_out_west;
+output [NURN_CNT_BIT_WIDTH-1:0] spike_neuron_id;
+output neuron_spike;
 
 wire [3:0] flit_out_local;
 wire outSpike;
@@ -43,6 +45,8 @@ wire [(1<<AXON_CNT_BIT_WIDTH) - 1:0] spike;
 `ifdef LOCAL_PACKET_BYPASS
 wire [31:0] packet_to_interface;
 wire write_req_to_router;
+
+assign neuron_spike = outSpike;
 
 Neuron #(
         .X_ID(X_ID), 
@@ -164,6 +168,7 @@ uut (
     .SpikePacket(flit_in_local), 
     .start(start), 
     .inSpike(spike),
+    .spike_neuron_id(spike_neuron_id),
 `ifdef AER_MULTICAST
     .outSpike(outSpike),
 	.packet_write_req(packet_write_req)

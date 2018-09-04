@@ -135,7 +135,8 @@ module NurnCtrlr
 	output reg 											read_enable_threshold_o,
 	output												write_enable_threshold_o,
 	output reg 											read_enable_posthistory_o,
-	output												write_enable_posthistory_o
+	output												write_enable_posthistory_o,
+	output [NURN_CNT_BIT_WIDTH-1:0]						rclCntr_Nurn_delay_o
 	//output reg 										read_enable_prehistory_o,
 	//output											write_enable_prehistory_o,
 	//output reg 										read_enable_weight_learn_o,
@@ -199,7 +200,8 @@ module NurnCtrlr
 	reg expired_post_history_write_back;
 	reg expired_post_history_write_back_delay;
 
-
+	reg [NURN_CNT_BIT_WIDTH-1:0] rclCntr_Nurn_delay_1;
+	reg [NURN_CNT_BIT_WIDTH-1:0] rclCntr_Nurn_delay_2;
 
 	parameter MULTICAST_IDLE = 0;
 	parameter MULTICAST_START = 1;
@@ -409,6 +411,9 @@ module NurnCtrlr
 			rclNurnAddr_buff <= 0;
 			lrnWrBack_Nurn <= 0;
 			lrnWrBackCntr_Axon <= 0;
+			rclCntr_Nurn_delay_1 <= 0;
+			rclCntr_Nurn_delay_2 <= 0;
+
 		end else begin
 			if (rclCntr_Nurn_rst == 1'b1) begin
 				rclCntr_Nurn <= 0;	
@@ -439,11 +444,14 @@ module NurnCtrlr
 				lrnWrBackCntr_Axon <= lrnWrBackCntr_Axon + 1;
 			end
 
+			rclCntr_Nurn_delay_1 <= rclCntr_Nurn;
+			rclCntr_Nurn_delay_2 <= rclCntr_Nurn_delay_1;
 		end
 	end
 	assign rclCntr_Nurn_done = (rclCntr_Nurn == NUM_NURNS-1) ? 1'b1 : 1'b0;
 	assign rclCntr_Axon_done = (rclCntr_Axon == NUM_AXONS-1) ? 1'b1 : 1'b0;
 	assign lrnCntr_Axon_done = (lrnCntr_Axon == NUM_AXONS-1) ? 1'b1 : 1'b0;
+	assign rclCntr_Nurn_delay_o = rclCntr_Nurn_delay_2;
 
 	//Address generation
 	//--------------------------------------------------//

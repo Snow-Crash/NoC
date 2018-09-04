@@ -28,7 +28,7 @@
 // `define SEPARATE_ADDRESS
 // `define RECORD_SPIKE
 
-module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_req);
+module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_req, spike_neuron_id);
 
 	
 	parameter NUM_NURNS    = 2  ;
@@ -74,6 +74,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 	output  outSpike;
 	output [31:0] SpikePacket;
 	output packet_write_req;
+	output [NURN_CNT_BIT_WIDTH-1:0] spike_neuron_id;
 	//REGISTER DECLARATION
 	//reg  start;
 
@@ -229,7 +230,9 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 		.read_enable_threshold_o			(read_enable_threshold),
 		.write_enable_threshold_o			(write_enable_threshold),
 		.read_enable_posthistory_o			(read_enable_posthistory),
-		.write_enable_posthistory_o			(write_enable_posthistory)
+		.write_enable_posthistory_o			(write_enable_posthistory),
+
+		.rclCntr_Nurn_delay_o(spike_neuron_id)
 		//.read_enable_prehistory_o			(read_enable_prehistory),
 		//.write_enable_prehistory_o		(write_enable_prehistory),
 		//.read_enable_weight_learn_o		(read_enable_weight_learn),

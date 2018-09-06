@@ -309,40 +309,48 @@ module StatusMem_Asic
 		end
 	assign data_rd_threshold_o = Mem_Threshold_dout;
 `else    
-    memory bias
+    //memory bias
 	always @(posedge clk_i)
         begin
 	        if (read_enable_bias_i == 1'b1)
-	            read_address_register_bias <= Addr_StatRd_A_i;
+	            //read_address_register_bias <= Addr_StatRd_A_i;
+				read_address_register_bias <= read_addr_bias_i;
 		    if (write_enable_bias_i == 1'b1)
-			    Mem_Bias[Addr_StatWr_B_i] <= data_wr_bias_i;
+			    //Mem_Bias[Addr_StatWr_B_i] <= data_wr_bias_i;
+				Mem_Bias[write_addr_bias_i] <= data_wr_bias_i;
         end
     assign data_rd_bias_o = Mem_Bias[read_address_register_bias];
 
     always @(posedge clk_i)
         begin
 	        if (read_enable_potential_i == 1'b1)
-	            read_address_register_potential <= Addr_StatRd_A_i;
+	            //read_address_register_potential <= Addr_StatRd_A_i;
+				read_address_register_potential <= read_addr_potential_i;
 		    if (write_enable_potential_i == 1'b1)
-			    Mem_Potential[Addr_StatWr_B_i] <= data_wr_potential_i;
+			    //Mem_Potential[Addr_StatWr_B_i] <= data_wr_potential_i;
+				Mem_Potential[write_addr_potential_i] <= data_wr_potential_i;
         end
     assign data_rd_potential_o = Mem_Potential[read_address_register_potential];
 
     always @(posedge clk_i)
         begin
 	        if (read_enable_threshold_i == 1'b1)
-	            read_address_register_threshold <= Addr_StatRd_A_i;
+	            //read_address_register_threshold <= Addr_StatRd_A_i;
+				read_address_register_threshold <= read_addr_threshold_i;
 		    if (write_enable_threshold_i == 1'b1)
-			    Mem_Threshold[Addr_StatWr_B_i] <= data_wr_threshold_i;
+			    //Mem_Threshold[Addr_StatWr_B_i] <= data_wr_threshold_i;
+				Mem_Threshold[write_addr_threshold_i] <= data_wr_threshold_i;
         end
     assign data_rd_threshold_o = Mem_Threshold[read_address_register_threshold];
 
     always @(posedge clk_i)
         begin
 	        if (read_enable_posthistory_i == 1'b1)
-	            read_address_register_posthistory <= Addr_StatRd_A_i;
+	            //read_address_register_posthistory <= Addr_StatRd_A_i;
+				read_address_register_posthistory <= read_addr_posthistory_i;
 		    if (write_enable_posthistory_i == 1'b1)
-			    Mem_PostHistory[Addr_StatWr_B_i] <= data_wr_posthistory_i;
+			    //Mem_PostHistory[Addr_StatWr_B_i] <= data_wr_posthistory_i;
+				Mem_PostHistory[write_addr_posthistory_i] <= data_wr_posthistory_i;
         end
     assign data_rd_posthistory_o = Mem_PostHistory[read_address_register_posthistory];
 `endif

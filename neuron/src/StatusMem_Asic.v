@@ -220,6 +220,8 @@ module StatusMem_Asic
 	wire [3:0] sign_bit;
 	wire [11:0] weight_write_back;
 
+	wire [DSIZE-1:0] weight_fifo_out;
+
 `ifdef SINGLE_PORT_STATUS_MEM
 	// output reg
 	reg [DSIZE-1:0] Mem_Bias_dout, Mem_Potential_dout, Mem_Threshold_dout;
@@ -372,9 +374,9 @@ module StatusMem_Asic
 			    Mem_Weight[Addr_StatWr_G_i] <= data_StatWr_G_i;
         end
     assign data_StatRd_E = Mem_Weight[read_address_register_weight_E];
-	//assign data_StatRd_E_o = data_StatRd_E;
+	assign data_StatRd_E_o = data_StatRd_E;
 	//assign data_StatRd_E_o = data_e;
-	assign data_StatRd_E_o = scaled_weight;
+	//assign data_StatRd_E_o = scaled_weight;
 
 always @(posedge clk_i or negedge rst_n_i)
 	begin
@@ -602,6 +604,7 @@ weight_fifo_2
 );
 //	.din({scaled_weight,Axon_scaling_i}), 
 assign data_StatRd_F_o = weight_fifo_2_out[DSIZE+2-1:2];
+assign data_StatRd_F_o = weight_fifo_out;
 //assign data_StatRd_F_o = weight_fifo_2_out;
 
 always @(posedge clk_i or negedge rst_n_i)
@@ -625,8 +628,7 @@ weight_fifo
 	.clr(start_i), 
 	.din(data_StatRd_E), 
 	.we(fifo_write_enable), 
-	//.dout(data_StatRd_F_o), 
-	.dout(), 
+	.dout(weight_fifo_out), 
 	.re(rdEn_StatRd_F_i),
 	.full(), 
 	.empty(), 

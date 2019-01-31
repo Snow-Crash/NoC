@@ -19,7 +19,7 @@
 //			it's earlier than weight memory write enable signal. need to fix it by adding a new pipeline. 
 //2017.9.7  Add two wire, expired_post_history_write_back and en_expired_post_history_write_back. And make connections.
 
-`include "neuron_define.v"
+`include "../src/neuron_define.v"
 // `timescale 1ns/100ps
 // `define tpd_clk 5
 // `define DUMP_MEMORY
@@ -28,7 +28,7 @@
 // `define SEPARATE_ADDRESS
 // `define RECORD_SPIKE
 
-module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_req, spike_neuron_id);
+module Neuron_debug(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_req);
 
 	
 	parameter NUM_NURNS    = 2  ;
@@ -74,7 +74,6 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 	output  outSpike;
 	output [31:0] SpikePacket;
 	output packet_write_req;
-	output [NURN_CNT_BIT_WIDTH-1:0] spike_neuron_id;
 	//REGISTER DECLARATION
 	//reg  start;
 
@@ -87,7 +86,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_Config_C, Addr_StatRd_C;
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_StatWr_D, Addr_StatRd_E;
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Addr_StatRd_F, Addr_StatWr_G;
-	wire [NURN_CNT_BIT_WIDTH-1:0] Addr_StatRd_A;
+	wire [NURN_CNT_BIT_WIDTH-1+2:0] Addr_StatRd_A;
 	wire [NURN_CNT_BIT_WIDTH-1:0] Addr_StatWr_B;
 	//wire shift_writeback_en_buffer;
 	wire expired_post_history_write_back;
@@ -126,9 +125,6 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 	wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] access_address_config_C;
 
 	wire [NURN_CNT_BIT_WIDTH-1:0] AER_pointer;
-	wire [NURN_CNT_BIT_WIDTH:0] Addr_AER;
-	wire [3:0] AER_number;
-	wire [1:0] Axon_scaling;
 
 	//MODULE INSTANTIATIONS
 	NurnCtrlr 
@@ -200,15 +196,12 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 		.en_expired_post_history_write_back_i (en_expired_post_history_write_back),
 		.read_weight_fifo_o (read_weight_fifo),
 
-
-		.outSpike_i			(outSpike),
-
+`ifdef AER_MULTICAST
+		.read_next_AER_i	(read_next_AER),
+		.AER_pointer_o		(AER_pointer),
 		.th_compare_i		(th_compare),
-		.multicast_i		(1'b0),
-		.Addr_AER_o			(Addr_AER),
-		.AER_number_i		(AER_number),
-		.send_req_NI_o		(packet_write_req),
-		.rdEn_AER_o			(rdEn_AER),
+		.packet_write_req_o (packet_write_req),
+`endif
 
 
 	`ifdef SEPARATE_ADDRESS
@@ -230,9 +223,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 		.read_enable_threshold_o			(read_enable_threshold),
 		.write_enable_threshold_o			(write_enable_threshold),
 		.read_enable_posthistory_o			(read_enable_posthistory),
-		.write_enable_posthistory_o			(write_enable_posthistory),
-
-		.rclCntr_Nurn_delay_o(spike_neuron_id)
+		.write_enable_posthistory_o			(write_enable_posthistory)
 		//.read_enable_prehistory_o			(read_enable_prehistory),
 		//.write_enable_prehistory_o		(write_enable_prehistory),
 		//.read_enable_weight_learn_o		(read_enable_weight_learn),
@@ -284,12 +275,12 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 		.FixedThreshold_i	(FixedThreshold),
 
 		//status memory
-		//.data_StatRd_A_i 	( data_StatRd_A ),
+		.data_StatRd_A_i 	( data_StatRd_A ),
 		.data_StatRd_C_i 	( data_StatRd_C ),
 		.data_StatRd_E_i 	( data_StatRd_E ),
 		.data_StatRd_F_i 	( data_StatRd_F ),
 
-		//.data_StatWr_B_o 	( data_StatWr_B ),
+		.data_StatWr_B_o 	( data_StatWr_B ),
 		.data_StatWr_D_o 	( data_StatWr_D ),
 		.data_StatWr_G_o 	( data_StatWr_G ),
 
@@ -330,7 +321,9 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 		.start_i			(start),
 		`endif
 
+		`ifdef AER_MULTICAST
 		.th_compare_o		(th_compare),
+		`endif
 
 		.update_weight_enable_o		(update_weight_enable),
 		//.shift_writeback_en_buffer_i (shift_writeback_en_buffer),
@@ -339,137 +332,7 @@ module Neuron(clk, rst_n, SpikePacket, outSpike, start, inSpike, packet_write_re
 
 	);
 
-// `ifdef NEW_CONFIG_MEMORY
-// ConfigMem_Asic_Onchip
-// #(
-// 	.NUM_NURNS(NUM_NURNS)  ,
-// 	.NUM_AXONS(NUM_AXONS) ,
-
-// 	.DSIZE(DSIZE) ,
-
-// 	.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
-// 	.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
-
-// 	.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
-
-// 	.AER_BIT_WIDTH(AER_BIT_WIDTH),
-
-// 	.CONFIG_PARAMETER_NUMBER(9),
-
-// 	.LEARN_MODE_MEMORY_WIDTH(2),
-	
-
-// 	.X_ID(X_ID),
-// 	.Y_ID(Y_ID),
-// 	.SYNTH_PATH(SYNTH_PATH),
-// 	.SIM_PATH(SIM_PATH)	
-
-// )
-// ConfigMem_Asic
-// (
-// 	.clk_i(clk)			,
-// 	.rst_n_i(rst_n)			,
-
-// 	.config_data_in(),
-
-// 	.config_write_enable(),
-
-// 	.FixedThreshold_o(FixedThreshold),
-// 	.Number_Neuron_o(),
-// 	.Number_Axon_o(),
-
-// 	//read port A
-// 	.Addr_Config_A_i(Addr_Config_A),
-// 	.rdEn_Config_A_i(rdEn_Config_A),
-
-// 	.LTP_Win_o(LTP_Win ),
-// 	.LTD_Win_o(LTD_Win ),
-// 	.LTP_LrnRt_o(LTP_LrnRt ),
-// 	.LTD_LrnRt_o(LTD_LrnRt ),
-// 	.biasLrnMode_o(biasLrnMode ),
-	
-// 	//read port B
-// 	.Addr_Config_B_i(Addr_Config_B ),
-// 	.rdEn_Config_B_i(rdEn_Config_B),
-
-// 	.NurnType_o(NurnType ),
-// 	.RandTh_o(RandTh),
-// 	.Th_Mask_o(Th_Mask ),
-// 	.RstPot_o( RstPot),
-// 	.SpikeAER_o(SpikeAER ),
-
-// `ifdef AER_MULTICAST
-// 		.read_next_AER_o	(read_next_AER),
-// 		.AER_pointer_i		(AER_pointer),
-// `endif
-
-// 	//read port C
-// 	.Addr_Config_C_i( Addr_Config_C),
-// 	.rdEn_Config_C_i(rdEn_Config_C ),
-
-// 	.axonLrnMode_o(axonLrnMode )
-// );
-
-
-// `else
-
-
-// 	ConfigMem
-// 	#(
-// 		.NUM_NURNS				( NUM_NURNS ),
-// 		.NUM_AXONS				( NUM_AXONS ),
-
-// 		.DSIZE					( DSIZE ),
-
-// 		.NURN_CNT_BIT_WIDTH		( NURN_CNT_BIT_WIDTH ),
-// 		.AXON_CNT_BIT_WIDTH		( AXON_CNT_BIT_WIDTH ),
-
-// 		.STDP_WIN_BIT_WIDTH		( STDP_WIN_BIT_WIDTH ),
-// 		.AER_BIT_WIDTH 			( AER_BIT_WIDTH ),
-
-// 		.X_ID					(X_ID),
-// 		.Y_ID					(Y_ID),
-// 		.SYNTH_PATH				(SYNTH_PATH),
-// 		.SIM_PATH				(SIM_PATH)
-// 		//.MEM_A_MIF_PATH			(MEM_A_MIF_PATH),
-// 		//.MEM_B_MIF_PATH			(MEM_B_MIF_PATH),
-// 		//.MEM_C_MIF_PATH			(MEM_C_MIF_PATH)
-// 	)
-// 	CONFIGMEM
-// 	(
-// 		.clk_i				( clk 	),
-// 		.rst_n_i			( rst_n ),
-
-// 		//read port A
-// 		.Addr_Config_A_i  	( Addr_Config_A ),
-// 		.rdEn_Config_A_i  	( rdEn_Config_A ),
-
-// 		.LTP_Win_o			( LTP_Win ),
-// 		.LTD_Win_o	( LTD_Win ),
-// 		.LTP_LrnRt_o		( LTP_LrnRt 	),
-// 		.LTD_LrnRt_o		( LTD_LrnRt 	),
-// 		.biasLrnMode_o 		( biasLrnMode   ),
-		
-// 		//read port B
-// 		.Addr_Config_B_i	( Addr_Config_B ),
-// 		.rdEn_Config_B_i 	( rdEn_Config_B ),
-
-// 		.NurnType_o 		( NurnType 		),
-// 		.RandTh_o			( RandTh 		),
-// 		.Th_Mask_o			( Th_Mask 		),
-// 		.RstPot_o			( RstPot 		),
-// 		.SpikeAER_o			( SpikeAER 		),
-
-// 		//read port C
-// 		.Addr_Config_C_i	( Addr_Config_C ),
-// 		.rdEn_Config_C_i 	( rdEn_Config_C ),
-
-// 		.axonLrnMode_o 		( axonLrnMode 	)
-// 	);
-// `endif
-
-
-ConfigMem_Asic
+ConfigMem_Asic_Onchip
 #(
 	.NUM_NURNS(NUM_NURNS)  ,
 	.NUM_AXONS(NUM_AXONS) ,
@@ -527,28 +390,94 @@ ConfigMem_Asic
 	.RstPot_o( RstPot),
 	.SpikeAER_o(SpikeAER ),
 
+`ifdef AER_MULTICAST
+		.read_next_AER_o	(read_next_AER),
+		.AER_pointer_i		(AER_pointer),
+`endif
 
-// //`endif
-	.multicast_i			(1'b1),
-	.AER_number_o				(AER_number),
-	.rdEn_AER_i				(rdEn_AER),
-	.Addr_AER_i				(Addr_AER),
 	//read port C
 	.Addr_Config_C_i( Addr_Config_C),
 	.rdEn_Config_C_i(rdEn_Config_C ),
 
-	.axonLrnMode_o(axonLrnMode ),
+	.axonLrnMode_o(axonLrnMode )
+);
 
-	.Addr_axon_scaling_i	(Addr_StatRd_E[AXON_CNT_BIT_WIDTH-1:0]),
-	.Axon_scaling_o (Axon_scaling),
 
+ConfigMem_Asic
+#(
+	.NUM_NURNS(NUM_NURNS)  ,
+	.NUM_AXONS(NUM_AXONS) ,
+
+	.DSIZE(DSIZE) ,
+
+	.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
+	.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+
+	.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
+
+	.AER_BIT_WIDTH(AER_BIT_WIDTH),
+
+	.CONFIG_PARAMETER_NUMBER(9),
+
+	.LEARN_MODE_MEMORY_WIDTH(2),
+	
+
+	.X_ID(X_ID),
+	.Y_ID(Y_ID),
+	.SYNTH_PATH(SYNTH_PATH),
+	.SIM_PATH(SIM_PATH)	
+
+)
+ConfigMem_Asic_uut
+(
+	.clk_i(clk)			,
+	.rst_n_i(rst_n)			,
+
+	.config_data_in(),
+
+	.config_write_enable(),
+
+	.FixedThreshold_o( ),
+	.Number_Neuron_o(),
+	.Number_Axon_o(),
+
+	//read port A
+	.Addr_Config_A_i(Addr_Config_A),
+	.rdEn_Config_A_i(rdEn_Config_A),
+
+	.LTP_Win_o(  ),
+	.LTD_Win_o(  ),
+	.LTP_LrnRt_o(  ),
+	.LTD_LrnRt_o(  ),
+	.biasLrnMode_o(  ),
+	
+	//read port B
+	.Addr_Config_B_i(Addr_Config_B ),
+	.rdEn_Config_B_i(rdEn_Config_B),
+
+	.NurnType_o(  ),
+	.RandTh_o( ),
+	.Th_Mask_o(  ),
+	.RstPot_o(  ),
+	.SpikeAER_o(  ),
+
+`ifdef AER_MULTICAST
+		.read_next_AER_o	(read_next_AER),
+		.AER_pointer_i		(AER_pointer),
+`endif
+
+	//read port C
+	.Addr_Config_C_i( Addr_Config_C),
+	.rdEn_Config_C_i(rdEn_Config_C ),
+
+	.axonLrnMode_o(  ),
 	.ce(1'b1)
 );
 
 
 
 
-	StatusMem_FPGA
+	StatusMem_Asic
 	#(
 		
 		.STOP_STEP(STOP_STEP),
@@ -569,7 +498,7 @@ ConfigMem_Asic
 		.SIM_PATH(SIM_PATH),
 		.SYNTH_PATH(SYNTH_PATH)
 	)
-	StatusMem_Asic
+	StatusMem_Asic_uut
 	(
 
 		.start_i(start),
@@ -618,6 +547,83 @@ ConfigMem_Asic
 		//read port C
 		.Addr_StatRd_C_i(Addr_StatRd_C),
 		.rdEn_StatRd_C_i(rdEn_StatRd_C),
+		.data_StatRd_C_o( ),
+
+		//write port D
+		.Addr_StatWr_D_i(Addr_StatWr_D),
+		.wrEn_StatWr_D_i(wrEn_StatWr_D),
+		.data_StatWr_D_i(data_StatWr_D),
+		
+		//read port E
+		.Addr_StatRd_E_i(Addr_StatRd_E),
+		.rdEn_StatRd_E_i(rdEn_StatRd_E),
+
+		.data_StatRd_E_o( ),
+		
+		//read port F
+		.Addr_StatRd_F_i(Addr_StatRd_F),
+		.rdEn_StatRd_F_i(read_weight_fifo),
+
+		.data_StatRd_F_o( ),
+
+		//write port G
+		.Addr_StatWr_G_i(Addr_StatWr_G),
+		.wrEn_StatWr_G_i(write_enable_G),
+		.data_StatWr_G_i(data_StatWr_G)
+	);
+
+
+
+
+	StatusMem_Asic_Onchip_SharePort
+	#(
+		
+		.STOP_STEP(STOP_STEP),
+		
+		.NUM_NURNS(NUM_NURNS),
+		.NUM_AXONS(NUM_AXONS),
+
+		.DSIZE(DSIZE),
+
+		.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
+		.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
+
+		.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
+
+		
+		.X_ID(X_ID),
+		.Y_ID(Y_ID),
+		.SIM_PATH(SIM_PATH),
+		.SYNTH_PATH(SYNTH_PATH)
+	)
+	StatusMem_Asic
+	(
+
+		.start_i(start),
+		.clk_i(clk),
+		.rst_n_i(rst_n),
+
+		//read port A
+		.Addr_StatRd_A_i								(Addr_StatRd_A),
+		.read_enable_bias_i								(read_enable_bias),
+		.read_enable_potential_i						(read_enable_potential),
+		.read_enable_threshold_i						(read_enable_threshold),
+		.read_enable_posthistory_i						(read_enable_posthistory),
+
+		.write_enable_bias_i 							(write_enable_bias),
+		.write_enable_potential_i						(write_enable_potential),
+		.write_enable_threshold_i						(write_enable_threshold),
+		.write_enable_posthistory_i						(write_enable_posthistory),
+
+		.data_StatRd_A_o								(data_StatRd_A),
+
+		//write port B
+		.Addr_StatWr_B_i(Addr_StatWr_B),
+		.data_StatWr_B_i(data_StatWr_B),
+		
+		//read port C
+		.Addr_StatRd_C_i(Addr_StatRd_C),
+		.rdEn_StatRd_C_i(rdEn_StatRd_C),
 		.data_StatRd_C_o(data_StatRd_C),
 
 		//write port D
@@ -640,165 +646,8 @@ ConfigMem_Asic
 		//write port G
 		.Addr_StatWr_G_i(Addr_StatWr_G),
 		.wrEn_StatWr_G_i(write_enable_G),
-		.data_StatWr_G_i(data_StatWr_G),
-
-		.Axon_scaling_i(Axon_scaling),
-		.en_config(1'b0)
+		.data_StatWr_G_i(data_StatWr_G)
 	);
-
-
-
-// `ifdef NEW_STATUS_MEMORY
-// 	StatusMem_Asic_Onchip_SharePort
-// 	#(
-		
-// 		.STOP_STEP(STOP_STEP),
-		
-// 		.NUM_NURNS(NUM_NURNS),
-// 		.NUM_AXONS(NUM_AXONS),
-
-// 		.DSIZE(DSIZE),
-
-// 		.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
-// 		.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
-
-// 		.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
-
-		
-// 		.X_ID(X_ID),
-// 		.Y_ID(Y_ID),
-// 		.SIM_PATH(SIM_PATH),
-// 		.SYNTH_PATH(SYNTH_PATH)
-// 	)
-// 	StatusMem_Asic
-// 	(
-
-// 		.start_i(start),
-// 		.clk_i(clk),
-// 		.rst_n_i(rst_n),
-
-// 		//read port A
-// 		.Addr_StatRd_A_i								(Addr_StatRd_A),
-// 		.read_enable_bias_i								(read_enable_bias),
-// 		.read_enable_potential_i						(read_enable_potential),
-// 		.read_enable_threshold_i						(read_enable_threshold),
-// 		.read_enable_posthistory_i						(read_enable_posthistory),
-
-// 		.write_enable_bias_i 							(write_enable_bias),
-// 		.write_enable_potential_i						(write_enable_potential),
-// 		.write_enable_threshold_i						(write_enable_threshold),
-// 		.write_enable_posthistory_i						(write_enable_posthistory),
-
-// 		.data_StatRd_A_o								(data_StatRd_A),
-
-// 		//write port B
-// 		.Addr_StatWr_B_i(Addr_StatWr_B),
-// 		.data_StatWr_B_i(data_StatWr_B),
-		
-// 		//read port C
-// 		.Addr_StatRd_C_i(Addr_StatRd_C),
-// 		.rdEn_StatRd_C_i(rdEn_StatRd_C),
-// 		.data_StatRd_C_o(data_StatRd_C),
-
-// 		//write port D
-// 		.Addr_StatWr_D_i(Addr_StatWr_D),
-// 		.wrEn_StatWr_D_i(wrEn_StatWr_D),
-// 		.data_StatWr_D_i(data_StatWr_D),
-		
-// 		//read port E
-// 		.Addr_StatRd_E_i(Addr_StatRd_E),
-// 		.rdEn_StatRd_E_i(rdEn_StatRd_E),
-
-// 		.data_StatRd_E_o(data_StatRd_E),
-		
-// 		//read port F
-// 		.Addr_StatRd_F_i(Addr_StatRd_F),
-// 		.rdEn_StatRd_F_i(read_weight_fifo),
-
-// 		.data_StatRd_F_o(data_StatRd_F),
-
-// 		//write port G
-// 		.Addr_StatWr_G_i(Addr_StatWr_G),
-// 		.wrEn_StatWr_G_i(write_enable_G),
-// 		.data_StatWr_G_i(data_StatWr_G)
-// 	);
-// `else
-// 	StatusMem
-// 	#(
-		
-// 		.STOP_STEP(STOP_STEP),
-		
-
-// 		.NUM_NURNS    		( NUM_NURNS ),
-// 		.NUM_AXONS    		( NUM_AXONS ),
-
-// 		.DSIZE				( DSIZE ),
-
-// 		.NURN_CNT_BIT_WIDTH ( NURN_CNT_BIT_WIDTH ),
-// 		.AXON_CNT_BIT_WIDTH ( AXON_CNT_BIT_WIDTH ),
-
-// 		.STDP_WIN_BIT_WIDTH ( STDP_WIN_BIT_WIDTH ),
-
-// 		.X_ID				(X_ID),
-// 		.Y_ID				(Y_ID),
-// 		.SIM_PATH			(SIM_PATH),
-// 		.SYNTH_PATH			(SYNTH_PATH)
-// 		//.BIAS_MIF_PATH		(BIAS_MIF_PATH),
-// 		//.MEMBPOT_MIF_PATH	(MEMBPOT_MIF_PATH),
-// 		//.TH_MIF_PATH		(TH_MIF_PATH),
-// 		//.POSTSPIKEHISTORY_MIF_PATH	(POSTSPIKEHISTORY_MIF_PATH),
-// 		//.PRESPIKEHISTORY_MIF_PATH	(PRESPIKEHISTORY_MIF_PATH),
-// 		//.WEIGHTS_MIF_PATH 	(WEIGHTS_MIF_PATH)
-
-// 	)
-// 	STATUSMEM
-// 	(
-// 		`ifdef DUMP_MEMORY
-// 			.start_i(start),
-// 		`endif
-// 		.clk_i				( clk   ),
-// 		.rst_n_i			( rst_n ),
-
-// 		//read port A
-// 		.Addr_StatRd_A_i	( Addr_StatRd_A ),
-// 		.rdEn_StatRd_A_i	( rdEn_StatRd_A ),
-
-// 		.data_StatRd_A_o 	( data_StatRd_A ),
-
-// 		//write port B
-// 		.Addr_StatWr_B_i	( Addr_StatWr_B ),
-// 		.wrEn_StatWr_B_i	( wrEn_StatWr_B ),
-// 		.data_StatWr_B_i	( data_StatWr_B ),
-		
-// 		//read port C
-// 		.Addr_StatRd_C_i	( Addr_StatRd_C ),
-// 		.rdEn_StatRd_C_i	( rdEn_StatRd_C ),
-
-// 		.data_StatRd_C_o    ( data_StatRd_C ),
-
-// 		//write port D
-// 		.Addr_StatWr_D_i	( Addr_StatWr_D ),
-// 		.wrEn_StatWr_D_i	( wrEn_StatWr_D ),
-// 		.data_StatWr_D_i	( data_StatWr_D ),	
-					
-// 		//read port E
-// 		.Addr_StatRd_E_i	( Addr_StatRd_E ),
-// 		.rdEn_StatRd_E_i	( rdEn_StatRd_E ),
-
-// 		.data_StatRd_E_o 	( data_StatRd_E ),
-		
-// 		//read port F
-// 		.Addr_StatRd_F_i	( Addr_StatRd_F ),
-// 		.rdEn_StatRd_F_i	( rdEn_StatRd_F ),
-
-// 		.data_StatRd_F_o 	( data_StatRd_F ),
-
-// 		//write port G
-// 		.Addr_StatWr_G_i	( Addr_StatWr_G ),
-// 		.wrEn_StatWr_G_i	( write_enable_G ),
-// 		.data_StatWr_G_i 	( data_StatWr_G )
-// 	);
-// `endif
 
 	assign write_enable_G = update_weight_enable & wrEn_StatWr_G;
 
@@ -807,9 +656,7 @@ ConfigMem_Asic
 		.NUM_AXONS			( NUM_AXONS ),
 		.AXON_CNT_BIT_WIDTH	( AXON_CNT_BIT_WIDTH ),
 		.X_ID					(X_ID),
-		.Y_ID					(Y_ID),
-		.SIM_PATH			(SIM_PATH),
-		.STOP_STEP			(STOP_STEP)
+		.Y_ID					(Y_ID)
 	)
 	INSPIKEBUF
 	(
@@ -829,152 +676,5 @@ ConfigMem_Asic
 		.Lrn_InSpike_o		( Lrn_InSpike ),
 		.spike_in			( inSpike)	//input from interface
 	);
-
-
-
-// StatusMem_Asic_Onchip
-// #(
-// 	`ifdef DUMP_MEMORY
-// 		.STOP_STEP(STOP_STEP),
-// 	`endif
-// 	.NUM_NURNS(NUM_NURNS),
-// 	.NUM_AXONS(NUM_AXONS),
-
-// 	.DSIZE(DSIZE),
-
-// 	.NURN_CNT_BIT_WIDTH(NURN_CNT_BIT_WIDTH),
-// 	.AXON_CNT_BIT_WIDTH(AXON_CNT_BIT_WIDTH),
-
-// 	.STDP_WIN_BIT_WIDTH(STDP_WIN_BIT_WIDTH),
-
-	
-// 	.X_ID(X_ID),
-// 	.Y_ID(Y_ID),
-// 	.SIM_PATH(SIM_PATH),
-// 	.SYNTH_PATH(SYNTH_PATH)
-// )
-// StatusMem_Asic
-// (
-// 	`ifdef DUMP_MEMORY
-// 		.start_i(start_i),
-// 	`endif
-// 	.clk_i(clk),
-// 	.rst_n_i(rst_n),
-
-//     //Mem Bias
-//     .read_address_bias_i					(read_address_bias),
-//     .write_address_bias_i					(write_address_bias),
-//     .read_enable_bias_i						(read_enable_bias),
-//     .write_enable_bias_i					(write_enable_bias),
-
-//     //Mem Potential
-//     .read_address_potential_i				(read_address_potential),
-//     .write_address_potential_i				(write_address_potential),
-//     .read_enable_potential_i				(read_enable_potential),
-//     .write_enable_potential_i				(write_enable_potential),
-
-//     .read_address_threshold_i				(read_address_threshold),
-//     .write_address_threshold_i				(write_address_threshold),
-//     .read_enable_threshold_i				(read_enable_threshold),
-//     .write_enable_threshold_i				(write_enable_threshold),
-
-//     .read_address_posthistory_i				(read_address_posthistory),
-//     .write_address_posthistory_i			(write_address_posthistory),
-//     .read_enable_posthistory_i				(read_enable_posthistory),
-//     .write_enable_posthistory_i				(write_enable_posthistory),
-
-//     .read_address_prehistory_i				(read_address_prehistory),
-//     .write_address_prehistory_i				(write_address_prehistory),
-//     .read_enable_prehistory_i				(read_enable_prehistory),
-//     .write_enable_prehistory_i				(write_enable_prehistory),
-
-//     .read_address_weight_i					(read_address_weight),
-//     .write_address_weight_i					(write_address_weight),
-//     .read_enable_weight_recall_i			(read_enable_weight_recall),
-//     .write_enable_weight_i					(write_enable_weight),
-// 	.read_enable_weight_learn_i				(read_enable_weight_learn),
-
-// 	.data_in_bias_i							(data_StatWr_B),
-// 	.data_in_potential_i					(data_StatWr_B),
-// 	.data_in_threshold_i					(data_StatWr_B),
-// 	.data_in_posthistory_i					(data_StatWr_B),
-// 	.data_in_prehistory_i					(data_StatWr_D),
-// 	.data_in_weight_i						(data_StatWr_G),
-
-// 	.data_out_bias_o						(),
-// 	.data_out_potential_o					(),
-// 	.data_out_threshold_o					(),
-// 	.data_out_posthistory_o					(),
-// 	.data_out_prehistory_o					(),
-// 	.data_out_weight_o						(),
-
-// 	.sel_A									(Addr_StatRd_A[1:0]),
-// 	.data_StatRd_A_o						(data_StatRd_A2)
-
-// );
-
-// memory_controller
-// #(
-// 	.NURN_CNT_BIT_WIDTH								(8),
-// 	.AXON_CNT_BIT_WIDTH								(8),
-// 	.DSIZE											(DSIZE),
-// 	.PARAMETER_SELECT_BIT							(4), 
-// 	.CONFIG_PARAMETER_NUMBER						(9),
-// 	.STATUS_PARAMETER_NUMBER						(6)
-// )
-// Memory_Controller
-// (   
-// 	.clk_i											(clk),
-// 	.reset_n_i										(rst_n),
-
-// 	//NI
-// 	.en_config										(en_config),
-// 	.packet_in										(packet_in), 
-// 	.NI_empty										(NI_empty), 
-// 	.read_NI										(read_NI), 
-	
-// 	//From controller
-// 	.read_address_config_A_i						(Addr_Config_A),
-// 	.read_address_config_B_i						(Addr_Config_B),
-// 	.read_address_config_C_i						(Addr_Config_C),
-
-// 	//To config memory
-// 	.access_address_config_A_o						(access_address_config_A),
-// 	.access_address_config_B_o						(access_address_config_B),
-// 	.access_address_config_C_o						(access_address_config_C),
-
-// 	.config_LTP_LTD_Window_o						(config_LTP_LTD_Window),
-// 	.config_LTP_LTD_LearnRate_o						(config_LTP_LTD_LearnRate),
-// 	.config_LearnMode_Bias_o						(config_LearnMode_Bias),
-// 	.config_NeuronType_RandomThreshold_o			(config_NeuronType_RandomThreshold),
-// 	.config_Mask_RestPotential_o					(config_Mask_RestPotential),
-// 	.config_AER_o									(config_AER),
-// 	.config_FixedThreshold_o						(config_FixedThreshold),
-// 	.config_LearnMode_Weight_o						(config_LearnMode_Weight),
-// 	.config_Number_Neuron_Axon_o					(config_Number_Neuron_Axon),
-
-// 	//status memory write enable signal (from controller)
-// 	.write_enable_Bias_controller_i					(write_enable_bias),
-// 	.write_enable_Potential_controller_i			(write_enable_Potential),
-// 	.write_enable_Threshold_controller_i			(write_enable_Threshold),
-// 	.write_enable_Posthistory_controller_i			(write_enable_Posthistory),
-// 	.write_enable_Prehistory_controller_i			(wrEn_StatWr_D),
-// 	.write_enable_Weight_controller_i				(write_enable_G),
-// 	//status memory write enable (to status memory)
-// 	.write_enable_Bias_o							(write_enable_Bias_toMem),
-// 	.write_enable_Potential_o						(write_enable_Potential_toMem),
-// 	.write_enable_Threshold_o						(write_enable_Threshold_toMem),
-// 	.write_enable_Posthistory_o						(write_enable_Posthistory_toMem),
-// 	.write_enable_Prehistory_o						(write_enable_Prehistory_toMem),
-// 	.write_enable_Weight_o							(write_enable_Weight_toMem),
-// 	//status memory write address (from controller)
-// 	.Addr_StatWr_B_controller_i						(Addr_StatWr_B),
-// 	.Addr_StatWr_D_controller_i						(Addr_StatWr_D),
-// 	.Addr_StatWr_G_controller_i						(Addr_StatWr_G),
-// 	//status memory write address (to status memory)
-// 	.Addr_StatWr_B_o								(Addr_StatWr_B_toMem),
-// 	.Addr_StatWr_D_o								(Addr_StatWr_D_toMem),
-// 	.Addr_StatWr_G_o								(Addr_StatWr_G_toMem)
-//     );
 
 endmodule

@@ -7,7 +7,8 @@ module memory_controller
     parameter PARAMETER_SELECT_BIT = 4, 
     parameter PACKET_SIZE = PARAMETER_SELECT_BIT + NURN_CNT_BIT_WIDTH + DSIZE + DSIZE ,
     parameter CONFIG_PARAMETER_NUMBER = 9,
-    parameter STATUS_PARAMETER_NUMBER = 6
+    parameter STATUS_PARAMETER_NUMBER = 6,
+    parameter STDP_WIN_BIT_WIDTH = 8
 )
 (   
     input clk_i,
@@ -15,220 +16,231 @@ module memory_controller
     //global config mode signal
     input en_config,
 
-    //input from NI
-    input [PACKET_SIZE-1:0] packet_in, 
+    //input from packet decoder
+    input [PACKET_SIZE-1:0] data_in, 
     input NI_empty, 
     //read request NI fifo
     output reg read_NI, 
 
     //config memory
-    //read address (from controller)
-    input [NURN_CNT_BIT_WIDTH-1:0]                          read_address_config_A_i,
-    input [NURN_CNT_BIT_WIDTH-1:0]                          read_address_config_B_i,
-    input [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]       read_address_config_C_i,
+    //read address (from neuron controller)
+    input [NURN_CNT_BIT_WIDTH-1:0]                          rd_addr_config_A_nc_i,
+    input [NURN_CNT_BIT_WIDTH-1:0]                          rd_addr_config_B_nc_i,
+    input [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]       rd_addr_config_C_nc_i,
+    input [NURN_CNT_BIT_WIDTH:0]                            rd_addr_config_AER_nc_i,
+    input [AXON_CNT_BIT_WIDTH-1:0]                          rd_addr_axon_scaling_nc_i,
+    
+    //config memory write address (from decoder)
+    input [NURN_CNT_BIT_WIDTH-1:0]                         wr_addr_config_A_dc_i,
+    input [NURN_CNT_BIT_WIDTH-1:0]                         wr_addr_config_B_dc_i,
+    input [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]      wr_addr_config_C_dc_i,
+    input [NURN_CNT_BIT_WIDTH:0]                           wr_addr_config_AER_dc_i,
+    input [AXON_CNT_BIT_WIDTH-1:0]                         wr_addr_axon_scaling_dc_i,
 
-    //config memory access address (used for both read and write)
-    output [NURN_CNT_BIT_WIDTH-1:0]                         access_address_config_A_o,
-    output [NURN_CNT_BIT_WIDTH-1:0]                         access_address_config_B_o,
-    output [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]      access_address_config_C_o,
+    // read address from memory reader
+    // input [NURN_CNT_BIT_WIDTH-1:0]                          rd_addr_config_A_mr_i,
+    // input [NURN_CNT_BIT_WIDTH-1:0]                          rd_addr_config_B_mr_i,
+    // input [NURN_CNT_BIT_WIDTH*AXON_CNT_BIT_WIDTH-1:0]       rd_addr_config_C_mr_i,
+    // input [NURN_CNT_BIT_WIDTH:0]                            rd_addr_config_AER_mr_i,
+    // input [AXON_CNT_BIT_WIDTH-1:0]                          rd_addr_axon_scaling_mr_i,
+
+    //config memory address to config memory (used for both read and write)
+    output [NURN_CNT_BIT_WIDTH-1:0]                         addr_config_A_o,
+    output [NURN_CNT_BIT_WIDTH-1:0]                         addr_config_B_o,
+    output [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]      addr_config_C_o,
+    output [NURN_CNT_BIT_WIDTH:0]                           addr_AER_o,
+    output [AXON_CNT_BIT_WIDTH-1:0]                         addr_axon_scaling_o,
+
     //write enable signal used in config mode
+    // output wr_config_A_o,
+    // output wr_config_B_o,
+    // output wr_config_C1_o,
+    // output wr_config_C2_o,
+    // output wr_config_C3_o,
+    // output wr_config_C4_o,
+    // output wr_config_AER_o,
+    // output wr_axon_scaling_o,
 
-    output reg config_LTP_LTD_Window_o,
-    output reg config_LTP_LTD_LearnRate_o,
-    output reg config_LearnMode_Bias_o,
-    output reg config_NeuronType_RandomThreshold_o,
-    output reg config_Mask_RestPotential_o,
-    output reg config_AER_o,
-    output reg config_FixedThreshold_o,
-    output reg config_LearnMode_Weight_o,
-    output reg config_Number_Neuron_Axon_o,
+    // input wr_config_A_init_i,
+    // input wr_config_B_init_i,
+    // input wr_config_C1_init_i,
+    // input wr_config_C2_init_i,
+    // input wr_config_C3_init_i,
+    // input wr_config_C4_init_i,
+    // input wr_config_AER_init_i,
+    // input wr_axon_scaling_init_o,
+
+    // read enable (from controller)
+    // input read_en_bias_controller_i,
+    // input read_en_potential_controller_i,
+    // input read_en_threshold_controller_i,
+    // input read_en_posthistory_controller_i,
+    // input read_en_E_controller_i,
+    // input read_en_F_controller_i,
+
+    // //status memory read address (from controller)
+	// input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_bias_controller_i,
+	// input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_potential_controller_i,
+	// input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_threshold_controller_i,
+	// input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_posthistory_controller_i,
+	// input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	read_addr_prehistory_controller_i,
+
+    // input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	read_addr_E_controller_i,
+    // input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	read_addr_F_controller_i,
+
+    // //status memory read address (to status memory)
+	// input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_bias_o,
+	// input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_potential_o,
+	// input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_threshold_o,
+	// input [NURN_CNT_BIT_WIDTH-1:0]						read_addr_posthistory_o,
+	// input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	read_addr_prehistory_o,
+
+    // input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	read_addr_E_o,
+    // input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	read_addr_F_o,
 
     //status memory write enable signal (from controller)
-    input write_enable_Bias_controller_i,
-    input write_enable_Potential_controller_i,
-    input write_enable_Threshold_controller_i,
-    input write_enable_Posthistory_controller_i,
-    input write_enable_Prehistory_controller_i,
-    input write_enable_Weight_controller_i,
+    input wr_Bias_nc_i,
+    input wr_Potential_nc_i,
+    input wr_Threshold_nc_i,
+    input wr_Posthistory_nc_i,
+    input wr_Prehistory_nc_i,
+    input wr_Weight_nc_i,
+
+    // status memory write enable signal (from decoder)
+    input wr_Bias_dc_i,
+    input wr_Potential_dc_i,
+    input wr_Threshold_dc_i,
+    input wr_Posthistory_dc_i,
+    input wr_Prehistory_dc_i,
+    input wr_Weight_dc_i,
+    
     //status memory write enable (to status memory)
-    output write_enable_Bias_o,
-    output write_enable_Potential_o,
-    output write_enable_Threshold_o,
-    output write_enable_Posthistory_o,
-    output write_enable_Prehistory_o,
-    output write_enable_Weight_o,
+    output wr_Bias_o,
+    output wr_Potential_o,
+    output wr_Threshold_o,
+    output wr_Posthistory_o,
+    output wr_Prehistory_o,
+    output wr_Weight_o,
+
+    //status memory read enable signal (from controller)
+    input rd_prehistory_nc_i,
+    input rd_weight_nc_i,
+
+    input rd_prehistory_mr_i,
+    input rd_weight_mr_i,
+
     //status memory write address (from controller)
-    input [NURN_CNT_BIT_WIDTH-1:0]                          Addr_StatWr_B_controller_i,
-    input [NURN_CNT_BIT_WIDTH-1:0]                          Addr_StatWr_D_controller_i,
-    input [NURN_CNT_BIT_WIDTH-1:0]                          Addr_StatWr_G_controller_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_bias_nc_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_potential_nc_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_threshold_nc_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_posthistory_nc_i,
+    input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]	wr_addr_prehistory_nc_i,
+    input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	wr_addr_G_nc_i,//weight
+
+    //status memory write address (from decoder)
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_bias_dc_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_potential_dc_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_threshold_dc_i,
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_posthistory_dc_i,
+    input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]	wr_addr_prehistory_dc_i,
+    input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	wr_addr_G_dc_i,//weight
+
     //status memory write address (to status memory)
-    output [NURN_CNT_BIT_WIDTH-1:0]                         Addr_StatWr_B_o,
-    output [NURN_CNT_BIT_WIDTH-1:0]                         Addr_StatWr_D_o,
-    output [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]      Addr_StatWr_G_o,
-    )
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_bias_o,
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_potential_o,
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_threshold_o,
+	input [NURN_CNT_BIT_WIDTH-1:0]						wr_addr_posthistory_o,
+    input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0]	wr_addr_prethistory_o,
+    input [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] 	wr_addr_G_o,//weight
+
+    //data from datapath
+    input [DSIZE-1:0]                                   data_wr_potential_dp_i,
+    input [DSIZE-1:0]                                   data_wr_threshold_dp_i,
+    input [STDP_WIN_BIT_WIDTH-1:0]                      data_wr_posthistory_dp_i,
+    input [DSIZE-1:0]                                   data_wr_bias_dp_i,
+    input [DSIZE-1:0]                                   data_wr_weight_dp_i,
+    input [STDP_WIN_BIT_WIDTH-1:0]                      data_wr_prehistory_dp_i,
+
+    //data from decoder
+    input [DSIZE-1:0]                                   data_wr_potential_dc_i,
+    input [DSIZE-1:0]                                   data_wr_threshold_dc_i,
+    input [STDP_WIN_BIT_WIDTH-1:0]                      data_wr_posthistory_dc_i,
+    input [DSIZE-1:0]                                   data_wr_bias_dc_i,
+    input [DSIZE-1:0]                                   data_wr_weight_dc_i,
+    input [STDP_WIN_BIT_WIDTH-1:0]                      data_wr_prehistory_dc_i,
+
+    //data to status memory
+    output [DSIZE-1:0]                                  data_wr_potential_o,
+    output [DSIZE-1:0]                                  data_wr_threshold_o,
+    output [STDP_WIN_BIT_WIDTH-1:0]                     data_wr_posthistory_o,
+    output [DSIZE-1:0]                                  data_wr_bias_o,
+    output [DSIZE-1:0]                                  data_wr_weight_o,
+    output [STDP_WIN_BIT_WIDTH-1:0]                     data_wr_prehistory_o
+
+
+    );
 
 //define coding for different neuron parameters
-parameter Set_LTP_LTD_Window = 4'd0;
-parameter Set_LTP_LTD_LearnRate = 4'd1;
-parameter Set_LearnMode_Bias = 4'd2;
-parameter Set_NeuronType_RandomThreshold = 4'd3;
-parameter Set_Mask_RestThreshold = 4'd4;
-parameter Set_AER = 4'd5;
-parameter Set_FixedThreshold = 4'd6;
-parameter Set_LearnMode_Weight = 4'd7;
-parameter Set_Number_Neuron_Axon = 4'd8;
-//parameter Set_Number_Axon = 4'd9;
-parameter Set_Bias = 4'd10;
-parameter Set_Potential = 4'd11;
-parameter Set_Threshold = 4'd12;
-parameter Set_PostSynapticHistory = 4'd13;
-parameter Set_PreSynapticHistory = 4'd14;
-parameter Set_Weight = 4'd15;
 
-reg config_Bias, config_Potential, config_Threshold, config_PostSynapticHistory, config_PreSynapticHistory, config_Weight;
-reg config_address_B;
-reg config_address_D;
-reg config_address_G;
-
-
-//split packet
-wire [PARAMETER_SELECT_BIT-1:0]                     select_parameter;
-wire [NURN_CNT_BIT_WIDTH-1:0]                       neuron_id;
-wire [AXON_CNT_BIT_WIDTH-1:0]                       axon_id;
-//wire [DSIZE*2-1:0]                                  config_parameter;
-
-wire [NURN_CNT_BIT_WIDTH-1:0]                       config_mode_write_address_config_A;
-wire [NURN_CNT_BIT_WIDTH-1:0]                       config_mode_write_address_config_B;
-wire [NURN_CNT_BIT_WIDTH + AXON_CNT_BIT_WIDTH-1:0]  config_mode_write_address_config_C;
-
-wire [STATUS_PARAMETER_NUMBER-1:0]                  config_mode_write_status;
-
-
-
-assign select_parameter = packet_in[PACKET_SIZE - 1 : PACKET_SIZE - PARAMETER_SELECT_BIT];
-assign neuron_id = packet_in [PACKET_SIZE - 1 - PARAMETER_SELECT_BIT : PACKET_SIZE - PARAMETER_SELECT_BIT - NURN_CNT_BIT_WIDTH];
-assign axon_id = packet_in[PACKET_SIZE - 1 - PARAMETER_SELECT_BIT - NURN_CNT_BIT_WIDTH: PACKET_SIZE - PARAMETER_SELECT_BIT - NURN_CNT_BIT_WIDTH - AXON_CNT_BIT_WIDTH];
-//assign config_parameter = packet_in [PACKET_SIZE - 1 - PARAMETER_SELECT_BIT - NURN_CNT_BIT_WIDTH : 0];
-
-assign config_mode_write_address_config_A = neuron_id;
-assign config_mode_write_address_config_B = neuron_id;
-assign config_mode_write_address_config_C = {neuron_id, axon_id};
-
-
-always @(posedge clk_i or negedge reset_n_i)
-    begin
-        if (reset_n_i == 1'b0)
-            begin
-                read_NI <= 1'b0;
-                write_enable <= 0;
-            end
-        else
-            if (en_config == 1'b1)
-                begin
-                    if (NI_empty == 1'b0)   //if NI is not empty, read from NI
-                        read_NI <= 1'b1;
-                    else
-                        read_NI <= 1'b0;
-                    config_mode_write_enable <= read_NI;
-                end
-    end
-
-//decode 
-always @(*)
-    begin
-        config_LTP_LTD_Window = 1'b0;
-        config_LTP_LTD_LearnRate = 1'b0;
-        config_LearnMode_Bias = 1'b0;
-        config_NeuronType_RandomThreshold = 1'b0;
-        config_Mask_RestPotential = 1'b0;
-        config_AER = 1'b0;
-        config_FixedThreshold = 1'b0;
-        config_LearnMode_Weight = 1'b0;
-        config_Number_Neuron_Axon = 1'b0;
-
-        config_Bias = 1'b0;
-        config_Potential = 1'b0;
-        config_Threshold = 1'b0;
-        config_PostSynapticHistory = 1'b0;
-        config_PreSynapticHistory = 1'b0;
-        config_Weight = 1'b0;
-
-        if (config_mode_write_enable == 1'b1)
-            begin
-                case(select_parameter)
-                    Set_LTP_LTD_Window :                    config_LTP_LTD_Window_o = 1'b1;                 //write_LTP_LTD_Window = 1'b1;
-                    Set_LTP_LTD_LearnRate :                 config_LTP_LTD_LearnRate_o = 1'b1;              //write_LTP_LTD_LearnRate = 1'b1;
-                    Set_LearnMode_Bias = :                  config_LearnMode_Bias_o = 1'b1;                 //write_LearnMode_Bias = 1'b1;
-                    Set_NeuronType_RandomThreshold :        config_NeuronType_RandomThreshold_o = 1'b1;     //write_NeuronType_RandomThreshold = 1'b1;
-                    Set_Mask_RestThreshold :                config_Mask_RestPotential_o = 1'b1;             //write_Mask_RestThreshold = 1'b1;
-                    Set_AER :                               config_AER_o = 1'b1;                            //write_AER = 1'b1;
-                    Set_FixedThreshold :                    config_FixedThreshold_o = 1'b1;                 //write_FixedThreshold = 1'b1;
-                    Set_LearnMode_Weight :                  config_LearnMode_Weight_o = 1'b1;               //write_LearnMode_Weight = 1'b1;
-                    Set_Number_Neuron_Axon :                config_Number_Neuron_Axon_o = 1'b1;             //write_Number_Neuron_Axon = 1'b1;
-                endcase
-
-                case (select_parameter)
-                    Set_Bias :                              config_Bias = 1'b1;                     //write_Bias = 1'b1;
-                    Set_Potential :                         config_Potential = 1'b1;                //
-                    Set_Threshold :                         config_Threshold = 1'b1;                //write_Threshold = 1'b1;
-                    Set_PostSynapticHistory :               config_PostSynapticHistory = 1'b1;      //write_PostSynapticHistory = 1'b1;
-                    Set_PreSynapticHistory :                config_PreSynapticHistory = 1'b1;       //write_PreSynapticHistory = 1'b1;
-                    Set_Weight :                            config_Weight = 1'b1;                   //write_Weight = 1'b1;
-                endcase
-            end
-    end
+// assign wr_config_A_o = wr_config_A_init_i;
+// assign wr_config_B_o = wr_config_C1_init_i;
+// assign wr_config_C1_o = wr_config_C1_init_i;
+// assign wr_config_C2_o = wr_config_C2_init_i;
+// assign wr_config_C3_o = wr_config_C3_init_i;
+// assign wr_config_C4_o = wr_config_C4_init_i;
+// assign wr_config_AER_o = wr_config_AER_init_i;
 
 //config memory address mux
+assign addr_config_A_o =  (en_config == 1'b1) ? wr_addr_config_A_dc_i : rd_addr_config_A_nc_i;
+assign addr_config_B_o =  (en_config == 1'b1) ? wr_addr_config_A_dc_i : read_addr_config_B_i;
+assign addr_config_C_o =  (en_config == 1'b1) ? write_addr_config_C_i : read_addr_config_C_i;
+assign addr_AER_o =  (en_config == 1'b1) ? write_addr_config_AER_i : read_addr_config_AER_i;
+assign addr_axon_scaling_o = (en_config == 1'b1) ? write_addr_axon_scaling_i : read_addr_axon_scaling_i;
+
 always @(*)
     begin
         if (en_config == 1'b1)
             begin
-                access_address_config_A = neuron_id;
-                access_address_config_B = neuron_id;
-                access_address_config_C = {neuron_id, axon_id};
+                assign addr_config_A_o = wr_addr_config_A_dc_i;
+                assign addr_config_B_o = wr_addr_config_A_dc_i;
+                assign addr_config_C_o = write_addr_config_C_i;
+                assign addr_AER_o = write_addr_config_AER_i;
+                assign addr_axon_scaling_o = write_addr_axon_scaling_i;
+            end
+        else if (en_retrive == 1'b1)
+            begin
+
             end
         else
             begin
-                access_address_config_A = read_address_config_A;
-                access_address_config_B = read_address_config_B;
-                access_address_config_C = read_address_config_C;
+
             end
-    end
-//status memory write address mux
-always @(*)
-    begin
-        if (en_config == 1'b1)
-            begin
-                Addr_StatWr_B_o = neuron_id;
-                Addr_StatWr_D_o = neuron_id;
-                Addr_StatWr_G_o = {neuron_id, axon_id};
-            end
-        else
-            begin
-                Addr_StatWr_B_o = Addr_StatWr_B_controller_i;
-                Addr_StatWr_D_o = Addr_StatWr_D_controller_i;
-                Addr_StatWr_G_o = Addr_StatWr_G_controller_i;
-            end
+
     end
 
-//status memory write enable mux
-always @(*)
-    begin
-        if (en_config)
-            write_enable_Bias_o = config_Bias;
-            write_enable_Potential_o = config_Potential;
-            write_enable_Threshold_o = config_Threshold;
-            write_enable_Posthistory_o = config_PostSynapticHistory;
-            write_enable_Prehistory_o = config_PreSynapticHistory;
-            write_enable_Weight_o = config_Weight;
-        else
-            write_enable_Bias_o = write_enable_Bias_controller_i
-            write_enable_Potential_o = write_enable_Potential_controller_i
-            write_enable_Threshold_o = write_enable_Threshold_controller_i;
-            write_enable_Posthistory_o = write_enable_Posthistory_controller_i
-            write_enable_Prehistory_o = write_enable_Prehistory_controller_i
-            write_enable_Weight_o = write_enable_Weight_controller_i;
-    end
+//status memory write address mux
+assign write_addr_bias_o = (en_config == 1'b0) ? write_addr_bias_controller_i :  write_addr_bias_init_i;
+assign write_addr_potential_o = (en_config == 1'b0) ? write_addr_potential_controller_i : write_addr_potential_init_i;
+assign write_addr_threshold_o = (en_config == 1'b0) ? write_addr_threshold_controller_i: write_addr_threshold_init_i;
+assign write_addr_posthistory_o = (en_config == 1'b0) ? write_addr_posthistory_controller_i : write_addr_posthistory_init_i;
+assign write_addr_G_o = (en_config == 1'b0) ? write_addr_G_controller_i : write_addr_G_init_i;
+assign write_addr_prethistory_o = (en_config == 1'b0) ? write_addr_prehistory_controller_i : write_addr_prehistory_init_i;
+
+//status memory write en mux
+assign wr_en_Bias_o = (en_config == 1'b0) ? wr_Bias_controller_i : wr_Bias_init_i;
+assign wr_en_Potential_o = (en_config == 1'b1) ? wr_Potential_controller_i : wr_Potential_init_i;
+assign wr_en_Threshold_o = (en_config == 1'b1) ? wr_Threshold_controller_i : wr_Threshold_init_i;
+assign wr_en_Posthistory_o = (en_config == 1'b1) ? wr_Posthistory_controller_i : wr_Posthistory_init_i;
+assign wr_en_Prehistory_o = (en_config == 1'b1) ? wr_Prehistory_controller_i : wr_Prehistory_init_i;
+assign wr_en_Weight_o = (en_config == 1'b1) ? wr_Weight_controller_i : wr_Weight_init_i; 
+
+
+assign data_wr_potential_o = (en_config == 1'b0) ? data_wr_potential_datapath_i : data_wr_potential_decoder_i;
+assign data_wr_threshold_o = (en_config == 1'b0) ? data_wr_threshold_datapath_i : data_wr_threshold_decoder_i;
+assign data_wr_posthistory_o = (en_config == 1'b0) ? data_wr_posthistory_datapath_i : data_wr_posthistory_decoder_i;
+assign data_wr_bias_o = (en_config == 1'b0) ? data_wr_bias_datapath_i : data_wr_bias_decoder_i;
+assign data_wr_weight_o = (en_config == 1'b0) ? data_wr_weight_datapath_i : data_wr_weight_decoder_i;
+assign data_wr_prehistory_o = (en_config == 1'b0) ? data_wr_prehistory_datapath_i : data_wr_prehistory_decoder_i;
 
 
 endmodule

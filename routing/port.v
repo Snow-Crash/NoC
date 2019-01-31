@@ -146,7 +146,7 @@ always @(posedge clk or posedge reset)
                 next_address_reg <= next_address;
         else if (shift_next_address)
                 //next_address_reg <= next_address_reg >> 4;
-                next_address_reg <= {flit_size'h0, next_address_reg[address_size - 1:flit_size]};
+                next_address_reg <= {4'h0, next_address_reg[address_size - 1:flit_size]};
     end
 
 //full signal mux

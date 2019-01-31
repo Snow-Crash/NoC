@@ -1,7 +1,6 @@
 //https://www.altera.com/support/support-resources/design-examples/design-software/verilog/ver-single-port-ram.html
 `timescale 1ns/100ps
-`define SIM_MEM_INIT
-//`define QUARTUS_SYN_INIT
+
 
 module generic_single_port_ram (clk, addr, data_in, data_out, write_enable);
 
@@ -11,7 +10,8 @@ module generic_single_port_ram (clk, addr, data_in, data_out, write_enable);
 	parameter INIT_FILE_PATH = "";
 
     input clk, write_enable;
-    input [DATA_WIDTH-1:0] data_in, data_out;
+    input [DATA_WIDTH-1:0] data_in;
+	output [DATA_WIDTH-1:0] data_out;
     input [ADDRESS_WIDTH-1:0] addr;
 
 

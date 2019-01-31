@@ -1,26 +1,35 @@
 `timescale 1ns/100ps
 module NI(router_clk, router_rst, flit_in_wr, flit_in, credit_in, flit_out_wr, flit_out, credit_out,
-        neuron_clk, neuron_rst, start, packet_out, spike_packet_in);
+        neuron_clk, neuron_rst, start, flit_to_decoder, spike_packet_in, activate_decoder, stall_decoder, packet_type);
 
 parameter VIRTUAL_CHANNEL = 4;
 parameter ADDRESS_WIDTH = 5;
+parameter PAYLOAD_WIDTH = 32;
 parameter FLIT_WIDTH = 38;
 
 parameter NUM_NURNS = 128;
 
-
-
 input router_clk, router_rst, neuron_clk, neuron_rst, start;
 //input [ADDRESS_WIDTH-1:0] current_x, current_y;
+
+// input from router
 input [VIRTUAL_CHANNEL-1:0] credit_in;
-input [2+VIRTUAL_CHANNEL+32-1:0] flit_in;
+input [2+VIRTUAL_CHANNEL+PAYLOAD_WIDTH-1:0] flit_in;
 input flit_in_wr;
+
+// output to router
+output flit_out_wr;
+output [2+VIRTUAL_CHANNEL+PAYLOAD_WIDTH-1:0] flit_out;
+output reg [VIRTUAL_CHANNEL-1:0] credit_out;
+
+//input from neuron
 input spike_packet_in;
 
-output flit_out_wr;
-output [2+VIRTUAL_CHANNEL+32-1:0] flit_out;
-output reg [VIRTUAL_CHANNEL-1:0] credit_out;
-output packet_out;
+//output to decoder
+output [2+VIRTUAL_CHANNEL+PAYLOAD_WIDTH-1:0] flit_to_decoder;
+output reg stall_decoder, activate_decoder;
+output [2:0] packet_type;
+
 
 parameter IDLE = 4'd0;
 parameter SET_CHANNEL = 4'd1;
@@ -29,11 +38,6 @@ parameter STALL = 4'd3;
 parameter DONE = 4'd4;
 
 
-parameter DC_IDLE = 3'b0;
-parameter DC_SET_TYPE = 3'b1;
-parameter DC_BUFFER = 3'b2;
-parameter DC_STALL = 3'b3;
-parameter DC_DECODE = 3'b4;
 
 //wires for buffers
 wire [FLIT_WIDTH-1:0] vc_0_do, vc_1_do, vc_2_do, vc_3_do;
@@ -49,22 +53,14 @@ reg [3:0] current_state, next_state;
 // transmission status, 0 for idle, 1 for transmission is not finished
 reg [VIRTUAL_CHANNEL-1:0] channel_state;
 reg [1:0] avaliable_channel_id;
-reg [FLIT_WIDTH-1:0] vc_buffer_out_mux;
+reg [FLIT_WIDTH-1:0] vc_buffer_out_mux, pipeline_reg;
 reg set_current_channel, set_channel_used, set_channel_idle;
 reg current_channel_empty;
 //reg [3:0] current_channel_reg;	//one hot
 reg [2:0] current_channel_id;	//
 reg vc_buffer_rd, receive_done;
-reg stall_decoder, activate_decoder, pipeline_reg_load;
+reg pipeline_reg_load;
 
-//decode packet state machine
-reg [3:0] decoder_cs, decoder_ns;
-
-//decoder regs
-reg [FLIT_WIDTH-1:0] pipeline_reg;
-reg write_memory, shift_reg, set_packet_type;
-reg [2:0] packet_type;
-reg [NUM_NURNS-1:0] shifter;
 
 
 //decoce state machine
@@ -155,12 +151,13 @@ always @(*)
 			vc_buffer_out_mux = 0;
 	end
 
-assign header = vc_buffer_out_mux[2+VIRTUAL_CHANNEL+32-1:2+VIRTUAL_CHANNEL+32-2];
+assign header = vc_buffer_out_mux[2+VIRTUAL_CHANNEL+PAYLOAD_WIDTH-1:2+VIRTUAL_CHANNEL+PAYLOAD_WIDTH-2];
+assign packet_type = vc_buffer_out_mux[31:29];
 
 //registers
-always @(posedge neuron_clk or posedge neuron_rst)
+always @(posedge neuron_clk or negedge neuron_rst)
     begin
-        if (router_rst == 1'b0)
+        if (neuron_rst == 1'b0)
 			begin
             	current_channel_id <= 0;
 				channel_state <= 0;
@@ -174,21 +171,20 @@ always @(posedge neuron_clk or posedge neuron_rst)
 				
 				if (set_channel_used == 1'b1)
 					channel_state[avaliable_channel_id] <= 1'b1;
-				
-				if (set_channel_idle == 1'b1)
+				else if (set_channel_idle == 1'b1)
 					channel_state[current_channel_id] <= 1'b0;
 				
 				if (pipeline_reg_load == 1'b1)
-					pipeline_reg_load <= vc_buffer_out_mux;
+					pipeline_reg <= vc_buffer_out_mux;
 
             end
     end
-
+assign flit_to_decoder = pipeline_reg;
 
 // state machine
 always @(posedge neuron_clk or posedge neuron_rst)
     begin
-        if (router_rst == 1'b1)
+        if (neuron_rst == 1'b0)
             current_state <= IDLE;
         else
             current_state <= next_state;
@@ -284,113 +280,8 @@ always @(*)
 		endcase
 	end
 
-always @(posedge neuron_rst or posedge neuron_clk)
-	begin
-		if (router_rst == 1'b1)
-			decoder_cs <= IDLE;
-		else
-			decoder_cs <= decoder_ns;
-	end
-
-always @(*)
-	begin
-		case(decoder_cs):
-			DC_IDLE:
-				begin
-					if (activate_decoder == 1'b1)
-						decoder_ns = DC_SET_TYPE;
-					else
-						decoder_ns = DC_IDLE;
-				end
-			DC_SET_TYPE:
-				decoder_ns = DC_BUFFER;
-			DC_BUFFER:
-				begin
-					if (header == 2'b01)
-						decoder_ns = DC_WRITE;
-					else if (stall_decoder == 1'b1)
-						decoder_ns = DC_STALL;
-					else
-						decoder_ns = DC_BUFFER;
-				end
-			DC_WRITE:
-				begin
-					if (activate_decoder == 1'b1)
-						decoder_ns = DC_SET_TYPE;
-					else
-						decoder_ns = DC_IDLE;
-				end
-			DC_STALL:
-				begin
-					if (stall_decoder == 1'b1)
-						decoder_ns = DC_STALL;
-					else
-						decoder_ns = DC_BUFFER;
-				end
-	end
-// decode combinational logic outpus
-always @(*)
-	begin
-
-		case(decoder_cs)
-			DC_IDLE:
-				begin
-					write_memory = 1'b0;
-					set_packet_type = 1'b0;
-					shift_reg = 1'b0;
-				end
-			DC_SET_TYPE:
-				begin
-					set_packet_type = 1'b1;
-				end
-			DC_BUFFER:
-				begin
-					write_memory = 1'b0;
-					shift_reg = 1'b1;
-					shift_reg = 1'b0;
-				end
-			DC_STALL:
-				begin
-					write_memory = 1'b0;
-					set_packet_type = 1'b0;
-					shift_reg = 1'b0;
-				end
-			DC_WRITE:
-				begin
-					write_memory = 1'b1;
-					set_packet_type = 1'b0;
-					shift_reg = 1'b0;
-				end
-			default:
-				begin
-					write_memory = 1'b0;
-					set_packet_type = 1'b0;
-					shift_reg = 1'b0;
-				end
-	end
-
-//decoder registers
-always @(posedge neuron_clk or posedge neuron_rst)
-	begin
-		if (neuron_rst == 1'b1)
-			begin
-				packet_out = 0;
-				shifter = 0;
-			end
-		else
-			begin
-				if (set_packet_type == 1'b1)
 
 
-
-			end
-
-
-
-	end
-
-
-// 	end
 
 generic_fifo_dc_gray
 #(

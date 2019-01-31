@@ -1,22 +1,60 @@
 module neuron_tile
+#(
+    parameter VIRTUAL_CHANNEL = 4,
+    parameter ADDRESS_WIDTH = 5,
+    parameter PAYLOAD_WIDTH = 32,
+    parameter FLIT_WIDTH = 38,
+
+    parameter NUM_NURNS = 128,
+
+    parameter NURN_CNT_BIT_WIDTH   = 1,
+	parameter AXON_CNT_BIT_WIDTH   = 1,
+
+    parameter NUM_NURNS    = 2,
+	parameter NUM_AXONS    = 2,
+
+)
 (
     input neuron_clk,
     input neuron_rst,
     input router_clk,
     input router_rst,
-    input [37:0] flit_in,
-    
+    input start, 
+    input flit_in_wr, 
+    input [FLIT_WIDTH-1:0] flit_in, 
+    input [VIRTUAL_CHANNEL-1:0] credit_in, 
+    input flit_out_wr, 
+    input [2+VIRTUAL_CHANNEL+PAYLOAD_WIDTH-1:0] flit_out, 
+    input [VIRTUAL_CHANNEL-1:0] credit_out,
 );
 
 
-module Neuron
+wire [63:0] config_data;
+wire [37:0] flit_to_decoder;
+
+wire [(1<<AXON_CNT_BIT_WIDTH) -1:0] spike_array;
+
+wire [NURN_CNT_BIT_WIDTH-1:0] address_bias;
+wire [NURN_CNT_BIT_WIDTH-1:0] address_potential;
+wire [NURN_CNT_BIT_WIDTH-1:0] address_threshold;
+wire [NURN_CNT_BIT_WIDTH-1:0] address_posthistory;
+wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] address_preshistory;
+wire [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] address_weight;
+
+wire [NURN_CNT_BIT_WIDTH-1:0] address_config_A;
+wire [NURN_CNT_BIT_WIDTH-1:0] address_config_B;
+wire [NURN_CNT_BIT_WIDTH-1:0] address_axonmode;
+wire [NURN_CNT_BIT_WIDTH-1:0] address_AER;
+wire [AXON_CNT_BIT_WIDTH-1:0] address_axon_scaling;
+
+
+Neuron
 #(
     .NUM_NURNS(4),
     .NUM_AXONS(4),
 
     .NURN_CNT_BIT_WIDTH(2),
     .AXON_CNT_BIT_WIDTH(2),
-        
 
     .DSIZE = DATA_BIT_WIDTH_INT+DATA_BIT_WIDTH_FRAC(),
 
@@ -28,31 +66,32 @@ module Neuron
     .SYNTH_PATH("D:/code/synth/data"),
     .SIM_PATH("D:/code/data"),
 )
+neuron_dut
 (
-    .clk(),
-    .rst_n(), 
+    .clk(neuron_clk),
+    .rst_n(neuron_rst), 
     .SpikePacket(), 
-    .outSpike(), 
-    .start(), 
-    .inSpike(), 
-    .packet_write_req(), 
-    .config_data_in(),
+    .outSpike(outSpike), 
+    .start(start), 
+    .inSpike(spike_array), 
+    .packet_write_req(packet_write_req), 
+    .config_data_in(config_data),
 
-    .wr_en_potential_i(),
-    .wr_en_threshold_i(),
-    .wr_en_bias_i(),
-    .wr_en_posthistory_i(),
-    .wr_en_prehistory_i(),
+    .wr_en_potential_i(wr_en_potential),
+    .wr_en_threshold_i(wr_en_threshold),
+    .wr_en_bias_i(wr_en_bias),
+    .wr_en_posthistory_i(wr_en_posthistory),
+    .wr_en_prehistory_i(wr_en_prehistory),
 
-        // address to status memory
-    .address_bias(),
-    .address_potential(),
-    .address_threshold(),
-    .address_posthistory(),
-    .address_preshistory(),
-    .address_weight(),
+    // address to status memory
+    .address_bias(address_bias),
+    .address_potential(address_potential),
+    .address_threshold(address_threshold),
+    .address_posthistory(address_posthistory),
+    .address_preshistory(address_preshistory),
+    .address_weight(address_weight),
 
-        //output to write config memory
+    //output to write config memory
     .wr_en_configA_i(wr_en_configA),
     .wr_en_configB_i(wr_en_configB),
     .wr_en_AER_i(wr_en_AER),
@@ -65,7 +104,7 @@ module Neuron
     .wr_en_axonmode_4_i(wr_en_axonmode_4),
     .wr_en_scaling_i(wr_en_scaling),
 
-        //address to config memory
+    //address to config memory
     .address_config_A(address_config_A),
     .address_config_B(address_config_B),
     .address_axonmode(address_axonmode),
@@ -76,64 +115,7 @@ module Neuron
 
 );
 
-module packet_decoder
-#(
-    .NUM_AXONS = 256,
-    .AXON_CNT_BIT_WIDTH = 8,
-    .NURN_CNT_BIT_WIDTH = 7,
-    .STDP_WIN_BIT_WIDTH = 8,
-    .DSIZE = 16,
-    .FLIT_WIDTH = 38,
-    .VIRTUAL_CHANNEL = 4,
-    .PAYLOAD_WIDTH = 32
-)
-(
-    .neuron_clk(), 
-    .neuron_rst(), 
-    .start(), 
-    .activate_decoder(), 
-    .stall_decoder(), 
-    .flit_in(),
-    .spike_out(), 
-    .mem_data_out(), 
-    .class_type_in(),
 
-    //output to write status memory
-    .wr_en_potential_o(),
-    .wr_en_threshold_o(),
-    .wr_en_bias_o(),
-    .wr_en_posthistory_o(),
-    .wr_en_prehistory_o(),
-    // address to status memory
-    .address_bias(),
-    .address_potential(),
-    .address_threshold(),
-    .address_posthistory(),
-    .address_preshistory(),
-    .address_weight(),
-
-    //output to write config memory
-    .wr_en_configA_o(),
-    .wr_en_configB_o(),
-    .wr_en_AER_o(),
-    .wr_en_weight_o(),
-    .wr_en_axonmode_o(),
-    .wr_en_coreconfig_o(),
-    .wr_en_axonmode_1_o(),
-    .wr_en_axonmode_2_o(),
-    .wr_en_axonmode_3_o(),
-    .wr_en_axonmode_4_o(),
-    .wr_en_scaling_o(),
-
-    //address to config memory
-    .address_config_A(),
-    .address_config_B(),
-    .address_axonmode(),
-    .address_AER(),
-    .address_axon_scaling(),
-
-    .config_data_out()
-);
 
 
 network_interface ni_uut

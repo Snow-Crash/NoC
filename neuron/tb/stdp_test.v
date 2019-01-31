@@ -13,8 +13,8 @@ parameter AXON_CNT_BIT_WIDTH = 2;
 parameter X_ID = "1";
 parameter Y_ID = "1";
 parameter SYNTH_PATH = "D:/code/synth/data";
-parameter SIM_PATH =  "D:/code/learn_test_work_dir/data";
-parameter STOP_STEP = 10;
+parameter SIM_PATH =  "D:/code/learn_test_work_dir/";
+parameter STOP_STEP = 80;
 
 reg clk, rst_n;
 wire outSpike;
@@ -108,20 +108,39 @@ always @(posedge clk)
 
 //read testcases
 integer f1;
-integer nouse1;
+integer nouse1, i;
+integer delay = 0;
 wire [7:0] step_counter;
+wire [NUM_AXONS-1:0] spike_wire;
 reg [7 + NUM_AXONS:0] testcases;
+reg [NUM_AXONS-1:0] reversed_spike;
 assign step_counter = testcases[7 + NUM_AXONS:NUM_AXONS];
-assign spike = testcases[NUM_AXONS-1:0];
+assign spike = reversed_spike;
+assign spike_wire = testcases[NUM_AXONS-1:0];
+
+always @(*)
+	begin
+	  for(i = 0; i < NUM_AXONS; i = i+1)
+	  	begin
+			reversed_spike[NUM_AXONS-1-i] = spike_wire[i]; 
+		end
+	end
+
+
 initial
 	begin
 		f1 = $fopen("D:/code/learn_test_work_dir/InputSpikes_HW_RAND_4.txt","r");
+		//f1 = $fopen("D:/code/learn_test_work_dir/InputSpikes_relutest_HW_RAND_4.txt","r");
 	end
 
 
 always @(posedge start)
 	begin
+		if (delay >= 1)
 			nouse1 = $fscanf(f1, "%b\n", testcases);
+		else
+			testcases = 0;
+		delay = delay + 1;
 	end
 
 

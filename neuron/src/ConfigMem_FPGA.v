@@ -6,7 +6,7 @@
 // `define NULL 0
 // `define MEM_DECLARE
 
-module ConfigMem_Asic
+module ConfigMem_FPGA
 #(
 	parameter NUM_NURNS    = 256  ,
 	parameter NUM_AXONS    = 256  ,
@@ -106,23 +106,15 @@ parameter CONFIG_B_WIDTH = 1 + 1 + DSIZE*3 + 4;
 reg [NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:0] Number_Neuron_Axon;
 
 
-reg [STDP_WIN_BIT_WIDTH*2+DSIZE*2+1-1:0]	config_A_reg;
+reg [STDP_WIN_BIT_WIDTH*2+DSIZE*2+1-1:0]            config_A_reg;
 reg [1+1+DSIZE*3+4-1:0]	config_B_reg;
-reg [CONFIG_A_WIDTH-1:0]                      config_A_dout;
-reg [CONFIG_B_WIDTH-1:0]                      config_B_dout;
-reg [64-1:0]	                axon_mode_1_dout;
-reg [64-1:0]	                axon_mode_2_dout;
-reg [64-1:0]	                axon_mode_3_dout;
-reg [64-1:0]	                axon_mode_4_dout;
-reg [AER_BIT_WIDTH-1:0]         config_AER_dout;
-wire [NURN_CNT_BIT_WIDTH-1:0]   neuron_id;
-wire [AXON_CNT_BIT_WIDTH-1:0]   axon_id;
-reg [AXON_CNT_BIT_WIDTH-1:0]    axon_id_reg;
-reg [AXON_CNT_BIT_WIDTH+NURN_CNT_BIT_WIDTH-1:0] LearnMode_Weight_addr_reg;
-wire [255:0]                    axon_mode_all;
-reg [AER_BIT_WIDTH-1:0]			AER_reg;
-reg [1:0]						axon_scaling_out;
-reg [AXON_CNT_BIT_WIDTH+NURN_CNT_BIT_WIDTH:0] core_config;
+reg [CONFIG_A_WIDTH-1:0]                            config_A_dout;
+reg [CONFIG_B_WIDTH-1:0]                            config_B_dout;
+reg [AER_BIT_WIDTH-1:0]                             config_AER_dout;
+reg [AXON_CNT_BIT_WIDTH+NURN_CNT_BIT_WIDTH-1:0]     LearnMode_Weight_addr_reg;
+reg [AER_BIT_WIDTH-1:0]			                    AER_reg;
+reg [1:0]						                    axon_scaling_out;
+reg [AXON_CNT_BIT_WIDTH+NURN_CNT_BIT_WIDTH:0]       core_config;
 
  //core config 
 always @(posedge clk_i or negedge rst_n_i)
@@ -152,11 +144,6 @@ reg [CONFIG_A_WIDTH-1:0]                  config_A            [255:0];
 reg [CONFIG_B_WIDTH-1:0]                  config_B      [255:0];
 // Mem B: aer
 reg [31:0]                  config_AER                              [255:0];
-// Mem C: weight learning mode           
-reg [63:0]                          axon_mode_1                    [255:0];
-reg [63:0]                          axon_mode_2                    [255:0];
-reg [63:0]                          axon_mode_3                    [255:0];
-reg [63:0]                          axon_mode_4                    [255:0];
 // axon sclaling
 reg [1:0]							axon_scaling					[255:0];
 
@@ -244,140 +231,50 @@ reg [1:0]							axon_scaling					[255:0];
 			file_name = {SIM_PATH, "data", DIR_ID, "/AxonScaling.txt"};
 			$readmemh (file_name,axon_scaling);
 
-			//initialize memc2
-			file_name = {SIM_PATH, "data", DIR_ID, "/LrnModeWght_SplitMemTest.txt"}; 	file1 = $fopen(file_name, "r+");
-            
-            for(idx = 0 ; idx <= ((1<<NURN_CNT_BIT_WIDTH) - 1) ; idx = idx + 1)
-                begin
-                    for (idx2 = 0; idx2 <= 255; idx2 = idx2 + 1)
-                        $fscanf (file1, "%h\n", data_learn_mode[idx2]);
-                    
-                    axon_mode_4[idx] = data_learn_mode[255:192];
-                    axon_mode_3[idx] = data_learn_mode[191:128];
-                    axon_mode_2[idx] = data_learn_mode[127:64];
-                    axon_mode_1[idx] = data_learn_mode[63:0];
-                end
-
-			$fclose(file1);
 			//-----------------------------
 
-			//initialize axon sclaling
+			//initialize learn mode
 			file_name = {SIM_PATH, "data", DIR_ID, "/LrnModeWght.txt"};
 			$readmemh (file_name,LearnMode_Weight);
 		end
 `endif
 
-assign neuron_id = Addr_Config_C_i[NURN_CNT_BIT_WIDTH+AXON_CNT_BIT_WIDTH-1:AXON_CNT_BIT_WIDTH];
-assign axon_id = Addr_Config_C_i[AXON_CNT_BIT_WIDTH-1:0];
-
 always  @(posedge clk_i)
 begin
-    if(ce)
-        begin
-            if(wr_config_A_i)
-                begin
-                    config_A[Addr_Config_A_i] <= config_data_in[CONFIG_A_WIDTH-1:0];
-                    config_A_dout <= config_data_in[CONFIG_A_WIDTH-1:0];
-                end
-            else
-                config_A_dout <= config_A[Addr_Config_A_i];
-        end
-end
-
-always  @(posedge clk_i)
-begin
-    if(ce)
-        begin
-            if(wr_config_B_i)
-                begin
-                    config_B[Addr_Config_B_i] <= config_data_in[CONFIG_B_WIDTH-1:0];
-                    config_B_dout <= config_data_in[CONFIG_B_WIDTH-1:0];
-                end
-            else
-                config_B_dout <= config_B[Addr_Config_B_i];
-        end
-end
-
-always  @(posedge clk_i)
-begin
-    if(ce)
-        begin
-            if(wr_config_AER_i)
-                begin
-                    config_AER[Addr_AER_i] <= config_data_in[AER_BIT_WIDTH-1:0];
-                    config_AER_dout <= config_data_in[AER_BIT_WIDTH-1:0];
-                end
-            else
-                config_AER_dout <= config_AER[Addr_AER_i];
-        end
-end
-
-always  @(posedge clk_i)
-begin
-    if(ce)
-        begin
-            if(wr_config_C1_i)
-                begin
-                    axon_mode_1[neuron_id] <= config_data_in;
-                    axon_mode_1_dout <= config_data_in;
-                end
-            else
-                axon_mode_1_dout <= axon_mode_1[neuron_id];
-        end
-end
-
-always  @(posedge clk_i)
-begin
-    if(ce)
-        begin
-            if(wr_config_C2_i)
-                begin
-                    axon_mode_2[neuron_id] <= config_data_in;
-                    axon_mode_2_dout <= config_data_in;
-                end
-            else
-                axon_mode_2_dout <=axon_mode_2[neuron_id];
-        end
-end
-
-always  @(posedge clk_i)
-begin
-    if(ce)
-        begin
-            if(wr_config_C3_i)
-                begin
-                    axon_mode_3[neuron_id] <= config_data_in;
-                    axon_mode_3_dout <= config_data_in;
-                end
-            else
-                axon_mode_3_dout <= axon_mode_3[neuron_id];
-        end
-end
-
-always  @(posedge clk_i)
-begin
-    if(ce)
-        begin
-            if(wr_config_C4_i)
-                begin
-                    axon_mode_4[neuron_id] <= config_data_in;
-                    axon_mode_4_dout <= config_data_in;
-                end
-            else
-                axon_mode_4_dout <= axon_mode_4[neuron_id];
-        end
-end
-
-always @(posedge clk_i or negedge rst_n_i)
+    if(wr_config_A_i)
     begin
-        if (rst_n_i == 1'b0)
-            axon_id_reg <= 0;
-        else
-            axon_id_reg <= axon_id;
+        config_A[Addr_Config_A_i] <= config_data_in[CONFIG_A_WIDTH-1:0];
+        config_A_dout <= config_data_in[CONFIG_A_WIDTH-1:0];
     end
-assign axon_mode_all = {axon_mode_4_dout, axon_mode_3_dout, axon_mode_2_dout, axon_mode_1_dout};
-assign axon_mode_o = axon_mode_all[axon_id_reg];
+    else
+        config_A_dout <= config_A[Addr_Config_A_i];
+end
 
+
+always  @(posedge clk_i)
+begin
+
+    if(wr_config_B_i)
+        begin
+            config_B[Addr_Config_B_i] <= config_data_in[CONFIG_B_WIDTH-1:0];
+            config_B_dout <= config_data_in[CONFIG_B_WIDTH-1:0];
+        end
+    else
+        config_B_dout <= config_B[Addr_Config_B_i];
+
+end
+
+always  @(posedge clk_i)
+begin
+
+    if(wr_config_AER_i)
+        begin
+            config_AER[Addr_AER_i] <= config_data_in[AER_BIT_WIDTH-1:0];
+            config_AER_dout <= config_data_in[AER_BIT_WIDTH-1:0];
+        end
+    else
+        config_AER_dout <= config_AER[Addr_AER_i];
+end
 
 //weight leanrning mode
 always @ (posedge clk_i)
@@ -386,21 +283,20 @@ always @ (posedge clk_i)
             LearnMode_Weight[Addr_Config_C_i] <= config_data_in[DSIZE-1];
         LearnMode_Weight_addr_reg <= Addr_Config_C_i;  
     end
-//assign axonLrnMode_o = LearnMode_Weight[LearnMode_Weight_addr_reg];
-assign axonLrnMode_o = axon_mode_all[axon_id_reg];
+assign axonLrnMode_o = LearnMode_Weight[LearnMode_Weight_addr_reg];
+
 
 always  @(posedge clk_i)
 begin
-    if(ce)
+
+    if(config_write_enable)
         begin
-            if(config_write_enable)
-                begin
-                    axon_scaling[Addr_axon_scaling_i] <= config_data_in;
-                    axon_scaling_out <= config_data_in;
-                end
-            else
-                axon_scaling_out <= axon_scaling[Addr_axon_scaling_i];
+            axon_scaling[Addr_axon_scaling_i] <= config_data_in;
+            axon_scaling_out <= config_data_in;
         end
+    else
+        axon_scaling_out <= axon_scaling[Addr_axon_scaling_i];
+
 end
 assign Axon_scaling_o = axon_scaling_out;
 
@@ -443,7 +339,7 @@ assign RstPot_o = config_B_reg[DSIZE*2+4-1:DSIZE+4];
 assign FixedThreshold_o = config_B_reg[DSIZE+4-1:4];
 assign AER_number_o = config_B_reg[3:0];
 assign SpikeAER_o = (multicast_i == 1'b0)? AER_reg : config_AER_dout;
-assign read_next_AER_o = config_AER_dout[AER_BIT_WIDTH-1];
+//assign read_next_AER_o = config_AER_dout[AER_BIT_WIDTH-1];
 
 
 

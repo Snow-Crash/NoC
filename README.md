@@ -1,6 +1,6 @@
 # In-hardware STDP Learning
 
-This is the implementation of [Scalable NoC-based Neuromorphic Hardware Learning and Inference]https://ieeexplore.ieee.org/document/8489619
+This is the implementation of [Scalable NoC-based Neuromorphic Hardware Learning and Inference](https://ieeexplore.ieee.org/document/8489619)
 
 
 ## Citation
